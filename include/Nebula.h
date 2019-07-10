@@ -362,7 +362,7 @@ public:
      */
     static string code_version()
     {
-        return "5.8.3"; // bump version
+        return "5.8.3-lxdPatch1"; // bump version
     }
 
     /**
