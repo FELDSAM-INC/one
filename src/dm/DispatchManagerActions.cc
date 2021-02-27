@@ -1582,8 +1582,8 @@ int DispatchManager::snapshot_revert(int vid, int snap_id,
         return -1;
     }
 
-    if ( vm->get_state()     != VirtualMachine::ACTIVE ||
-         vm->get_lcm_state() != VirtualMachine::RUNNING )
+    if ( vm->get_state() != VirtualMachine::POWEROFF &&
+         vm->get_state() != VirtualMachine::UNDEPLOYED )
     {
         oss << "Could not revert VM " << vid << " to snapshot " << snap_id
             << ", wrong state " << vm->state_str() << ".";
@@ -1655,7 +1655,8 @@ int DispatchManager::snapshot_delete(int vid, int snap_id,
     if ( (vm->get_state() != VirtualMachine::ACTIVE ||
                 vm->get_lcm_state() != VirtualMachine::RUNNING) &&
          (!is_keep_snapshots ||
-                vm->get_state() != VirtualMachine::POWEROFF) )
+                vm->get_state() != VirtualMachine::POWEROFF &&
+                vm->get_state() != VirtualMachine::UNDEPLOYED) )
     {
         oss << "Could not delete snapshot " << snap_id << " for VM " << vid
             << ", wrong state " << vm->state_str() << ".";

@@ -117,20 +117,14 @@ define(function(require) {
         } else {
           actions = '';
 
-          if ((that.element.STATE == OpenNebulaVM.STATES.ACTIVE &&
-               that.element.LCM_STATE == OpenNebulaVM.LCM_STATES.RUNNING)) {
-
+          if (that.element.STATE == OpenNebulaVM.STATES.POWEROFF || that.element.STATE == OpenNebulaVM.STATES.UNDEPLOYED) {
             if (Config.isTabActionEnabled("vms-tab", "VM.snapshot_revert")) {
               actions += '<a href="VM.snapshot_revert" class="snapshot_revert" ><i class="fas fa-reply"/>' + Locale.tr("Revert") + '</a> &emsp;'
             }
+          }
 
-            if (Config.isTabActionEnabled("vms-tab", "VM.snapshot_delete")) {
-              actions += '<a href="VM.snapshot_delete" class="snapshot_delete" ><i class="fas fa-times"/>' + Locale.tr("Delete") + '</a>'
-            }
-          } else if (that.element.STATE == OpenNebulaVM.STATES.POWEROFF &&  that.element.HISTORY_RECORDS.HISTORY.VM_MAD == "vcenter"){
-            if (Config.isTabActionEnabled("vms-tab", "VM.snapshot_delete")) {
-              actions += '<a href="VM.snapshot_delete" class="snapshot_delete" ><i class="fas fa-times"/>' + Locale.tr("Delete") + '</a>'
-            }
+          if (Config.isTabActionEnabled("vms-tab", "VM.snapshot_delete")) {
+            actions += '<a href="VM.snapshot_delete" class="snapshot_delete" ><i class="fas fa-times"/>' + Locale.tr("Delete") + '</a>'
           }
         }
 
