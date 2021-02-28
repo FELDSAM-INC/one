@@ -78,7 +78,9 @@ define(function(require) {
 
     if (Config.isTabActionEnabled("vms-tab", "VM.snapshot_create")) {
       // If VM is not RUNNING, then we forget about the attach disk form.
-      if (that.element.STATE == OpenNebulaVM.STATES.ACTIVE && that.element.LCM_STATE == OpenNebulaVM.LCM_STATES.RUNNING) {
+      if (that.element.STATE == OpenNebulaVM.STATES.ACTIVE && that.element.LCM_STATE == OpenNebulaVM.LCM_STATES.RUNNING
+          || that.element.STATE == OpenNebulaVM.STATES.POWEROFF || that.element.STATE == OpenNebulaVM.STATES.UNDEPLOYED
+      ) {
         html += '\
            <button id="take_snapshot" class="button small success right radius" >' + Locale.tr("Take snapshot") + '</button>'
       } else {
