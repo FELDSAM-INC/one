@@ -293,6 +293,15 @@ const (
 
 	// DiskResizeUndeployed lcm state
 	DiskResizeUndeployed LCMState = 64
+
+    // HotplugSnapshotPoweroff lcm state
+	HotplugSnapshotPoweroff LCMState = 100
+
+    // HotplugSnapshotSuspended lcm state
+	HotplugSnapshotSuspended LCMState = 101
+
+	// HotplugSnapshotUndeployed lcm state
+	HotplugSnapshotUndeployed LCMState = 102
 )
 
 func (s LCMState) isValid() bool {
@@ -430,6 +439,12 @@ func (s LCMState) String() string {
 		return "DISK_RESIZE_POWEROFF"
 	case DiskResizeUndeployed:
 		return "DISK_RESIZE_UNDEPLOYED"
+	case HotplugSnapshotPoweroff:
+	    return "HOTPLUG_SNAPSHOT_POWEROFF"
+	case HotplugSnapshotSuspended:
+	    return "HOTPLUG_SNAPSHOT_SUSPENDED"
+	case HotplugSnapshotUndeployed:
+	    return "HOTPLUG_SNAPSHOT_UNDEPLOYED"
 	default:
 		return ""
 	}

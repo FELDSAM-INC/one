@@ -1486,13 +1486,41 @@ void LifeCycleManager::snapshot_create_success(int vid)
         return;
     }
 
-    if ( vm->get_lcm_state() == VirtualMachine::HOTPLUG_SNAPSHOT )
+    VirtualMachine::LcmState state = vm->get_lcm_state();
+
+    if ( state == VirtualMachine::HOTPLUG_SNAPSHOT )
     {
         vm->clear_active_snapshot();
 
         vm->set_state(VirtualMachine::RUNNING);
 
         vmpool->update(vm);
+    }
+    else if ( state == VirtualMachine::HOTPLUG_SNAPSHOT_POWEROFF ||
+              state == VirtualMachine::HOTPLUG_SNAPSHOT_SUSPENDED ||
+              state == VirtualMachine::HOTPLUG_SNAPSHOT_UNDEPLOYED )
+    {
+        vm->clear_active_snapshot();
+
+        vmpool->update(vm);
+
+        switch (state)
+        {
+            case VirtualMachine::HOTPLUG_SNAPSHOT_POWEROFF:
+                dm->trigger(DMAction::POWEROFF_SUCCESS, vid);
+                break;
+
+            case VirtualMachine::HOTPLUG_SNAPSHOT_SUSPENDED:
+                dm->trigger(DMAction::SUSPEND_SUCCESS, vid);
+                break;
+
+            case VirtualMachine::HOTPLUG_SNAPSHOT_UNDEPLOYED:
+                dm->trigger(DMAction::UNDEPLOY_SUCCESS, vid);
+                break;
+
+            default:
+                return;
+        }
     }
     else
     {
@@ -1516,13 +1544,41 @@ void LifeCycleManager::snapshot_create_failure(int vid)
         return;
     }
 
-    if ( vm->get_lcm_state() == VirtualMachine::HOTPLUG_SNAPSHOT )
+    VirtualMachine::LcmState state = vm->get_lcm_state();
+
+    if ( state == VirtualMachine::HOTPLUG_SNAPSHOT )
     {
         vm->delete_active_snapshot();
 
         vm->set_state(VirtualMachine::RUNNING);
 
         vmpool->update(vm);
+    }
+    else if ( state == VirtualMachine::HOTPLUG_SNAPSHOT_POWEROFF ||
+              state == VirtualMachine::HOTPLUG_SNAPSHOT_SUSPENDED ||
+              state == VirtualMachine::HOTPLUG_SNAPSHOT_UNDEPLOYED )
+    {
+        vm->delete_active_snapshot();
+
+        vmpool->update(vm);
+
+        switch (state)
+        {
+            case VirtualMachine::HOTPLUG_SNAPSHOT_POWEROFF:
+                dm->trigger(DMAction::POWEROFF_SUCCESS, vid);
+                break;
+
+            case VirtualMachine::HOTPLUG_SNAPSHOT_SUSPENDED:
+                dm->trigger(DMAction::SUSPEND_SUCCESS, vid);
+                break;
+
+            case VirtualMachine::HOTPLUG_SNAPSHOT_UNDEPLOYED:
+                dm->trigger(DMAction::UNDEPLOY_SUCCESS, vid);
+                break;
+
+            default:
+                return;
+        }
     }
     else
     {
@@ -1549,13 +1605,41 @@ void LifeCycleManager::snapshot_revert_success(int vid)
         return;
     }
 
-    if ( vm->get_lcm_state() == VirtualMachine::HOTPLUG_SNAPSHOT )
+    VirtualMachine::LcmState state = vm->get_lcm_state();
+
+    if ( state == VirtualMachine::HOTPLUG_SNAPSHOT )
     {
         vm->clear_active_snapshot();
 
         vm->set_state(VirtualMachine::RUNNING);
 
         vmpool->update(vm);
+    }
+    else if ( state == VirtualMachine::HOTPLUG_SNAPSHOT_POWEROFF ||
+              state == VirtualMachine::HOTPLUG_SNAPSHOT_SUSPENDED ||
+              state == VirtualMachine::HOTPLUG_SNAPSHOT_UNDEPLOYED )
+    {
+        vm->clear_active_snapshot();
+
+        vmpool->update(vm);
+
+        switch (state)
+        {
+            case VirtualMachine::HOTPLUG_SNAPSHOT_POWEROFF:
+                dm->trigger(DMAction::POWEROFF_SUCCESS, vid);
+                break;
+
+            case VirtualMachine::HOTPLUG_SNAPSHOT_SUSPENDED:
+                dm->trigger(DMAction::SUSPEND_SUCCESS, vid);
+                break;
+
+            case VirtualMachine::HOTPLUG_SNAPSHOT_UNDEPLOYED:
+                dm->trigger(DMAction::UNDEPLOY_SUCCESS, vid);
+                break;
+
+            default:
+                return;
+        }
     }
     else
     {
@@ -1587,13 +1671,41 @@ void LifeCycleManager::snapshot_delete_success(int vid)
         return;
     }
 
-    if ( vm->get_lcm_state() == VirtualMachine::HOTPLUG_SNAPSHOT )
+    VirtualMachine::LcmState state = vm->get_lcm_state();
+
+    if ( state == VirtualMachine::HOTPLUG_SNAPSHOT )
     {
         vm->delete_active_snapshot();
 
         vm->set_state(VirtualMachine::RUNNING);
 
         vmpool->update(vm);
+    }
+    else if ( state == VirtualMachine::HOTPLUG_SNAPSHOT_POWEROFF ||
+              state == VirtualMachine::HOTPLUG_SNAPSHOT_SUSPENDED ||
+              state == VirtualMachine::HOTPLUG_SNAPSHOT_UNDEPLOYED )
+    {
+        vm->delete_active_snapshot();
+
+        vmpool->update(vm);
+
+        switch (state)
+        {
+            case VirtualMachine::HOTPLUG_SNAPSHOT_POWEROFF:
+                dm->trigger(DMAction::POWEROFF_SUCCESS, vid);
+                break;
+
+            case VirtualMachine::HOTPLUG_SNAPSHOT_SUSPENDED:
+                dm->trigger(DMAction::SUSPEND_SUCCESS, vid);
+                break;
+
+            case VirtualMachine::HOTPLUG_SNAPSHOT_UNDEPLOYED:
+                dm->trigger(DMAction::UNDEPLOY_SUCCESS, vid);
+                break;
+
+            default:
+                return;
+        }
     }
     else
     {
@@ -1617,13 +1729,41 @@ void LifeCycleManager::snapshot_delete_failure(int vid)
         return;
     }
 
-    if ( vm->get_lcm_state() == VirtualMachine::HOTPLUG_SNAPSHOT )
+    VirtualMachine::LcmState state = vm->get_lcm_state();
+
+    if ( state == VirtualMachine::HOTPLUG_SNAPSHOT )
     {
         vm->clear_active_snapshot();
 
         vm->set_state(VirtualMachine::RUNNING);
 
         vmpool->update(vm);
+    }
+    else if ( state == VirtualMachine::HOTPLUG_SNAPSHOT_POWEROFF ||
+              state == VirtualMachine::HOTPLUG_SNAPSHOT_SUSPENDED ||
+              state == VirtualMachine::HOTPLUG_SNAPSHOT_UNDEPLOYED )
+    {
+        vm->clear_active_snapshot();
+
+        vmpool->update(vm);
+
+        switch (state)
+        {
+            case VirtualMachine::HOTPLUG_SNAPSHOT_POWEROFF:
+                dm->trigger(DMAction::POWEROFF_SUCCESS, vid);
+                break;
+
+            case VirtualMachine::HOTPLUG_SNAPSHOT_SUSPENDED:
+                dm->trigger(DMAction::SUSPEND_SUCCESS, vid);
+                break;
+
+            case VirtualMachine::HOTPLUG_SNAPSHOT_UNDEPLOYED:
+                dm->trigger(DMAction::UNDEPLOY_SUCCESS, vid);
+                break;
+
+            default:
+                return;
+        }
     }
     else
     {

@@ -215,6 +215,12 @@ int VirtualMachine::lcm_state_from_str(string& st, LcmState& state)
         state = CLEANUP_DELETE;
     } else if ( st == "HOTPLUG_SNAPSHOT" ) {
         state = HOTPLUG_SNAPSHOT;
+    } else if ( st == "HOTPLUG_SNAPSHOT_POWEROFF" ) {
+        state = HOTPLUG_SNAPSHOT_POWEROFF;
+    } else if ( st == "HOTPLUG_SNAPSHOT_SUSPENDED" ) {
+        state = HOTPLUG_SNAPSHOT_SUSPENDED;
+    } else if ( st == "HOTPLUG_SNAPSHOT_UNDEPLOYED" ) {
+        state = HOTPLUG_SNAPSHOT_UNDEPLOYED;
     } else if ( st == "HOTPLUG_NIC" ) {
         state = HOTPLUG_NIC;
     } else if ( st == "HOTPLUG_SAVEAS" ) {
@@ -352,6 +358,12 @@ string& VirtualMachine::lcm_state_to_str(string& st, LcmState state)
             st = "CLEANUP_DELETE"; break;
         case HOTPLUG_SNAPSHOT:
             st = "HOTPLUG_SNAPSHOT"; break;
+        case HOTPLUG_SNAPSHOT_POWEROFF:
+            st = "HOTPLUG_SNAPSHOT_POWEROFF"; break;
+        case HOTPLUG_SNAPSHOT_SUSPENDED:
+            st = "HOTPLUG_SNAPSHOT_SUSPENDED"; break;
+        case HOTPLUG_SNAPSHOT_UNDEPLOYED:
+            st = "HOTPLUG_SNAPSHOT_UNDEPLOYED"; break;
         case HOTPLUG_NIC:
             st = "HOTPLUG_NIC"; break;
         case HOTPLUG_SAVEAS:

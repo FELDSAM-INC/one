@@ -153,7 +153,10 @@ public class VirtualMachine extends PoolElement{
         "PROLOG_MIGRATE_UNKNOWN_FAILURE",
         "DISK_RESIZE",
         "DISK_RESIZE_POWEROFF",
-        "DISK_RESIZE_UNDEPLOYED"
+        "DISK_RESIZE_UNDEPLOYED",
+        "HOTPLUG_SNAPSHOT_POWEROFF",
+        "HOTPLUG_SNAPSHOT_SUSPENDED",
+        "HOTPLUG_SNAPSHOT_UNDEPLOYED"
     };
 
     private static final String[] SHORT_LCM_STATES =
@@ -222,7 +225,10 @@ public class VirtualMachine extends PoolElement{
         "fail",     // PROLOG_MIGRATE_UNKNOWN_FAILURE
         "drsz",     // DISK_RESIZE
         "drsz",     // DISK_RESIZE_POWEROFF
-        "drsz"      // DISK_RESIZE_UNDEPLOYED
+        "drsz",     // DISK_RESIZE_UNDEPLOYED
+        "snap",     // HOTPLUG_SNAPSHOT_POWEROFF
+        "snap",     // HOTPLUG_SNAPSHOT_SUSPENDED
+        "snap"      // HOTPLUG_SNAPSHOT_UNDEPLOYED
     };
 
     /**

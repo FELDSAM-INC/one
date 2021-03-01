@@ -78,7 +78,9 @@ define(function(require) {
 
     if (Config.isTabActionEnabled("vms-tab", "VM.snapshot_create")) {
       // If VM is not RUNNING, then we forget about the attach disk form.
-      if (that.element.STATE == OpenNebulaVM.STATES.ACTIVE && that.element.LCM_STATE == OpenNebulaVM.LCM_STATES.RUNNING) {
+      if (that.element.STATE == OpenNebulaVM.STATES.ACTIVE && that.element.LCM_STATE == OpenNebulaVM.LCM_STATES.RUNNING
+          || that.element.STATE == OpenNebulaVM.STATES.POWEROFF || that.element.STATE == OpenNebulaVM.STATES.UNDEPLOYED
+      ) {
         html += '\
            <button id="take_snapshot" class="button small success right radius" >' + Locale.tr("Take snapshot") + '</button>'
       } else {
@@ -112,25 +114,22 @@ define(function(require) {
            (
             that.element.STATE == OpenNebulaVM.STATES.ACTIVE) &&
            (
-            that.element.LCM_STATE == OpenNebulaVM.LCM_STATES.HOTPLUG_SNAPSHOT)) {
+            that.element.LCM_STATE == OpenNebulaVM.LCM_STATES.HOTPLUG_SNAPSHOT ||
+            that.element.LCM_STATE == OpenNebulaVM.LCM_STATES.HOTPLUG_SNAPSHOT_POWEROFF ||
+            that.element.LCM_STATE == OpenNebulaVM.LCM_STATES.HOTPLUG_SNAPSHOT_SUSPENDED ||
+            that.element.LCM_STATE == OpenNebulaVM.LCM_STATES.HOTPLUG_SNAPSHOT_UNDEPLOYED)) {
           actions = Locale.tr("snapshot in progress");
         } else {
           actions = '';
 
-          if ((that.element.STATE == OpenNebulaVM.STATES.ACTIVE &&
-               that.element.LCM_STATE == OpenNebulaVM.LCM_STATES.RUNNING)) {
-
+          if (that.element.STATE == OpenNebulaVM.STATES.POWEROFF || that.element.STATE == OpenNebulaVM.STATES.UNDEPLOYED) {
             if (Config.isTabActionEnabled("vms-tab", "VM.snapshot_revert")) {
               actions += '<a href="VM.snapshot_revert" class="snapshot_revert" ><i class="fas fa-reply"/>' + Locale.tr("Revert") + '</a> &emsp;'
             }
+          }
 
-            if (Config.isTabActionEnabled("vms-tab", "VM.snapshot_delete")) {
-              actions += '<a href="VM.snapshot_delete" class="snapshot_delete" ><i class="fas fa-times"/>' + Locale.tr("Delete") + '</a>'
-            }
-          } else if (that.element.STATE == OpenNebulaVM.STATES.POWEROFF &&  that.element.HISTORY_RECORDS.HISTORY.VM_MAD == "vcenter"){
-            if (Config.isTabActionEnabled("vms-tab", "VM.snapshot_delete")) {
-              actions += '<a href="VM.snapshot_delete" class="snapshot_delete" ><i class="fas fa-times"/>' + Locale.tr("Delete") + '</a>'
-            }
+          if (Config.isTabActionEnabled("vms-tab", "VM.snapshot_delete")) {
+            actions += '<a href="VM.snapshot_delete" class="snapshot_delete" ><i class="fas fa-times"/>' + Locale.tr("Delete") + '</a>'
           }
         }
 
