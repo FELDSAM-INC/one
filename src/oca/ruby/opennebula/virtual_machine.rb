@@ -130,6 +130,8 @@ module OpenNebula
             HOTPLUG_RESIZE
             HOTPLUG_SAVEAS_UNDEPLOYED
             HOTPLUG_SAVEAS_STOPPED
+            HOTPLUG_SNAPSHOT_POWEROFF
+            HOTPLUG_SNAPSHOT_UNDEPLOYED
         }
 
         SHORT_VM_STATES={
@@ -214,7 +216,9 @@ module OpenNebula
             "HOTPLUG_NIC_POWEROFF"   => "hotp",
             "HOTPLUG_RESIZE"         => "hotp",
             "HOTPLUG_SAVEAS_UNDEPLOYED"  => "hotp",
-            "HOTPLUG_SAVEAS_STOPPED"     => "hotp"
+            "HOTPLUG_SAVEAS_STOPPED"     => "hotp",
+            "HOTPLUG_SNAPSHOT_POWEROFF"   => "snap",
+            "HOTPLUG_SNAPSHOT_UNDEPLOYED" => "snap"
         }
 
         HISTORY_ACTION=%w{none migrate live-migrate shutdown shutdown-hard
