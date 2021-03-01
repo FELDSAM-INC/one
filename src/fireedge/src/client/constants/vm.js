@@ -725,6 +725,16 @@ export const VM_LCM_STATES = [
     meaning: '',
   },
 ]
+VM_LCM_STATES["100"] = {
+  name: STATES.HOTPLUG_SNAPSHOT_POWEROFF,
+  color: COLOR.info.main,
+  meaning: ''
+}
+VM_LCM_STATES["101"] = {
+  name: STATES.HOTPLUG_SNAPSHOT_UNDEPLOYED,
+  color: COLOR.info.main,
+  meaning: ''
+}
 
 /** @enum {string} Virtual machine actions */
 export const VM_ACTIONS = {

@@ -168,7 +168,9 @@ public class VirtualMachine extends PoolElement{
         "HOTPLUG_SAVEAS_UNDEPLOYED",
         "HOTPLUG_SAVEAS_STOPPED",
         "BACKUP",
-        "BACKUP_POWEROFF"
+        "BACKUP_POWEROFF",
+        "HOTPLUG_SNAPSHOT_POWEROFF",
+        "HOTPLUG_SNAPSHOT_UNDEPLOYED"
     };
 
     private static final String[] SHORT_LCM_STATES =
@@ -243,7 +245,9 @@ public class VirtualMachine extends PoolElement{
         "hotp",     // HOTPLUG_SAVEAS_UNDEPLOYED
         "hotp",     // HOTPLUG_SAVEAS_STOPPED
         "back",     // BACKUP
-        "back"      // BACKUP_POWEROFF
+        "back",     // BACKUP_POWEROFF
+        "snap",     // HOTPLUG_SNAPSHOT_POWEROFF
+        "snap"      // HOTPLUG_SNAPSHOT_UNDEPLOYED
     };
 
     /**

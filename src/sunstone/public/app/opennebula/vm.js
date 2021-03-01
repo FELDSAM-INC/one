@@ -145,7 +145,9 @@ define(function(require) {
     "HOTPLUG_SAVEAS_UNDEPLOYED",
     "HOTPLUG_SAVEAS_STOPPED",
     "BACKUP",
-    "BACKUP_POWEROFF"
+    "BACKUP_POWEROFF",
+    "HOTPLUG_SNAPSHOT_POWEROFF",
+    "HOTPLUG_SNAPSHOT_UNDEPLOYED"
   ];
 
   var LCM_STATES_CLASSES = [
@@ -294,6 +296,8 @@ define(function(require) {
     HOTPLUG_SAVEAS_STOPPED          : 68,
     BACKUP                          : 69,
     BACKUP_POWEROFF                 : 70,
+    HOTPLUG_SNAPSHOT_POWEROFF       : 100,
+    HOTPLUG_SNAPSHOT_UNDEPLOYED     : 101,
   };
 
   var SHORT_LCM_STATES_STR = [
@@ -368,6 +372,8 @@ define(function(require) {
     Locale.tr("HOTPLUG"),         // HOTPLUG_SAVEAS_STOPPED
     Locale.tr("BACKUP"),          // BACKUP
     Locale.tr("BACKUP"),          // BACKUP_POWEROFF
+    Locale.tr("SNAPSHOT"),  // HOTPLUG_SNAPSHOT_POWEROFF
+    Locale.tr("SNAPSHOT"),  // HOTPLUG_SNAPSHOT_UNDEPLOYED
   ];
 
   var VNC_STATES = [
