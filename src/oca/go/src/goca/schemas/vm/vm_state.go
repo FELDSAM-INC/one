@@ -305,6 +305,12 @@ const (
 
 	// HotplugSaveasStopped lcm state
 	HotplugSaveasStopped = 68
+
+	// HotplugSnapshotUndeployed lcm state
+	HotplugSnapshotUndeployed LCMState = 101
+
+	// HotplugSnapshotPoweroff lcm state
+	HotplugSnapshotPoweroff LCMState = 100
 )
 
 func (s LCMState) isValid() bool {
@@ -450,6 +456,10 @@ func (s LCMState) String() string {
 		return "HOTPLUG_SAVEAS_UNDEPLOYED"
 	case HotplugSaveasStopped:
 		return "HOTPLUG_SAVEAS_STOPPED"
+	case HotplugSnapshotPoweroff:
+	    return "HOTPLUG_SNAPSHOT_POWEROFF"
+	case HotplugSnapshotUndeployed:
+	    return "HOTPLUG_SNAPSHOT_UNDEPLOYED"
 	default:
 		return ""
 	}
