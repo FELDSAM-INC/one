@@ -80,7 +80,6 @@ define(function(require) {
       // If VM is not RUNNING, then we forget about the attach disk form.
       if (that.element.STATE == OpenNebulaVM.STATES.ACTIVE && that.element.LCM_STATE == OpenNebulaVM.LCM_STATES.RUNNING ||
           that.element.STATE == OpenNebulaVM.STATES.POWEROFF ||
-          that.element.STATE == OpenNebulaVM.STATES.SUSPENDED ||
           that.element.STATE == OpenNebulaVM.STATES.UNDEPLOYED
       ) {
         html += '\
@@ -118,14 +117,12 @@ define(function(require) {
            (
             that.element.LCM_STATE == OpenNebulaVM.LCM_STATES.HOTPLUG_SNAPSHOT ||
             that.element.LCM_STATE == OpenNebulaVM.LCM_STATES.HOTPLUG_SNAPSHOT_POWEROFF ||
-            that.element.LCM_STATE == OpenNebulaVM.LCM_STATES.HOTPLUG_SNAPSHOT_SUSPENDED ||
             that.element.LCM_STATE == OpenNebulaVM.LCM_STATES.HOTPLUG_SNAPSHOT_UNDEPLOYED)) {
           actions = Locale.tr("snapshot in progress");
         } else {
           actions = '';
 
           if (that.element.STATE == OpenNebulaVM.STATES.POWEROFF ||
-              that.element.STATE == OpenNebulaVM.STATES.SUSPENDED ||
               that.element.STATE == OpenNebulaVM.STATES.UNDEPLOYED) {
             if (Config.isTabActionEnabled("vms-tab", "VM.snapshot_revert")) {
               actions += '<a href="VM.snapshot_revert" class="snapshot_revert" ><i class="fas fa-reply"/>' + Locale.tr("Revert") + '</a> &emsp;'

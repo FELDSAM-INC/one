@@ -1497,7 +1497,6 @@ void LifeCycleManager::snapshot_create_success(int vid)
         vmpool->update(vm);
     }
     else if ( state == VirtualMachine::HOTPLUG_SNAPSHOT_POWEROFF ||
-              state == VirtualMachine::HOTPLUG_SNAPSHOT_SUSPENDED ||
               state == VirtualMachine::HOTPLUG_SNAPSHOT_UNDEPLOYED )
     {
         vm->clear_active_snapshot();
@@ -1508,10 +1507,6 @@ void LifeCycleManager::snapshot_create_success(int vid)
         {
             case VirtualMachine::HOTPLUG_SNAPSHOT_POWEROFF:
                 dm->trigger(DMAction::POWEROFF_SUCCESS, vid);
-                break;
-
-            case VirtualMachine::HOTPLUG_SNAPSHOT_SUSPENDED:
-                dm->trigger(DMAction::SUSPEND_SUCCESS, vid);
                 break;
 
             case VirtualMachine::HOTPLUG_SNAPSHOT_UNDEPLOYED:
@@ -1555,7 +1550,6 @@ void LifeCycleManager::snapshot_create_failure(int vid)
         vmpool->update(vm);
     }
     else if ( state == VirtualMachine::HOTPLUG_SNAPSHOT_POWEROFF ||
-              state == VirtualMachine::HOTPLUG_SNAPSHOT_SUSPENDED ||
               state == VirtualMachine::HOTPLUG_SNAPSHOT_UNDEPLOYED )
     {
         vm->delete_active_snapshot();
@@ -1566,10 +1560,6 @@ void LifeCycleManager::snapshot_create_failure(int vid)
         {
             case VirtualMachine::HOTPLUG_SNAPSHOT_POWEROFF:
                 dm->trigger(DMAction::POWEROFF_SUCCESS, vid);
-                break;
-
-            case VirtualMachine::HOTPLUG_SNAPSHOT_SUSPENDED:
-                dm->trigger(DMAction::SUSPEND_SUCCESS, vid);
                 break;
 
             case VirtualMachine::HOTPLUG_SNAPSHOT_UNDEPLOYED:
@@ -1616,7 +1606,6 @@ void LifeCycleManager::snapshot_revert_success(int vid)
         vmpool->update(vm);
     }
     else if ( state == VirtualMachine::HOTPLUG_SNAPSHOT_POWEROFF ||
-              state == VirtualMachine::HOTPLUG_SNAPSHOT_SUSPENDED ||
               state == VirtualMachine::HOTPLUG_SNAPSHOT_UNDEPLOYED )
     {
         vm->clear_active_snapshot();
@@ -1627,10 +1616,6 @@ void LifeCycleManager::snapshot_revert_success(int vid)
         {
             case VirtualMachine::HOTPLUG_SNAPSHOT_POWEROFF:
                 dm->trigger(DMAction::POWEROFF_SUCCESS, vid);
-                break;
-
-            case VirtualMachine::HOTPLUG_SNAPSHOT_SUSPENDED:
-                dm->trigger(DMAction::SUSPEND_SUCCESS, vid);
                 break;
 
             case VirtualMachine::HOTPLUG_SNAPSHOT_UNDEPLOYED:
@@ -1682,7 +1667,6 @@ void LifeCycleManager::snapshot_delete_success(int vid)
         vmpool->update(vm);
     }
     else if ( state == VirtualMachine::HOTPLUG_SNAPSHOT_POWEROFF ||
-              state == VirtualMachine::HOTPLUG_SNAPSHOT_SUSPENDED ||
               state == VirtualMachine::HOTPLUG_SNAPSHOT_UNDEPLOYED )
     {
         vm->delete_active_snapshot();
@@ -1693,10 +1677,6 @@ void LifeCycleManager::snapshot_delete_success(int vid)
         {
             case VirtualMachine::HOTPLUG_SNAPSHOT_POWEROFF:
                 dm->trigger(DMAction::POWEROFF_SUCCESS, vid);
-                break;
-
-            case VirtualMachine::HOTPLUG_SNAPSHOT_SUSPENDED:
-                dm->trigger(DMAction::SUSPEND_SUCCESS, vid);
                 break;
 
             case VirtualMachine::HOTPLUG_SNAPSHOT_UNDEPLOYED:
@@ -1740,7 +1720,6 @@ void LifeCycleManager::snapshot_delete_failure(int vid)
         vmpool->update(vm);
     }
     else if ( state == VirtualMachine::HOTPLUG_SNAPSHOT_POWEROFF ||
-              state == VirtualMachine::HOTPLUG_SNAPSHOT_SUSPENDED ||
               state == VirtualMachine::HOTPLUG_SNAPSHOT_UNDEPLOYED )
     {
         vm->clear_active_snapshot();
@@ -1751,10 +1730,6 @@ void LifeCycleManager::snapshot_delete_failure(int vid)
         {
             case VirtualMachine::HOTPLUG_SNAPSHOT_POWEROFF:
                 dm->trigger(DMAction::POWEROFF_SUCCESS, vid);
-                break;
-
-            case VirtualMachine::HOTPLUG_SNAPSHOT_SUSPENDED:
-                dm->trigger(DMAction::SUSPEND_SUCCESS, vid);
                 break;
 
             case VirtualMachine::HOTPLUG_SNAPSHOT_UNDEPLOYED:

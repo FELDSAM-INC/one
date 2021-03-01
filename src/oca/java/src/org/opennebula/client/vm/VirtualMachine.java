@@ -155,7 +155,6 @@ public class VirtualMachine extends PoolElement{
         "DISK_RESIZE_POWEROFF",
         "DISK_RESIZE_UNDEPLOYED",
         "HOTPLUG_SNAPSHOT_POWEROFF",
-        "HOTPLUG_SNAPSHOT_SUSPENDED",
         "HOTPLUG_SNAPSHOT_UNDEPLOYED"
     };
 
@@ -227,7 +226,6 @@ public class VirtualMachine extends PoolElement{
         "drsz",     // DISK_RESIZE_POWEROFF
         "drsz",     // DISK_RESIZE_UNDEPLOYED
         "snap",     // HOTPLUG_SNAPSHOT_POWEROFF
-        "snap",     // HOTPLUG_SNAPSHOT_SUSPENDED
         "snap"      // HOTPLUG_SNAPSHOT_UNDEPLOYED
     };
 

@@ -38,7 +38,6 @@ void  DispatchManager::suspend_success_action(int vid)
         (vm->get_lcm_state() == VirtualMachine::SAVE_SUSPEND ||
          vm->get_lcm_state() == VirtualMachine::PROLOG_MIGRATE_SUSPEND ||
          vm->get_lcm_state() == VirtualMachine::PROLOG_MIGRATE_SUSPEND_FAILURE||
-         vm->get_lcm_state() == VirtualMachine::HOTPLUG_SNAPSHOT_SUSPENDED ||
          vm->get_lcm_state() == VirtualMachine::DISK_SNAPSHOT_SUSPENDED ||
          vm->get_lcm_state() == VirtualMachine::DISK_SNAPSHOT_REVERT_SUSPENDED||
          vm->get_lcm_state() == VirtualMachine::DISK_SNAPSHOT_DELETE_SUSPENDED))

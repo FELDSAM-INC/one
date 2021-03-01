@@ -441,8 +441,6 @@ func (s LCMState) String() string {
 		return "DISK_RESIZE_UNDEPLOYED"
 	case HotplugSnapshotPoweroff:
 	    return "HOTPLUG_SNAPSHOT_POWEROFF"
-	case HotplugSnapshotSuspended:
-	    return "HOTPLUG_SNAPSHOT_SUSPENDED"
 	case HotplugSnapshotUndeployed:
 	    return "HOTPLUG_SNAPSHOT_UNDEPLOYED"
 	default:

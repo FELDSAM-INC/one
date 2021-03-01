@@ -1041,7 +1041,6 @@ void LifeCycleManager::clean_up_vm(VirtualMachine * vm, bool dispose,
         case VirtualMachine::SHUTDOWN_UNDEPLOY:
         case VirtualMachine::HOTPLUG_SNAPSHOT:
         case VirtualMachine::HOTPLUG_SNAPSHOT_POWEROFF:
-        case VirtualMachine::HOTPLUG_SNAPSHOT_SUSPENDED:
         case VirtualMachine::HOTPLUG_SNAPSHOT_UNDEPLOYED:
             vm->set_running_etime(the_time);
 
@@ -1400,7 +1399,6 @@ void LifeCycleManager::recover(VirtualMachine * vm, bool success,
         //This is for all snapshot actions (create, delete & revert)
         case VirtualMachine::HOTPLUG_SNAPSHOT:
         case VirtualMachine::HOTPLUG_SNAPSHOT_POWEROFF:
-        case VirtualMachine::HOTPLUG_SNAPSHOT_SUSPENDED:
         case VirtualMachine::HOTPLUG_SNAPSHOT_UNDEPLOYED:
             action = vm->get_snapshot_action();
 
@@ -1675,7 +1673,6 @@ void LifeCycleManager::retry(VirtualMachine * vm)
         case VirtualMachine::HOTPLUG_NIC:
         case VirtualMachine::HOTPLUG_SNAPSHOT:
         case VirtualMachine::HOTPLUG_SNAPSHOT_POWEROFF:
-        case VirtualMachine::HOTPLUG_SNAPSHOT_SUSPENDED:
         case VirtualMachine::HOTPLUG_SNAPSHOT_UNDEPLOYED:
         case VirtualMachine::HOTPLUG_SAVEAS:
         case VirtualMachine::HOTPLUG_SAVEAS_POWEROFF:
@@ -1823,7 +1820,6 @@ void  LifeCycleManager::updatesg_action(const LCMAction& la)
                 case VirtualMachine::HOTPLUG:
                 case VirtualMachine::HOTPLUG_SNAPSHOT:
                 case VirtualMachine::HOTPLUG_SNAPSHOT_POWEROFF:
-                case VirtualMachine::HOTPLUG_SNAPSHOT_SUSPENDED:
                 case VirtualMachine::HOTPLUG_SNAPSHOT_UNDEPLOYED:
                 case VirtualMachine::HOTPLUG_SAVEAS:
                 case VirtualMachine::DISK_SNAPSHOT:

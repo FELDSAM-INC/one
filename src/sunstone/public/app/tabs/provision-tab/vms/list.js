@@ -856,7 +856,6 @@ define(function(require) {
           case OpenNebulaVM.LCM_STATES.RUNNING:
           case OpenNebulaVM.LCM_STATES.HOTPLUG_SNAPSHOT:
           case OpenNebulaVM.LCM_STATES.HOTPLUG_SNAPSHOT_POWEROFF:
-          case OpenNebulaVM.LCM_STATES.HOTPLUG_SNAPSHOT_SUSPENDED:
           case OpenNebulaVM.LCM_STATES.HOTPLUG_SNAPSHOT_UNDEPLOYED:
           case OpenNebulaVM.LCM_STATES.DISK_SNAPSHOT_POWEROFF:
           case OpenNebulaVM.LCM_STATES.DISK_SNAPSHOT_REVERT_POWEROFF:

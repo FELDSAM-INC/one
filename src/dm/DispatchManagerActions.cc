@@ -1537,7 +1537,6 @@ int DispatchManager::snapshot_create(int vid, string& name, int& snap_id,
     if ( (state != VirtualMachine::ACTIVE ||
                 lstate != VirtualMachine::RUNNING) &&
          state != VirtualMachine::POWEROFF &&
-         state != VirtualMachine::SUSPENDED &&
          state != VirtualMachine::UNDEPLOYED )
     {
         oss << "Could not create a new snapshot for VM " << vid
@@ -1556,10 +1555,6 @@ int DispatchManager::snapshot_create(int vid, string& name, int& snap_id,
             vm->set_state(VirtualMachine::ACTIVE);
             vm->set_state(VirtualMachine::HOTPLUG_SNAPSHOT_POWEROFF);
             break;
-
-        case VirtualMachine::SUSPENDED:
-            vm->set_state(VirtualMachine::ACTIVE);
-            vm->set_state(VirtualMachine::HOTPLUG_SNAPSHOT_SUSPENDED);
 
         case VirtualMachine::UNDEPLOYED:
             vm->set_state(VirtualMachine::ACTIVE);
@@ -1613,7 +1608,6 @@ int DispatchManager::snapshot_revert(int vid, int snap_id,
     VirtualMachine::VmState  state  = vm->get_state();
 
     if ( state != VirtualMachine::POWEROFF &&
-         state != VirtualMachine::SUSPENDED &&
          state != VirtualMachine::UNDEPLOYED )
     {
         oss << "Could not revert VM " << vid << " to snapshot " << snap_id
@@ -1646,10 +1640,6 @@ int DispatchManager::snapshot_revert(int vid, int snap_id,
             vm->set_state(VirtualMachine::ACTIVE);
             vm->set_state(VirtualMachine::HOTPLUG_SNAPSHOT_POWEROFF);
             break;
-
-        case VirtualMachine::SUSPENDED:
-            vm->set_state(VirtualMachine::ACTIVE);
-            vm->set_state(VirtualMachine::HOTPLUG_SNAPSHOT_SUSPENDED);
 
         case VirtualMachine::UNDEPLOYED:
             vm->set_state(VirtualMachine::ACTIVE);
@@ -1699,7 +1689,6 @@ int DispatchManager::snapshot_delete(int vid, int snap_id,
     if ( (state != VirtualMachine::ACTIVE ||
                 lstate != VirtualMachine::RUNNING) &&
          state != VirtualMachine::POWEROFF &&
-         state != VirtualMachine::SUSPENDED &&
          state != VirtualMachine::UNDEPLOYED )
     {
         oss << "Could not delete snapshot " << snap_id << " for VM " << vid
@@ -1732,10 +1721,6 @@ int DispatchManager::snapshot_delete(int vid, int snap_id,
             vm->set_state(VirtualMachine::ACTIVE);
             vm->set_state(VirtualMachine::HOTPLUG_SNAPSHOT_POWEROFF);
             break;
-
-        case VirtualMachine::SUSPENDED:
-            vm->set_state(VirtualMachine::ACTIVE);
-            vm->set_state(VirtualMachine::HOTPLUG_SNAPSHOT_SUSPENDED);
 
         case VirtualMachine::UNDEPLOYED:
             vm->set_state(VirtualMachine::ACTIVE);
