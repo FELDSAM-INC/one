@@ -1499,8 +1499,13 @@ int DispatchManager::snapshot_create(int vid, string& name, int& snap_id,
         return -1;
     }
 
-    if ( vm->get_state()     != VirtualMachine::ACTIVE ||
-         vm->get_lcm_state() != VirtualMachine::RUNNING )
+    VirtualMachine::VmState  state  = vm->get_state();
+    VirtualMachine::LcmState lstate = vm->get_lcm_state();
+
+    if ( (state != VirtualMachine::ACTIVE ||
+                lstate != VirtualMachine::RUNNING) &&
+         state != VirtualMachine::POWEROFF &&
+         state != VirtualMachine::UNDEPLOYED )
     {
         oss << "Could not create a new snapshot for VM " << vid
             << ", wrong state " << vm->state_str() << ".";
@@ -1511,7 +1516,25 @@ int DispatchManager::snapshot_create(int vid, string& name, int& snap_id,
         return -1;
     }
 
-    vm->set_state(VirtualMachine::HOTPLUG_SNAPSHOT);
+    switch (state)
+    {
+        case VirtualMachine::POWEROFF:
+            vm->set_state(VirtualMachine::ACTIVE);
+            vm->set_state(VirtualMachine::HOTPLUG_SNAPSHOT_POWEROFF);
+            break;
+
+        case VirtualMachine::UNDEPLOYED:
+            vm->set_state(VirtualMachine::ACTIVE);
+            vm->set_state(VirtualMachine::HOTPLUG_SNAPSHOT_UNDEPLOYED);
+            break;
+
+        case VirtualMachine::ACTIVE:
+            vm->set_state(VirtualMachine::ACTIVE);
+            vm->set_state(VirtualMachine::HOTPLUG_SNAPSHOT);
+            break;
+
+        default: break;
+    }
 
     vm->set_resched(false);
 
@@ -1547,8 +1570,10 @@ int DispatchManager::snapshot_revert(int vid, int snap_id,
         return -1;
     }
 
-    if ( vm->get_state()     != VirtualMachine::ACTIVE ||
-         vm->get_lcm_state() != VirtualMachine::RUNNING )
+    VirtualMachine::VmState  state  = vm->get_state();
+
+    if ( state != VirtualMachine::POWEROFF &&
+         state != VirtualMachine::UNDEPLOYED )
     {
         oss << "Could not revert VM " << vid << " to snapshot " << snap_id
             << ", wrong state " << vm->state_str() << ".";
@@ -1572,7 +1597,20 @@ int DispatchManager::snapshot_revert(int vid, int snap_id,
         return -1;
     }
 
-    vm->set_state(VirtualMachine::HOTPLUG_SNAPSHOT);
+    switch (state)
+    {
+        case VirtualMachine::POWEROFF:
+            vm->set_state(VirtualMachine::ACTIVE);
+            vm->set_state(VirtualMachine::HOTPLUG_SNAPSHOT_POWEROFF);
+            break;
+
+        case VirtualMachine::UNDEPLOYED:
+            vm->set_state(VirtualMachine::ACTIVE);
+            vm->set_state(VirtualMachine::HOTPLUG_SNAPSHOT_UNDEPLOYED);
+            break;
+
+        default: break;
+    }
 
     vm->set_resched(false);
 
@@ -1606,17 +1644,13 @@ int DispatchManager::snapshot_delete(int vid, int snap_id,
         return -1;
     }
 
-    bool is_keep_snapshots = false;
+    VirtualMachine::VmState  state  = vm->get_state();
+    VirtualMachine::LcmState lstate = vm->get_lcm_state();
 
-    if ( vm->hasHistory() )
-    {
-        is_keep_snapshots = vmm->is_keep_snapshots(vm->get_vmm_mad());
-    }
-
-    if ( (vm->get_state() != VirtualMachine::ACTIVE ||
-                vm->get_lcm_state() != VirtualMachine::RUNNING) &&
-         (!is_keep_snapshots ||
-                vm->get_state() != VirtualMachine::POWEROFF) )
+    if ( (state != VirtualMachine::ACTIVE ||
+                lstate != VirtualMachine::RUNNING) &&
+         state != VirtualMachine::POWEROFF &&
+         state != VirtualMachine::UNDEPLOYED )
     {
         oss << "Could not delete snapshot " << snap_id << " for VM " << vid
             << ", wrong state " << vm->state_str() << ".";
@@ -1640,7 +1674,25 @@ int DispatchManager::snapshot_delete(int vid, int snap_id,
         return -1;
     }
 
-    vm->set_state(VirtualMachine::HOTPLUG_SNAPSHOT);
+    switch (state)
+    {
+        case VirtualMachine::POWEROFF:
+            vm->set_state(VirtualMachine::ACTIVE);
+            vm->set_state(VirtualMachine::HOTPLUG_SNAPSHOT_POWEROFF);
+            break;
+
+        case VirtualMachine::UNDEPLOYED:
+            vm->set_state(VirtualMachine::ACTIVE);
+            vm->set_state(VirtualMachine::HOTPLUG_SNAPSHOT_UNDEPLOYED);
+            break;
+
+        case VirtualMachine::ACTIVE:
+            vm->set_state(VirtualMachine::ACTIVE);
+            vm->set_state(VirtualMachine::HOTPLUG_SNAPSHOT);
+            break;
+
+        default: break;
+    }
 
     vm->set_resched(false);
 

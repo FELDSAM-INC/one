@@ -141,7 +141,9 @@ define(function(require) {
     "HOTPLUG_NIC_POWEROFF",
     "HOTPLUG_RESIZE",
     "HOTPLUG_SAVEAS_UNDEPLOYED",
-    "HOTPLUG_SAVEAS_STOPPED"
+    "HOTPLUG_SAVEAS_STOPPED",
+    "HOTPLUG_SNAPSHOT_POWEROFF",
+    "HOTPLUG_SNAPSHOT_UNDEPLOYED"
   ];
 
   var LCM_STATES_CLASSES = [
@@ -285,7 +287,9 @@ define(function(require) {
     HOTPLUG_NIC_POWEROFF            : 65,
     HOTPLUG_RESIZE                  : 66,
     HOTPLUG_SAVEAS_UNDEPLOYED       : 67,
-    HOTPLUG_SAVEAS_STOPPED          : 68
+    HOTPLUG_SAVEAS_STOPPED          : 68,
+    HOTPLUG_SNAPSHOT_POWEROFF       : 100,
+    HOTPLUG_SNAPSHOT_UNDEPLOYED     : 101
   };
 
   var SHORT_LCM_STATES_STR = [
@@ -357,7 +361,9 @@ define(function(require) {
     Locale.tr("HOTPLUG"),   // HOTPLUG_NIC_POWEROFF
     Locale.tr("HOTPLUG"),   // HOTPLUG_RESIZE
     Locale.tr("HOTPLUG"),   // HOTPLUG_SAVEAS_UNDEPLOYED
-    Locale.tr("HOTPLUG")    // HOTPLUG_SAVEAS_STOPPED
+    Locale.tr("HOTPLUG"),   // HOTPLUG_SAVEAS_STOPPED
+    Locale.tr("SNAPSHOT"),  // HOTPLUG_SNAPSHOT_POWEROFF
+    Locale.tr("SNAPSHOT")   // HOTPLUG_SNAPSHOT_UNDEPLOYED
   ];
 
   var VNC_STATES = [
