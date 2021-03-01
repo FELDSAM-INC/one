@@ -297,11 +297,11 @@ const (
     // HotplugSnapshotPoweroff lcm state
 	HotplugSnapshotPoweroff LCMState = 100
 
-    // HotplugSnapshotSuspended lcm state
-	HotplugSnapshotSuspended LCMState = 101
-
 	// HotplugSnapshotUndeployed lcm state
-	HotplugSnapshotUndeployed LCMState = 102
+	HotplugSnapshotUndeployed LCMState = 101
+
+    // HotplugSnapshotSuspended lcm state
+	HotplugSnapshotSuspended LCMState = 102
 )
 
 func (s LCMState) isValid() bool {
