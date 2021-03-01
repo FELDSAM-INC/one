@@ -35,6 +35,7 @@ define(function(require) {
     require("./vms-tab/dialogs/attach-nic"),
     require("./vms-tab/dialogs/snapshot"),
     require("./vms-tab/dialogs/revert"),
+    require("./vms-tab/dialogs/snapshot-delete"),
     require("./vms-tab/dialogs/vnc"),
     require("./vms-tab/dialogs/spice"),
     require("./vms-tab/dialogs/saveas-template")

@@ -35,6 +35,7 @@ define(function(require) {
   var PANEL_ID = require('./snapshots/panelId');
   var SNAPSHOT_DIALOG_ID = require('../dialogs/snapshot/dialogId');
   var REVERT_DIALOG_ID = require('../dialogs/revert/dialogId');
+  var DELETE_DIALOG_ID = require('../dialogs/snapshot-delete/dialogId');
   var RESOURCE = "VM"
   var XML_ROOT = "VM"
 
@@ -182,8 +183,10 @@ define(function(require) {
     if (Config.isTabActionEnabled("vms-tab", "VM.snapshot_delete")) {
       context.off('click', '.snapshot_delete');
       context.on('click', '.snapshot_delete', function() {
-        var snapshot_id = $(this).parents('tr').attr('snapshot_id');
-        Sunstone.runAction('VM.snapshot_delete', that.element.ID,  {"snapshot_id": snapshot_id});
+        var dialog = Sunstone.getDialog(DELETE_DIALOG_ID);
+        that.element.snapshot_id = $(this).parents('tr').attr('snapshot_id');
+        dialog.setElement(that.element);
+        dialog.show();
         return false;
       });
     }
