@@ -35,6 +35,7 @@ define(function(require) {
   var PANEL_ID = require('./snapshots/panelId');
   var SNAPSHOT_DIALOG_ID = require('../dialogs/snapshot/dialogId');
   var REVERT_DIALOG_ID = require('../dialogs/revert/dialogId');
+  var DELETE_DIALOG_ID = require('../dialogs/snapshot-delete/dialogId');
   var RESOURCE = "VM"
   var XML_ROOT = "VM"
 
@@ -79,7 +80,10 @@ define(function(require) {
 
     if (Config.isTabActionEnabled("vms-tab", "VM.snapshot_create")) {
       // If VM is not RUNNING, then we forget about the attach disk form.
-      if (that.element.STATE == OpenNebulaVM.STATES.ACTIVE && that.element.LCM_STATE == OpenNebulaVM.LCM_STATES.RUNNING) {
+      if (that.element.STATE == OpenNebulaVM.STATES.ACTIVE && that.element.LCM_STATE == OpenNebulaVM.LCM_STATES.RUNNING ||
+          that.element.STATE == OpenNebulaVM.STATES.POWEROFF ||
+          that.element.STATE == OpenNebulaVM.STATES.UNDEPLOYED
+      ) {
         html += '\
            <button id="take_snapshot" class="button small success right radius" >' + Locale.tr("Take snapshot") + '</button>'
       } else {
@@ -102,7 +106,7 @@ define(function(require) {
     if (!snapshots.length) {
       html += '\
           <tr id="no_snapshots_tr">\
-            <td colspan="6">'          + Locale.tr("No snapshots to show") + '</td>\
+            <td colspan="5">'          + Locale.tr("No snapshots to show") + '</td>\
           </tr>'        ;
     } else {
 
@@ -113,25 +117,22 @@ define(function(require) {
            (
             that.element.STATE == OpenNebulaVM.STATES.ACTIVE) &&
            (
-            that.element.LCM_STATE == OpenNebulaVM.LCM_STATES.HOTPLUG_SNAPSHOT)) {
+            that.element.LCM_STATE == OpenNebulaVM.LCM_STATES.HOTPLUG_SNAPSHOT ||
+            that.element.LCM_STATE == OpenNebulaVM.LCM_STATES.HOTPLUG_SNAPSHOT_POWEROFF ||
+            that.element.LCM_STATE == OpenNebulaVM.LCM_STATES.HOTPLUG_SNAPSHOT_UNDEPLOYED)) {
           actions = Locale.tr("snapshot in progress");
         } else {
           actions = '';
 
-          if ((that.element.STATE == OpenNebulaVM.STATES.ACTIVE &&
-               that.element.LCM_STATE == OpenNebulaVM.LCM_STATES.RUNNING)) {
-
+          if (that.element.STATE == OpenNebulaVM.STATES.POWEROFF ||
+              that.element.STATE == OpenNebulaVM.STATES.UNDEPLOYED) {
             if (Config.isTabActionEnabled("vms-tab", "VM.snapshot_revert")) {
               actions += '<a href="VM.snapshot_revert" class="snapshot_revert" ><i class="fas fa-reply"/>' + Locale.tr("Revert") + '</a> &emsp;'
             }
+          }
 
-            if (Config.isTabActionEnabled("vms-tab", "VM.snapshot_delete")) {
-              actions += '<a href="VM.snapshot_delete" class="snapshot_delete" ><i class="fas fa-times"/>' + Locale.tr("Delete") + '</a>'
-            }
-          } else if (that.element.STATE == OpenNebulaVM.STATES.POWEROFF &&  that.element.HISTORY_RECORDS.HISTORY.VM_MAD == "vcenter"){
-            if (Config.isTabActionEnabled("vms-tab", "VM.snapshot_delete")) {
-              actions += '<a href="VM.snapshot_delete" class="snapshot_delete" ><i class="fas fa-times"/>' + Locale.tr("Delete") + '</a>'
-            }
+          if (Config.isTabActionEnabled("vms-tab", "VM.snapshot_delete")) {
+            actions += '<a href="VM.snapshot_delete" class="snapshot_delete" ><i class="fas fa-times"/>' + Locale.tr("Delete") + '</a>'
           }
         }
 
@@ -141,6 +142,7 @@ define(function(require) {
                 <td>'            + TemplateUtils.htmlEncode(snapshot.NAME) + '</td>\
                 <td>'            + Humanize.prettyTime(snapshot.TIME) + '</td>\
                 <td>'            + actions + '</td>\
+                <td></td>\
             </tr>'        ;
       }
     }
@@ -184,8 +186,10 @@ define(function(require) {
     if (Config.isTabActionEnabled("vms-tab", "VM.snapshot_delete")) {
       context.off('click', '.snapshot_delete');
       context.on('click', '.snapshot_delete', function() {
-        var snapshot_id = $(this).parents('tr').attr('snapshot_id');
-        Sunstone.runAction('VM.snapshot_delete', that.element.ID,  {"snapshot_id": snapshot_id});
+        var dialog = Sunstone.getDialog(DELETE_DIALOG_ID);
+        that.element.snapshot_id = $(this).parents('tr').attr('snapshot_id');
+        dialog.setElement(that.element);
+        dialog.show();
         return false;
       });
     }

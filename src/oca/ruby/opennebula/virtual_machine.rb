@@ -142,7 +142,9 @@ module OpenNebula
             'HOTPLUG_SAVEAS_STOPPED',
             'BACKUP',
             'BACKUP_POWEROFF',
-            'RESTORE'
+            'RESTORE',
+            'HOTPLUG_SNAPSHOT_POWEROFF',
+            'HOTPLUG_SNAPSHOT_UNDEPLOYED'
         ]
 
         SHORT_VM_STATES={
@@ -230,7 +232,9 @@ module OpenNebula
             'HOTPLUG_SAVEAS_STOPPED'     => 'hotp',
             'BACKUP'            => 'back',
             'BACKUP_POWEROFF'   => 'back',
-            'RESTORE'           => 'rest'
+            'RESTORE'           => 'rest',
+            "HOTPLUG_SNAPSHOT_POWEROFF"   => "snap",
+            "HOTPLUG_SNAPSHOT_UNDEPLOYED" => "snap"
         }
 
         HISTORY_ACTION=[

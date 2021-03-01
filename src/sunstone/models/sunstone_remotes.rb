@@ -90,6 +90,8 @@ ALLOWED_CONSOLE_STATES = [
     # '66', # HOTPLUG_RESIZE
     # '67', # HOTPLUG_SAVEAS_UNDEPLOYED
     # '68', # HOTPLUG_SAVEAS_STOPPED
+    # '100', # HOTPLUG_SNAPSHOT_POWEROFF
+    # '101', # HOTPLUG_SNAPSHOT_UNDEPLOYED
 ]
 
 # This class provides an abstracion with the common code

@@ -314,6 +314,12 @@ const (
 
 	// PrologRestore lcm state
 	Restore LCMState = 71
+
+	// HotplugSnapshotPoweroff lcm state
+	HotplugSnapshotPoweroff LCMState = 100
+
+	// HotplugSnapshotUndeployed lcm state
+	HotplugSnapshotUndeployed LCMState = 101
 )
 
 func (s LCMState) isValid() bool {
@@ -465,6 +471,10 @@ func (s LCMState) String() string {
 		return "BACKUP_POWEROFF"
 	case Restore:
 		return "RESTORE"
+	case HotplugSnapshotPoweroff:
+	    return "HOTPLUG_SNAPSHOT_POWEROFF"
+	case HotplugSnapshotUndeployed:
+	    return "HOTPLUG_SNAPSHOT_UNDEPLOYED"
 	default:
 		return ""
 	}

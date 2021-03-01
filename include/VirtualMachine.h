@@ -142,7 +142,9 @@ public:
         HOTPLUG_SAVEAS_STOPPED    = 68,
         BACKUP            = 69,
         BACKUP_POWEROFF   = 70,
-        RESTORE           = 71
+        RESTORE           = 71,
+        HOTPLUG_SNAPSHOT_POWEROFF = 100,
+        HOTPLUG_SNAPSHOT_UNDEPLOYED = 101
     };
 
     static const int MAX_VNC_PASSWD_LENGTH = 8;

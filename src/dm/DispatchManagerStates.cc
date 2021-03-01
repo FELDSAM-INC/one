@@ -149,6 +149,7 @@ void DispatchManager::trigger_undeploy_success(int vid)
         if ((vm->get_state() == VirtualMachine::ACTIVE) &&
             (vm->get_lcm_state() == VirtualMachine::EPILOG_UNDEPLOY ||
              vm->get_lcm_state() == VirtualMachine::DISK_RESIZE_UNDEPLOYED ||
+             vm->get_lcm_state() == VirtualMachine::HOTPLUG_SNAPSHOT_UNDEPLOYED ||
              vm->get_lcm_state() == VirtualMachine::PROLOG_UNDEPLOY))
         {
             VirtualMachineTemplate quota_tmpl;
@@ -213,6 +214,7 @@ void DispatchManager::trigger_poweroff_success(int vid)
              vm->get_lcm_state() == VirtualMachine::DISK_SNAPSHOT_POWEROFF ||
              vm->get_lcm_state() == VirtualMachine::DISK_SNAPSHOT_REVERT_POWEROFF ||
              vm->get_lcm_state() == VirtualMachine::DISK_SNAPSHOT_DELETE_POWEROFF ||
+             vm->get_lcm_state() == VirtualMachine::HOTPLUG_SNAPSHOT_POWEROFF ||
              vm->get_lcm_state() == VirtualMachine::DISK_RESIZE_POWEROFF ||
              vm->get_lcm_state() == VirtualMachine::HOTPLUG_NIC_POWEROFF ||
              vm->get_lcm_state() == VirtualMachine::PROLOG_MIGRATE_POWEROFF_FAILURE))
