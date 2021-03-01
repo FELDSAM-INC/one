@@ -78,8 +78,10 @@ define(function(require) {
 
     if (Config.isTabActionEnabled("vms-tab", "VM.snapshot_create")) {
       // If VM is not RUNNING, then we forget about the attach disk form.
-      if (that.element.STATE == OpenNebulaVM.STATES.ACTIVE && that.element.LCM_STATE == OpenNebulaVM.LCM_STATES.RUNNING
-          || that.element.STATE == OpenNebulaVM.STATES.POWEROFF || that.element.STATE == OpenNebulaVM.STATES.UNDEPLOYED
+      if (that.element.STATE == OpenNebulaVM.STATES.ACTIVE && that.element.LCM_STATE == OpenNebulaVM.LCM_STATES.RUNNING ||
+          that.element.STATE == OpenNebulaVM.STATES.POWEROFF ||
+          that.element.STATE == OpenNebulaVM.STATES.SUSPENDED ||
+          that.element.STATE == OpenNebulaVM.STATES.UNDEPLOYED
       ) {
         html += '\
            <button id="take_snapshot" class="button small success right radius" >' + Locale.tr("Take snapshot") + '</button>'
@@ -103,7 +105,7 @@ define(function(require) {
     if (!snapshots.length) {
       html += '\
           <tr id="no_snapshots_tr">\
-            <td colspan="6">'          + Locale.tr("No snapshots to show") + '</td>\
+            <td colspan="5">'          + Locale.tr("No snapshots to show") + '</td>\
           </tr>'        ;
     } else {
 
@@ -122,7 +124,9 @@ define(function(require) {
         } else {
           actions = '';
 
-          if (that.element.STATE == OpenNebulaVM.STATES.POWEROFF || that.element.STATE == OpenNebulaVM.STATES.UNDEPLOYED) {
+          if (that.element.STATE == OpenNebulaVM.STATES.POWEROFF ||
+              that.element.STATE == OpenNebulaVM.STATES.SUSPENDED ||
+              that.element.STATE == OpenNebulaVM.STATES.UNDEPLOYED) {
             if (Config.isTabActionEnabled("vms-tab", "VM.snapshot_revert")) {
               actions += '<a href="VM.snapshot_revert" class="snapshot_revert" ><i class="fas fa-reply"/>' + Locale.tr("Revert") + '</a> &emsp;'
             }
@@ -139,6 +143,7 @@ define(function(require) {
                 <td>'            + TemplateUtils.htmlEncode(snapshot.NAME) + '</td>\
                 <td>'            + Humanize.prettyTime(snapshot.TIME) + '</td>\
                 <td>'            + actions + '</td>\
+                <td></td>\
             </tr>'        ;
       }
     }
