@@ -54,7 +54,7 @@ define(function(require) {
       tip: Locale.tr("Select the new group")
     },
     "VM.deploy" : {
-      type: text,
+      type: "action",
       text: Locale.tr("Deploy"),
       layout: "vmsplanification_buttons",
       custom_classes : "state-dependent"
