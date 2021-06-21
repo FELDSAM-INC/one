@@ -207,8 +207,10 @@ class SunstoneGuac < SunstoneRemoteConnections
             end
 
             private_key = user['TEMPLATE/SSH_PRIVATE_KEY']
-            if !private_key.nil?
-                hash['private-key'] = private_key
+
+            if private_key.nil?
+                error_message = "SSH_PRIVATE_KEY not present in the USER:#{OpenNebula::User::SELF} TEMPLATE"
+                return { :error => error(400, error_message) }
             end
 
             passphrase = user['TEMPLATE/SSH_PASSPHRASE']
@@ -216,6 +218,7 @@ class SunstoneGuac < SunstoneRemoteConnections
                 hash['passphrase'] = passphrase
             end
 
+            hash['private-key'] = private_key
         end
 
         {
