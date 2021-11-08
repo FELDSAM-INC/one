@@ -27,7 +27,7 @@ import { useProvisionTemplate } from 'client/features/One'
 import { ListCards } from 'client/components/List'
 import { ProvisionTemplateCard } from 'client/components/Cards'
 import { sanitize, deepmerge } from 'client/utils'
-import { isValidProviderTemplate } from 'client/models/ProviderTemplate'
+import { isValidProviderTemplate, getProvisionTypeFromTemplate } from 'client/models/ProviderTemplate'
 import { T } from 'client/constants'
 
 import { STEP_FORM_SCHEMA } from 'client/components/Forms/Provider/CreateForm/Steps/Template/schema'
@@ -58,9 +58,12 @@ const Content = ({ data, setFormData }) => {
     )
   ], [])
 
+  const provisionTypeSelected = useMemo(() => (
+    getProvisionTypeFromTemplate(provisionTemplates, templateSelected)
+  ), [])
+
+  const [provisionSelected, setProvision] = useState(() => provisionTypeSelected ?? provisionTypes[0])
   const [providerSelected, setProvider] = useState(() => templateSelected?.provider)
-  const [provisionSelected, setProvision] =
-    useState(() => templateSelected?.plain?.provision_type ?? provisionTypes[0])
 
   const [templatesByProvisionSelected, providerTypes, description] = useMemo(() => {
     const templates = Object.values(provisionTemplates[provisionSelected]?.providers).flat()
@@ -104,6 +107,7 @@ const Content = ({ data, setFormData }) => {
 
   const handleClick = (template, isSelected) => {
     const { name, description } = template
+    const extraPlainInfo = { plain: { provision_type: provisionSelected } }
 
     // reset rest of form when change template
     setFormData({
@@ -113,7 +117,7 @@ const Content = ({ data, setFormData }) => {
 
     isSelected
       ? handleUnselect(name)
-      : handleSelect(template)
+      : handleSelect(deepmerge(template, extraPlainInfo))
   }
 
   const RenderDescription = ({ description = '' }) => {
