@@ -14,14 +14,44 @@
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
 
-const { setApiRoutes } = require('server/utils/server')
-const { routes: sunstoneRoutes } = require('./routes')
+const {
+  httpMethod,
+  from: fromData,
+} = require('server/utils/constants/defaults')
+const { auth } = require('server/routes/api/auth/functions')
+const { POST } = httpMethod
 
-const { SUNSTONE } = require('./string-routes')
-
-const functionRoutes = {
-  private: setApiRoutes(sunstoneRoutes, SUNSTONE),
-  public: [],
+const routes = {
+  [POST]: {
+    null: {
+      action: auth,
+      params: {
+        user: {
+          from: fromData.postBody,
+          name: 'user',
+        },
+        token: {
+          from: fromData.postBody,
+          name: 'token',
+        },
+        type: {
+          from: fromData.postBody,
+          name: 'type',
+        },
+        token2fa: {
+          from: fromData.postBody,
+          name: 'token2fa',
+        },
+        remember: {
+          from: fromData.postBody,
+          name: 'remember',
+        },
+      },
+    },
+  },
 }
 
-module.exports = functionRoutes
+const authApi = {
+  routes,
+}
+module.exports = authApi

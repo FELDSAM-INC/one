@@ -14,37 +14,36 @@
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
 
-const { httpMethod, from: fromData } = require('server/utils/constants/defaults')
-const { setup, qr, del } = require('./tfa-functions')
-const { POST, DELETE, GET } = httpMethod
+const {
+  httpMethod,
+  from: fromData,
+} = require('server/utils/constants/defaults')
+const { saveAsTemplate } = require('server/routes/api/vm/functions')
+const { POST } = httpMethod
 
 const routes = {
   [POST]: {
-    null: {
-      action: setup,
+    save: {
+      action: saveAsTemplate,
       params: {
-        token: {
+        id: {
+          from: fromData.resource,
+          name: 'id',
+        },
+        name: {
           from: fromData.postBody,
-          name: 'token'
-        }
-      }
-    }
+          name: 'name',
+        },
+        persistent: {
+          from: fromData.postBody,
+          name: 'persistent',
+        },
+      },
+    },
   },
-  [GET]: {
-    null: {
-      action: qr,
-      params: {}
-    }
-  },
-  [DELETE]: {
-    null: {
-      action: del,
-      params: {}
-    }
-  }
 }
 
 const authApi = {
-  routes
+  routes,
 }
 module.exports = authApi

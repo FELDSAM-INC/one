@@ -27,7 +27,7 @@ const {
   ok,
   notFound,
   accepted,
-  internalServerError
+  internalServerError,
 } = require('server/utils/constants/http-codes')
 const {
   httpResponse,
@@ -37,39 +37,39 @@ const {
   getDirectories,
   getFilesbyEXT,
   executeCommand,
-  executeCommandAsync
+  executeCommandAsync,
+  removeFile,
 } = require('server/utils/server')
 const { checkEmptyObject } = require('server/utils/general')
 const {
   defaultFolderTmpProvision,
   defaultCommandProvision,
   defaultEmptyFunction,
-  defaultErrorTemplate
+  defaultErrorTemplate,
 } = require('server/utils/constants/defaults')
 const {
   createTemporalFile,
   createFolderWithFiles,
   createYMLContent,
-  removeFile,
   renameFolder,
   moveToFolder,
   findRecursiveFolder,
   publish,
   getEndpoint,
   addOptionalCreateCommand,
-  getSpecificConfig
-} = require('./functions')
-const { provision } = require('./schemas')
+  getSpecificConfig,
+} = require('server/routes/api/oneprovision/utils')
+const { provision } = require('server/routes/api/oneprovision/schemas')
 
 const httpInternalError = httpResponse(internalServerError, '', '')
 
 const logFile = {
   name: 'stdouterr',
-  ext: 'log'
+  ext: 'log',
 }
 const provisionFile = {
   name: 'provision',
-  ext: 'yaml'
+  ext: 'yaml',
 }
 const regexp = /^ID: \d+/
 const regexpStartJSON = /^{/
@@ -84,11 +84,15 @@ const appendError = '.ERROR'
  *
  * @param {string} command - command to execute
  * @param {object} actions - external functions when command emit in stderr, stdout and finalize
- * @param {*} dataForLog - data
+ * @param {Function} actions.err - emit when have stderr
+ * @param {Function} actions.out - emit when have stdout
+ * @param {Function} actions.close - emit when finalize
+ * @param {object} dataForLog - data
+ * @param {number} dataForLog.id - data id
+ * @param {string} dataForLog.command - data command
  * @returns {boolean} check if emmit data
  */
 const executeWithEmit = (command = [], actions = {}, dataForLog = {}) => {
-  let rtn = false
   if (
     command &&
     Array.isArray(command) &&
@@ -96,9 +100,19 @@ const executeWithEmit = (command = [], actions = {}, dataForLog = {}) => {
     actions &&
     dataForLog
   ) {
-    const err = actions.err && typeof actions.err === 'function' ? actions.err : defaultEmptyFunction
-    const out = actions.out && typeof actions.out === 'function' ? actions.out : defaultEmptyFunction
-    const close = actions.close && typeof actions.close === 'function' ? actions.close : defaultEmptyFunction
+    const { err: externalErr, out: externalOut, close: externalClose } = actions
+    const err =
+      externalErr && typeof externalErr === 'function'
+        ? externalErr
+        : defaultEmptyFunction
+    const out =
+      externalOut && typeof externalOut === 'function'
+        ? externalOut
+        : defaultEmptyFunction
+    const close =
+      externalClose && typeof externalClose === 'function'
+        ? actions.close
+        : defaultEmptyFunction
 
     // data for log
     const id = (dataForLog && dataForLog.id) || ''
@@ -122,30 +136,42 @@ const executeWithEmit = (command = [], actions = {}, dataForLog = {}) => {
        * @param {string} line - command CLI line
        */
       const publisher = (line = '') => {
-        const resposeData = callback(line, uuid) || { id, data: line, command: commandName, commandId: uuid }
+        const resposeData = callback(line, uuid) || {
+          id,
+          data: line,
+          command: commandName,
+          commandId: uuid,
+        }
         publish(defaultCommandProvision, resposeData)
       }
 
-      message.toString().split(regexpSplitLine).map(line => {
-        if (line) {
-          if (
-            (regexpStartJSON.test(line) && regexpEndJSON.test(line)) ||
-            (!regexpStartJSON.test(line) && !regexpEndJSON.test(line) && pendingMessages.length === 0)
-          ) {
-            lastLine = line
-            publisher(lastLine)
-          } else if (
-            (regexpStartJSON.test(line) && !regexpEndJSON.test(line)) ||
-            (!regexpStartJSON.test(line) && !regexpEndJSON.test(line) && pendingMessages.length > 0)
-          ) {
-            pendingMessages += line
-          } else {
-            lastLine = pendingMessages + line
-            publisher(lastLine)
-            pendingMessages = ''
+      message
+        .toString()
+        .split(regexpSplitLine)
+        .forEach((line) => {
+          if (line) {
+            if (
+              (regexpStartJSON.test(line) && regexpEndJSON.test(line)) ||
+              (!regexpStartJSON.test(line) &&
+                !regexpEndJSON.test(line) &&
+                pendingMessages.length === 0)
+            ) {
+              lastLine = line
+              publisher(lastLine)
+            } else if (
+              (regexpStartJSON.test(line) && !regexpEndJSON.test(line)) ||
+              (!regexpStartJSON.test(line) &&
+                !regexpEndJSON.test(line) &&
+                pendingMessages.length > 0)
+            ) {
+              pendingMessages += line
+            } else {
+              lastLine = pendingMessages + line
+              publisher(lastLine)
+              pendingMessages = ''
+            }
           }
-        }
-      })
+        })
     }
 
     executeCommandAsync(
@@ -153,20 +179,20 @@ const executeWithEmit = (command = [], actions = {}, dataForLog = {}) => {
       command,
       getSpecificConfig('oneprovision_prepend_command'),
       {
-        err: message => {
+        err: (message) => {
           emit(message, err)
         },
-        out: message => {
+        out: (message) => {
           emit(message, out)
         },
-        close: success => {
+        close: (success) => {
           close(success, lastLine)
-        }
+        },
       }
     )
-    rtn = true
+
+    return true
   }
-  return rtn
 }
 
 /**
@@ -202,7 +228,7 @@ const logData = (id, fullPath = false) => {
         const stringPath = `${path}/${logFile.name}.${logFile.ext}`
         existsFile(
           stringPath,
-          filedata => {
+          (filedata) => {
             rtn = { uuid, log: filedata.split(regexpSplitLine) }
             if (fullPath) {
               rtn.fullPath = stringPath
@@ -218,14 +244,17 @@ const logData = (id, fullPath = false) => {
     } else {
       existsFile(
         relFileYML,
-        filedata => {
+        (filedata) => {
           const fileData = parse(filedata) || {}
           if (fileData[id]) {
             const findPending = findRecursiveFolder(basePath, fileData[id])
             if (findPending) {
               rtnFound(findPending, fileData[id])
             } else {
-              const findError = findRecursiveFolder(basePath, fileData[id] + appendError)
+              const findError = findRecursiveFolder(
+                basePath,
+                fileData[id] + appendError
+              )
               if (findError) {
                 rtnFound(findError, fileData[id])
               } else {
@@ -240,6 +269,7 @@ const logData = (id, fullPath = false) => {
       )
     }
   }
+
   return rtn
 }
 
@@ -250,8 +280,15 @@ const logData = (id, fullPath = false) => {
  * @param {Function} next - express stepper
  * @param {object} params - params of http request
  * @param {object} userData - user of http request
+ * @param {string} userData.user - username
+ * @param {string} userData.password - password
  */
-const getProvisionDefaults = (res = {}, next = defaultEmptyFunction, params = {}, userData = {}) => {
+const getProvisionDefaults = (
+  res = {},
+  next = defaultEmptyFunction,
+  params = {},
+  userData = {}
+) => {
   const extFiles = 'yml'
   const { user, password } = userData
   let rtn = httpInternalError
@@ -288,8 +325,7 @@ const getProvisionDefaults = (res = {}, next = defaultEmptyFunction, params = {}
         }
         try {
           providers[name].push(parse(content))
-        } catch (error) {
-        }
+        } catch (error) {}
       }
     }
     /**
@@ -297,17 +333,23 @@ const getProvisionDefaults = (res = {}, next = defaultEmptyFunction, params = {}
      *
      * @param {string} content - content of provision
      * @param {string} filePath - path of provision yamls
-     * @param {string} path - path for command
+     * @param {string} pathCli - path for command
      */
-    const fillProvisions = (content = '', filePath = '', path = '') => {
+    const fillProvisions = (content = '', filePath = '', pathCli = '') => {
       if (content && filePath && path) {
         const name = basename(filePath).replace(`.${extFiles}`, '')
-        const paramsCommand = ['validate', '--dump', filePath, ...authCommand, ...endpoint]
+        const paramsCommand = [
+          'validate',
+          '--dump',
+          filePath,
+          ...authCommand,
+          ...endpoint,
+        ]
         const executedCommand = executeCommand(
           defaultCommandProvision,
           paramsCommand,
           getSpecificConfig('oneprovision_prepend_command'),
-          { cwd: path }
+          { cwd: pathCli }
         )
         if (executedCommand && executedCommand.success) {
           if (!provisions[name]) {
@@ -323,47 +365,39 @@ const getProvisionDefaults = (res = {}, next = defaultEmptyFunction, params = {}
     directories.forEach((directory = {}) => {
       if (directory.filename && directory.path) {
         // description
-        existsFile(
-          `${directory.path}/description.md`,
-          fillDescription
-        )
+        existsFile(`${directory.path}/description.md`, fillDescription)
 
         // providers
-        getDirectories(
-          `${directory.path}/providers`
-        ).map((provider = {}) => {
-          if (provider.filename && provider.path) {
-            getFilesbyEXT(
-              provider.path,
-              extFiles
-            ).map(file => {
-              existsFile(
-                file,
-                (content) => fillProviders(
-                  content,
-                  provider.filename
+        getDirectories(`${directory.path}/providers`).forEach(
+          (provider = {}) => {
+            if (provider.filename && provider.path) {
+              getFilesbyEXT(provider.path, extFiles).forEach((file) => {
+                existsFile(file, (content) =>
+                  fillProviders(content, provider.filename)
                 )
-              )
-            })
+              })
+            }
           }
-        })
+        )
 
         // provisions
-        getFilesbyEXT(
-          `${directory.path}/provisions`,
-          extFiles
-        ).map(file => {
-          existsFile(
-            file,
-            (content, filePath) => fillProvisions(content, filePath, dirname(file))
-          )
-        })
+        getFilesbyEXT(`${directory.path}/provisions`, extFiles).forEach(
+          (file) => {
+            existsFile(file, (content, filePath) =>
+              fillProvisions(content, filePath, dirname(file))
+            )
+          }
+        )
 
-        if (description && !checkEmptyObject(providers) && !checkEmptyObject(provisions)) {
+        if (
+          description &&
+          !checkEmptyObject(providers) &&
+          !checkEmptyObject(provisions)
+        ) {
           files[directory.filename] = {
             description,
             providers,
-            provisions
+            provisions,
           }
           // clear
           description = ''
@@ -384,15 +418,30 @@ const getProvisionDefaults = (res = {}, next = defaultEmptyFunction, params = {}
  * @param {object} res - http response
  * @param {Function} next - express stepper
  * @param {object} params - params of http request
+ * @param {string} params.resource - resource provision
  * @param {object} userData - user of http request
+ * @param {string} userData.user - username
+ * @param {string} userData.password - user password
  */
-const getListResourceProvision = (res = {}, next = defaultEmptyFunction, params = {}, userData = {}) => {
+const getListResourceProvision = (
+  res = {},
+  next = defaultEmptyFunction,
+  params = {},
+  userData = {}
+) => {
   const { user, password } = userData
+  const { resource } = params
   let rtn = httpInternalError
-  if (params && params.resource && user && password) {
+  if (resource && user && password) {
     const endpoint = getEndpoint()
     const authCommand = ['--user', user, '--password', password]
-    const paramsCommand = [`${params.resource}`.toLowerCase(), 'list', ...authCommand, ...endpoint, '--json']
+    const paramsCommand = [
+      `${resource}`.toLowerCase(),
+      'list',
+      ...authCommand,
+      ...endpoint,
+      '--json',
+    ]
     const executedCommand = executeCommand(
       defaultCommandProvision,
       paramsCommand,
@@ -400,8 +449,12 @@ const getListResourceProvision = (res = {}, next = defaultEmptyFunction, params 
     )
     try {
       const response = executedCommand.success ? ok : internalServerError
-      res.locals.httpCode = httpResponse(response, JSON.parse(executedCommand.data))
+      res.locals.httpCode = httpResponse(
+        response,
+        JSON.parse(executedCommand.data)
+      )
       next()
+
       return
     } catch (error) {
       rtn = httpResponse(internalServerError, '', executedCommand.data)
@@ -417,17 +470,32 @@ const getListResourceProvision = (res = {}, next = defaultEmptyFunction, params 
  * @param {object} res - http response
  * @param {Function} next - express stepper
  * @param {object} params - params of http request
+ * @param {number} params.id - provision id
  * @param {object} userData - user of http request
+ * @param {string} userData.user - username
+ * @param {string} userData.password - user password
  */
-const getListProvisions = (res = {}, next = defaultEmptyFunction, params = {}, userData = {}) => {
+const getListProvisions = (
+  res = {},
+  next = defaultEmptyFunction,
+  params = {},
+  userData = {}
+) => {
   const { user, password } = userData
+  const { id } = params
   let rtn = httpInternalError
   if (user && password) {
     const endpoint = getEndpoint()
     const authCommand = ['--user', user, '--password', password]
     let paramsCommand = ['list', ...authCommand, ...endpoint, '--json']
-    if (params && params.id) {
-      paramsCommand = ['show', `${params.id}`.toLowerCase(), ...authCommand, ...endpoint, '--json']
+    if (Number.isInteger(parseInt(id, 10))) {
+      paramsCommand = [
+        'show',
+        `${id}`.toLowerCase(),
+        ...authCommand,
+        ...endpoint,
+        '--json',
+      ]
     }
     const executedCommand = executeCommand(
       defaultCommandProvision,
@@ -441,14 +509,19 @@ const getListProvisions = (res = {}, next = defaultEmptyFunction, params = {}, u
       /**
        * Parse provision.TEMPLATE.BODY to JSON.
        *
-       * @param {object} provision - provision
+       * @param {object} oneProvision - provision
        * @returns {object} provision with TEMPLATE.BODY in JSON
        */
-      const parseTemplateBody = provision => {
-        if (provision && provision.TEMPLATE && provision.TEMPLATE.BODY) {
-          provision.TEMPLATE.BODY = JSON.parse(provision.TEMPLATE.BODY)
+      const parseTemplateBody = (oneProvision) => {
+        if (
+          oneProvision &&
+          oneProvision.TEMPLATE &&
+          oneProvision.TEMPLATE.BODY
+        ) {
+          oneProvision.TEMPLATE.BODY = JSON.parse(oneProvision.TEMPLATE.BODY)
         }
-        return provision
+
+        return oneProvision
       }
 
       if (data && data.DOCUMENT_POOL && data.DOCUMENT_POOL.DOCUMENT) {
@@ -458,6 +531,7 @@ const getListProvisions = (res = {}, next = defaultEmptyFunction, params = {}, u
       }
       res.locals.httpCode = httpResponse(response, data)
       next()
+
       return
     } catch (error) {
       rtn = httpResponse(internalServerError, '', executedCommand.data)
@@ -473,15 +547,31 @@ const getListProvisions = (res = {}, next = defaultEmptyFunction, params = {}, u
  * @param {object} res - http response
  * @param {Function} next - express stepper
  * @param {object} params - params of http request
+ * @param {number} params.id - resource ID
+ * @param {string} params.resource - resource name
  * @param {object} userData - user of http request
+ * @param {string} userData.user - username
+ * @param {string} userData.password - user password
  */
-const deleteResource = (res = {}, next = defaultEmptyFunction, params = {}, userData = {}) => {
+const deleteResource = (
+  res = {},
+  next = defaultEmptyFunction,
+  params = {},
+  userData = {}
+) => {
   const { user, password } = userData
+  const { resource, id } = params
   let rtn = httpInternalError
-  if (params && params.resource && params.id && user && password) {
+  if (resource && Number.isInteger(parseInt(id, 10)) && user && password) {
     const endpoint = getEndpoint()
     const authCommand = ['--user', user, '--password', password]
-    const paramsCommand = [`${params.resource}`.toLowerCase(), 'delete', `${params.id}`.toLowerCase(), ...authCommand, ...endpoint]
+    const paramsCommand = [
+      `${resource}`.toLowerCase(),
+      'delete',
+      `${id}`.toLowerCase(),
+      ...authCommand,
+      ...endpoint,
+    ]
     const executedCommand = executeCommand(
       defaultCommandProvision,
       paramsCommand,
@@ -489,7 +579,10 @@ const deleteResource = (res = {}, next = defaultEmptyFunction, params = {}, user
     )
     try {
       const response = executedCommand.success ? ok : internalServerError
-      rtn = httpResponse(response, executedCommand.data ? JSON.parse(executedCommand.data) : params.id)
+      rtn = httpResponse(
+        response,
+        executedCommand.data ? JSON.parse(executedCommand.data) : params.id
+      )
     } catch (error) {
       rtn = httpResponse(internalServerError, '', executedCommand.data)
     }
@@ -504,28 +597,51 @@ const deleteResource = (res = {}, next = defaultEmptyFunction, params = {}, user
  * @param {object} res - http response
  * @param {Function} next - express stepper
  * @param {object} params - params of http request
+ * @param {number} params.id - provision id
+ * @param {boolean} params.cleanup - provision cleanup
  * @param {object} userData - user of http request
+ * @param {string} userData.user - username
+ * @param {string} userData.password - user password
  * @param {Function} oneConnection - function xmlrpc
  */
-const deleteProvision = (res = {}, next = defaultEmptyFunction, params = {}, userData = {}, oneConnection = defaultEmptyFunction) => {
+const deleteProvision = (
+  res = {},
+  next = defaultEmptyFunction,
+  params = {},
+  userData = {},
+  oneConnection = defaultEmptyFunction
+) => {
   const basePath = `${global.paths.CPI}/provision`
   const relFile = `${basePath}/${relName}`
   const relFileYML = `${relFile}.${ext}`
   const relFileLOCK = `${relFile}.lock`
   const { user, password } = userData
+  const { id, cleanup } = params
   const rtn = httpInternalError
-  if (params && params.id && user && password) {
+  if (Number.isInteger(parseInt(id, 10)) && user && password) {
     const command = 'delete'
     const endpoint = getEndpoint()
     const authCommand = ['--user', user, '--password', password]
-    const cleanup = params.cleanup ? ['--cleanup'] : []
-    const paramsCommand = [command, params.id, '--batch', '--debug', '--json', ...cleanup, ...authCommand, ...endpoint]
+    const cleanUpTag = cleanup ? ['--cleanup'] : []
+    const paramsCommand = [
+      command,
+      id,
+      '--batch',
+      '--debug',
+      '--json',
+      ...cleanUpTag,
+      ...authCommand,
+      ...endpoint,
+    ]
 
     // get Log file
     const dataLog = logData(params.id, true)
 
     // create stream for write into file
-    const stream = dataLog && dataLog.fullPath && createWriteStream(dataLog.fullPath, { flags: 'a' })
+    const stream =
+      dataLog &&
+      dataLog.fullPath &&
+      createWriteStream(dataLog.fullPath, { flags: 'a' })
 
     /**
      * This function is performed for each command line response.
@@ -534,7 +650,12 @@ const deleteProvision = (res = {}, next = defaultEmptyFunction, params = {}, use
      * @param {string} uuid - uuid commnand
      */
     const emit = (lastLine, uuid) => {
-      const renderLine = { id: params.id, data: lastLine, command: command, commandId: uuid }
+      const renderLine = {
+        id: params.id,
+        data: lastLine,
+        command: command,
+        commandId: uuid,
+      }
       stream && stream.write && stream.write(`${JSON.stringify(renderLine)}\n`)
     }
 
@@ -547,42 +668,54 @@ const deleteProvision = (res = {}, next = defaultEmptyFunction, params = {}, use
     const close = (success, lastLine) => {
       if (success) {
         stream && stream.end && stream.end()
-        existsFile(
-          relFileYML,
-          filedata => {
-            let uuid = ''
-            if (!checkSync(relFileLOCK)) {
-              lockSync(relFileLOCK)
-              const fileData = parse(filedata) || {}
-              if (fileData[params.id]) {
-                uuid = fileData[params.id]
-                delete fileData[params.id]
-                createTemporalFile(
-                  basePath,
-                  ext,
-                  createYMLContent(
-                    Object.keys(fileData).length !== 0 && fileData.constructor === Object && fileData
-                  ),
-                  relName
-                )
-              }
-              unlockSync(relFileLOCK)
-              if (uuid) {
-                // provisions in deploy
-                const findFolder = findRecursiveFolder(`${global.paths.CPI}/provision`, uuid)
-                findFolder && removeFile(findFolder)
-                // provisions in error
-                const findFolderERROR = findRecursiveFolder(`${global.paths.CPI}/provision`, uuid + appendError)
-                findFolderERROR && removeFile(findFolderERROR)
-              }
+        existsFile(relFileYML, (filedata) => {
+          let uuid = ''
+          if (!checkSync(relFileLOCK)) {
+            lockSync(relFileLOCK)
+            const fileData = parse(filedata) || {}
+            if (fileData[params.id]) {
+              uuid = fileData[params.id]
+              delete fileData[params.id]
+              createTemporalFile(
+                basePath,
+                ext,
+                createYMLContent(
+                  Object.keys(fileData).length !== 0 &&
+                    fileData.constructor === Object &&
+                    fileData
+                ),
+                relName
+              )
+            }
+            unlockSync(relFileLOCK)
+            if (uuid) {
+              // provisions in deploy
+              const provisionFolder = findRecursiveFolder(
+                `${global.paths.CPI}/provision`,
+                uuid
+              )
+              provisionFolder && removeFile(provisionFolder)
+              // provisions in error
+              const findFolderERROR = findRecursiveFolder(
+                `${global.paths.CPI}/provision`,
+                uuid + appendError
+              )
+              findFolderERROR && removeFile(findFolderERROR)
             }
           }
+        })
+        const findFolder = findRecursiveFolder(
+          `${global.paths.CPI}/provision`,
+          params.id
         )
-        const findFolder = findRecursiveFolder(`${global.paths.CPI}/provision`, params.id)
         findFolder && removeFile(findFolder)
       } else {
         const connect = oneConnection(user, password)
-        connect(Actions.DOCUMENT_UPDATE, [parseInt(params.id, 10), sprintf(defaultErrorTemplate, lastLine), 1], defaultEmptyFunction)
+        connect(
+          Actions.DOCUMENT_UPDATE,
+          [parseInt(params.id, 10), sprintf(defaultErrorTemplate, lastLine), 1],
+          defaultEmptyFunction
+        )
       }
     }
 
@@ -594,8 +727,12 @@ const deleteProvision = (res = {}, next = defaultEmptyFunction, params = {}, use
     )
 
     // response Http
-    res.locals.httpCode = httpResponse(executedCommand ? accepted : internalServerError, params.id)
+    res.locals.httpCode = httpResponse(
+      executedCommand ? accepted : internalServerError,
+      params.id
+    )
     next()
+
     return
   }
   res.locals.httpCode = rtn
@@ -608,15 +745,31 @@ const deleteProvision = (res = {}, next = defaultEmptyFunction, params = {}, use
  * @param {object} res - http response
  * @param {Function} next - express stepper
  * @param {object} params - params of http request
+ * @param {number} params.id - host provision ID
+ * @param {string} params.action - provison accion host
  * @param {object} userData - user of http request
+ * @param {string} userData.user - username
+ * @param {string} userData.password - user password
  */
-const hostCommand = (res = {}, next = defaultEmptyFunction, params = {}, userData = {}) => {
+const hostCommand = (
+  res = {},
+  next = defaultEmptyFunction,
+  params = {},
+  userData = {}
+) => {
   const { user, password } = userData
+  const { action, id } = params
   let rtn = httpInternalError
-  if (params && params.action && params.id && user && password) {
+  if (action && Number.isInteger(parseInt(id, 10)) && user && password) {
     const endpoint = getEndpoint()
     const authCommand = ['--user', user, '--password', password]
-    const paramsCommand = ['host', `${params.action}`.toLowerCase(), `${params.id}`.toLowerCase(), ...authCommand, ...endpoint]
+    const paramsCommand = [
+      'host',
+      `${action}`.toLowerCase(),
+      `${id}`.toLowerCase(),
+      ...authCommand,
+      ...endpoint,
+    ]
     const executedCommand = executeCommand(
       defaultCommandProvision,
       paramsCommand,
@@ -624,8 +777,12 @@ const hostCommand = (res = {}, next = defaultEmptyFunction, params = {}, userDat
     )
     try {
       const response = executedCommand.success ? ok : internalServerError
-      res.locals.httpCode = httpResponse(response, executedCommand.data ? JSON.parse(executedCommand.data) : params.id)
+      res.locals.httpCode = httpResponse(
+        response,
+        executedCommand.data ? JSON.parse(executedCommand.data) : id
+      )
       next()
+
       return
     } catch (error) {
       rtn = httpResponse(internalServerError, '', executedCommand.data)
@@ -641,15 +798,39 @@ const hostCommand = (res = {}, next = defaultEmptyFunction, params = {}, userDat
  * @param {object} res - http response
  * @param {Function} next - express stepper
  * @param {object} params - params of http request
+ * @param {string} params.action - provision action
+ * @param {number} params.id - provision id
+ * @param {string} params.command - provision command
  * @param {object} userData - user of http request
+ * @param {string} userData.user - username
+ * @param {string} userData.password - user password
  */
-const hostCommandSSH = (res = {}, next = defaultEmptyFunction, params = {}, userData = {}) => {
+const hostCommandSSH = (
+  res = {},
+  next = defaultEmptyFunction,
+  params = {},
+  userData = {}
+) => {
   const { user, password } = userData
+  const { action, id, command } = params
   let rtn = httpInternalError
-  if (params && params.action && params.id && params.command && user && password) {
+  if (
+    action &&
+    Number.isInteger(parseInt(id, 10)) &&
+    command &&
+    user &&
+    password
+  ) {
     const endpoint = getEndpoint()
     const authCommand = ['--user', user, '--password', password]
-    const paramsCommand = ['host', `${params.action}`.toLowerCase(), `${params.id}`.toLowerCase(), `${params.command}`.toLowerCase(), ...authCommand, ...endpoint]
+    const paramsCommand = [
+      'host',
+      `${action}`.toLowerCase(),
+      `${id}`.toLowerCase(),
+      `${command}`.toLowerCase(),
+      ...authCommand,
+      ...endpoint,
+    ]
     const executedCommand = executeCommand(
       defaultCommandProvision,
       paramsCommand,
@@ -657,8 +838,12 @@ const hostCommandSSH = (res = {}, next = defaultEmptyFunction, params = {}, user
     )
     try {
       const response = executedCommand.success ? ok : internalServerError
-      res.locals.httpCode = httpResponse(response, executedCommand.data ? JSON.parse(executedCommand.data) : params.id)
+      res.locals.httpCode = httpResponse(
+        response,
+        executedCommand.data ? JSON.parse(executedCommand.data) : params.id
+      )
       next()
+
       return
     } catch (error) {
       rtn = httpResponse(internalServerError, '', executedCommand.data)
@@ -674,35 +859,60 @@ const hostCommandSSH = (res = {}, next = defaultEmptyFunction, params = {}, user
  * @param {object} res - http response
  * @param {Function} next - express stepper
  * @param {object} params - params of http request
+ * @param {string} params.resource - resource for provision
  * @param {object} userData - user of http request
+ * @param {string} userData.user - username
+ * @param {string} userData.password - user password
+ * @param {number} userData.id - user id
  * @param {Function} oneConnection - function of xmlrpc
  */
-const createProvision = (res = {}, next = defaultEmptyFunction, params = {}, userData = {}, oneConnection = defaultEmptyFunction) => {
+const createProvision = (
+  res = {},
+  next = defaultEmptyFunction,
+  params = {},
+  userData = {},
+  oneConnection = defaultEmptyFunction
+) => {
   const basePath = `${global.paths.CPI}/provision`
   const relFile = `${basePath}/${relName}`
   const relFileYML = `${relFile}.${ext}`
   const relFileLOCK = `${relFile}.lock`
   const { user, password, id } = userData
+  const { resource } = params
   const rtn = httpInternalError
-  if (params && params.resource && user && password) {
+  if (resource && user && password) {
     const optionalCommand = addOptionalCreateCommand()
-    const resource = parsePostData(params.resource)
-    const content = createYMLContent(resource)
+    const content = createYMLContent(parsePostData(params.resource))
     if (content) {
       const command = 'create'
       const authCommand = ['--user', user, '--password', password]
       const endpoint = getEndpoint()
-      const files = createFolderWithFiles(`${global.paths.CPI}/provision/${id}/tmp`, [{ name: logFile.name, ext: logFile.ext }, { name: provisionFile.name, ext: provisionFile.ext, content }])
+      const files = createFolderWithFiles(
+        `${global.paths.CPI}/provision/${id}/tmp`,
+        [
+          { name: logFile.name, ext: logFile.ext },
+          { name: provisionFile.name, ext: provisionFile.ext, content },
+        ]
+      )
       if (files && files.name && files.files) {
         /**
          * Find file in created files.
          *
          * @param {string} val - filename
-         * @param {string} ext - file extension
+         * @param {string} extension - file extension
          * @param {Array} arr - array of files
          * @returns {Array} path file
          */
-        const find = (val = '', ext = '', arr = files.files) => arr.find(e => e && e.path && e.ext && e.name && e.name === val && e.ext === ext)
+        const find = (val = '', extension = '', arr = files.files) =>
+          arr.find(
+            (e) =>
+              e &&
+              e.path &&
+              e.ext &&
+              e.name &&
+              e.name === val &&
+              e.ext === extension
+          )
 
         const config = find(provisionFile.name, provisionFile.ext)
         const log = find(logFile.name, logFile.ext)
@@ -713,10 +923,19 @@ const createProvision = (res = {}, next = defaultEmptyFunction, params = {}, use
            * @param {string} filedata - provision data
            */
           const create = (filedata = '') => {
-            const paramsCommand = [command, config.path, '--batch', '--debug', '--json', ...optionalCommand, ...authCommand, ...endpoint]
+            const paramsCommand = [
+              command,
+              config.path,
+              '--batch',
+              '--debug',
+              '--json',
+              ...optionalCommand,
+              ...authCommand,
+              ...endpoint,
+            ]
 
             // stream file log
-            var stream = createWriteStream(log.path, { flags: 'a' })
+            const stream = createWriteStream(log.path, { flags: 'a' })
 
             /**
              * This function is performed for each command line response.
@@ -730,16 +949,27 @@ const createProvision = (res = {}, next = defaultEmptyFunction, params = {}, use
                 if (regexp.test(lastLine) && !checkSync(relFileLOCK)) {
                   const fileData = parse(filedata) || {}
                   const parseID = lastLine.match('\\d+')
-                  const id = parseID[0]
-                  if (id && !fileData[id]) {
+                  const idResource = parseID[0]
+                  if (idResource && !fileData[idResource]) {
                     lockSync(relFileLOCK)
-                    fileData[id] = files.name
-                    createTemporalFile(basePath, ext, createYMLContent(fileData), relName)
+                    fileData[idResource] = files.name
+                    createTemporalFile(
+                      basePath,
+                      ext,
+                      createYMLContent(fileData),
+                      relName
+                    )
                     unlockSync(relFileLOCK)
                   }
                 }
-                const renderLine = { id: files.name, data: lastLine, command: command, commandId: uuid }
+                const renderLine = {
+                  id: files.name,
+                  data: lastLine,
+                  command: command,
+                  commandId: uuid,
+                }
                 stream.write(`${JSON.stringify(renderLine)}\n`)
+
                 return renderLine
               }
             }
@@ -753,30 +983,35 @@ const createProvision = (res = {}, next = defaultEmptyFunction, params = {}, use
             const close = (success, lastLine) => {
               stream.end()
               if (success && regexp.test(lastLine)) {
-                const newPath = renameFolder(config.path, lastLine.match('\\d+'), 'replace')
+                const newPath = renameFolder(
+                  config.path,
+                  lastLine.match('\\d+'),
+                  'replace'
+                )
                 if (newPath) {
-                  existsFile(
-                    relFileYML,
-                    filedata => {
-                      if (!checkSync(relFileLOCK)) {
-                        lockSync(relFileLOCK)
-                        const fileData = parse(filedata) || {}
-                        const findKey = Object.keys(fileData).find(key => fileData[key] === files.name)
-                        if (findKey) {
-                          delete fileData[findKey]
-                          createTemporalFile(
-                            basePath,
-                            ext,
-                            createYMLContent(
-                              Object.keys(fileData).length !== 0 && fileData.constructor === Object && fileData
-                            ),
-                            relName
-                          )
-                        }
-                        unlockSync(relFileLOCK)
+                  existsFile(relFileYML, (file) => {
+                    if (!checkSync(relFileLOCK)) {
+                      lockSync(relFileLOCK)
+                      const fileData = parse(file) || {}
+                      const findKey = Object.keys(fileData).find(
+                        (key) => fileData[key] === files.name
+                      )
+                      if (findKey) {
+                        delete fileData[findKey]
+                        createTemporalFile(
+                          basePath,
+                          ext,
+                          createYMLContent(
+                            Object.keys(fileData).length !== 0 &&
+                              fileData.constructor === Object &&
+                              fileData
+                          ),
+                          relName
+                        )
                       }
+                      unlockSync(relFileLOCK)
                     }
-                  )
+                  })
                   moveToFolder(newPath, '/../../../')
                 }
               }
@@ -793,19 +1028,18 @@ const createProvision = (res = {}, next = defaultEmptyFunction, params = {}, use
 
           existsFile(
             relFileYML,
-            filedata => {
+            (filedata) => {
               create(filedata)
             },
             () => {
-              createFile(
-                relFileYML, '', filedata => {
-                  create(filedata)
-                }
-              )
+              createFile(relFileYML, '', (filedata) => {
+                create(filedata)
+              })
             }
           )
           res.locals.httpCode = httpResponse(accepted, files.name)
           next()
+
           return
         }
       }
@@ -821,22 +1055,44 @@ const createProvision = (res = {}, next = defaultEmptyFunction, params = {}, use
  * @param {object} res - http response
  * @param {Function} next - express stepper
  * @param {object} params - params of http request
+ * @param {number} params.id - proivision id
  * @param {object} userData - user of http request
+ * @param {string} userData.user - username
+ * @param {string} userData.password - user password
  */
-const configureProvision = (res = {}, next = defaultEmptyFunction, params = {}, userData = {}) => {
+const configureProvision = (
+  res = {},
+  next = defaultEmptyFunction,
+  params = {},
+  userData = {}
+) => {
   const { user, password } = userData
+  const { id } = params
   const rtn = httpInternalError
-  if (params && params.id && user && password) {
+  if (Number.isInteger(parseInt(id, 10)) && user && password) {
     const command = 'configure'
     const endpoint = getEndpoint()
     const authCommand = ['--user', user, '--password', password]
-    const paramsCommand = [command, params.id, '--debug', '--json', '--fail_cleanup', '--batch', '--force', ...authCommand, ...endpoint]
+    const paramsCommand = [
+      command,
+      id,
+      '--debug',
+      '--json',
+      '--fail_cleanup',
+      '--batch',
+      '--force',
+      ...authCommand,
+      ...endpoint,
+    ]
 
     // get Log file
-    const dataLog = logData(params.id, true)
+    const dataLog = logData(id, true)
 
     // create stream for write into file
-    const stream = dataLog && dataLog.fullPath && createWriteStream(dataLog.fullPath, { flags: 'a' })
+    const stream =
+      dataLog &&
+      dataLog.fullPath &&
+      createWriteStream(dataLog.fullPath, { flags: 'a' })
 
     /**
      * This function is performed for each command line response.
@@ -845,7 +1101,12 @@ const configureProvision = (res = {}, next = defaultEmptyFunction, params = {}, 
      * @param {string} uuid - UUID command
      */
     const emit = (lastLine, uuid) => {
-      const renderLine = { id: params.id, data: lastLine, command: command, commandId: uuid }
+      const renderLine = {
+        id,
+        data: lastLine,
+        command: command,
+        commandId: uuid,
+      }
       stream && stream.write && stream.write(`${JSON.stringify(renderLine)}\n`)
     }
 
@@ -863,12 +1124,16 @@ const configureProvision = (res = {}, next = defaultEmptyFunction, params = {}, 
     const executedCommand = executeWithEmit(
       paramsCommand,
       { close, out: emit, err: emit },
-      { id: params.id, command }
+      { id, command }
     )
 
     // response Http
-    res.locals.httpCode = httpResponse(executedCommand ? accepted : internalServerError, params.id)
+    res.locals.httpCode = httpResponse(
+      executedCommand ? accepted : internalServerError,
+      id
+    )
     next()
+
     return
   }
   res.locals.httpCode = rtn
@@ -881,22 +1146,43 @@ const configureProvision = (res = {}, next = defaultEmptyFunction, params = {}, 
  * @param {object} res - http response
  * @param {Function} next - express stepper
  * @param {object} params - params of http request
+ * @param {number} params.id - host id
  * @param {object} userData - user of http request
+ * @param {string} userData.user - username
+ * @param {string} userData.password - user password
  */
-const configureHost = (res = {}, next = defaultEmptyFunction, params = {}, userData = {}) => {
+const configureHost = (
+  res = {},
+  next = defaultEmptyFunction,
+  params = {},
+  userData = {}
+) => {
   const { user, password } = userData
+  const { id } = params
   const rtn = httpInternalError
-  if (params && params.id && user && password) {
+  if (Number.isInteger(parseInt(id, 10)) && user && password) {
     const command = 'configure'
     const endpoint = getEndpoint()
     const authCommand = ['--user', user, '--password', password]
-    const paramsCommand = ['host', command, `${params.id}`.toLowerCase(), '--debug', '--fail_cleanup', '--batch', ...authCommand, ...endpoint]
+    const paramsCommand = [
+      'host',
+      command,
+      `${id}`.toLowerCase(),
+      '--debug',
+      '--fail_cleanup',
+      '--batch',
+      ...authCommand,
+      ...endpoint,
+    ]
 
     // get Log file
-    const dataLog = logData(params.id, true)
+    const dataLog = logData(id, true)
 
     // create stream for write into file
-    const stream = dataLog && dataLog.fullPath && createWriteStream(dataLog.fullPath, { flags: 'a' })
+    const stream =
+      dataLog &&
+      dataLog.fullPath &&
+      createWriteStream(dataLog.fullPath, { flags: 'a' })
 
     /**
      * This function is performed for each command line response.
@@ -905,7 +1191,12 @@ const configureHost = (res = {}, next = defaultEmptyFunction, params = {}, userD
      * @param {string} uuid - uuid command
      */
     const emit = (lastLine, uuid) => {
-      const renderLine = { id: params.id, data: lastLine, command: `host ${command}`, commandId: uuid }
+      const renderLine = {
+        id,
+        data: lastLine,
+        command: `host ${command}`,
+        commandId: uuid,
+      }
       stream && stream.write && stream.write(`${JSON.stringify(renderLine)}\n`)
     }
 
@@ -923,12 +1214,16 @@ const configureHost = (res = {}, next = defaultEmptyFunction, params = {}, userD
     const executedCommand = executeWithEmit(
       paramsCommand,
       { close, out: emit, err: emit },
-      { id: params.id, command: `host ${command}` }
+      { id, command: `host ${command}` }
     )
 
     // response Http
-    res.locals.httpCode = httpResponse(executedCommand ? accepted : internalServerError, params.id)
+    res.locals.httpCode = httpResponse(
+      executedCommand ? accepted : internalServerError,
+      id
+    )
     next()
+
     return
   }
   res.locals.httpCode = rtn
@@ -941,23 +1236,40 @@ const configureHost = (res = {}, next = defaultEmptyFunction, params = {}, userD
  * @param {object} res - http response
  * @param {Function} next - express stepper
  * @param {object} params - params of http request
+ * @param {string} params.resource - resource
  * @param {object} userData - user of http request
  */
-const validate = (res = {}, next = defaultEmptyFunction, params = {}, userData = {}) => {
+const validate = (
+  res = {},
+  next = defaultEmptyFunction,
+  params = {},
+  userData = {}
+) => {
   const { user, password } = userData
+  const { resource } = params
   let rtn = httpInternalError
-  if (params && params.resource && user && password) {
+  if (resource && user && password) {
     const endpoint = getEndpoint()
     const authCommand = ['--user', user, '--password', password]
     const schemaValidator = new Validator()
-    const resource = parsePostData(params.resource)
-    const valSchema = schemaValidator.validate(resource, provision)
+    const parsedResource = parsePostData(resource)
+    const valSchema = schemaValidator.validate(parsedResource, provision)
     if (valSchema.valid) {
-      const content = createYMLContent(resource)
+      const content = createYMLContent(parsedResource)
       if (content) {
-        const file = createTemporalFile(`${global.paths.CPI}/${defaultFolderTmpProvision}`, 'yaml', content)
+        const file = createTemporalFile(
+          `${global.paths.CPI}/${defaultFolderTmpProvision}`,
+          'yaml',
+          content
+        )
         if (file && file.name && file.path) {
-          const paramsCommand = ['validate', '--dump', file.path, ...authCommand, ...endpoint]
+          const paramsCommand = [
+            'validate',
+            '--dump',
+            file.path,
+            ...authCommand,
+            ...endpoint,
+          ]
           const executedCommand = executeCommand(
             defaultCommandProvision,
             paramsCommand,
@@ -970,13 +1282,14 @@ const validate = (res = {}, next = defaultEmptyFunction, params = {}, userData =
           removeFile(file)
           res.locals.httpCode = httpResponse(response)
           next()
+
           return
         }
       }
     } else {
       const errors = []
       if (valSchema && valSchema.errors) {
-        valSchema.errors.forEach(error => {
+        valSchema.errors.forEach((error) => {
           errors.push(error.stack.replace(/^instance./, ''))
         })
         rtn = httpResponse(internalServerError, '', errors.toString())
@@ -994,7 +1307,11 @@ const validate = (res = {}, next = defaultEmptyFunction, params = {}, userData =
  * @param {Function} next - express stepper
  * @param {object} params - params of http request
  */
-const getLogProvisions = (res = {}, next = defaultEmptyFunction, params = {}) => {
+const getLogProvisions = (
+  res = {},
+  next = defaultEmptyFunction,
+  params = {}
+) => {
   let rtn = httpInternalError
   if (params && params.id) {
     const foundLogs = logData(params.id)
@@ -1020,6 +1337,6 @@ const provisionFunctionsApi = {
   createProvision,
   configureProvision,
   configureHost,
-  validate
+  validate,
 }
 module.exports = provisionFunctionsApi

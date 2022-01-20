@@ -14,61 +14,68 @@
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
 
-const { httpMethod, from: fromData } = require('server/utils/constants/defaults')
 const {
-  serviceTemplate,
-  serviceTemplateDelete,
-  serviceTemplateCreate,
-  serviceTemplateUpdate,
-  serviceTemplateAction
-} = require('./service_template-functions')
-const { GET, POST, DELETE, PUT } = httpMethod
+  from: fromData,
+  httpMethod,
+} = require('server/utils/constants/defaults')
+const {
+  getListProviders,
+  getConnectionProviders,
+  createProviders,
+  updateProviders,
+  deleteProvider,
+  getProviderConfig,
+} = require('server/routes/api/oneprovision/provider/functions')
+
+const { GET, POST, PUT, DELETE } = httpMethod
 
 const routes = {
   [GET]: {
-    list: {
-      action: serviceTemplate,
+    null: {
+      action: getListProviders,
       params: {
-        id: { from: fromData.resource, name: 'id', front: true }
-      }
-    }
+        id: { from: fromData.resource, name: 'method' },
+      },
+    },
+    connection: {
+      action: getConnectionProviders,
+      params: {
+        id: { from: fromData.resource, name: 'id' },
+      },
+    },
+    config: {
+      action: getProviderConfig,
+      params: {},
+    },
   },
   [POST]: {
-    create: {
-      action: serviceTemplateCreate,
+    null: {
+      action: createProviders,
       params: {
-        template: { from: fromData.postBody, front: true }
-      }
+        resource: { from: fromData.postBody },
+      },
     },
-    action: {
-      action: serviceTemplateAction,
-      params: {
-        id: { from: fromData.resource, name: 'id', front: true },
-        template: { from: fromData.postBody, front: true }
-      }
-    }
   },
   [PUT]: {
-    update: {
-      action: serviceTemplateUpdate,
+    null: {
+      action: updateProviders,
       params: {
-        id: { from: fromData.resource, name: 'id', front: true },
-        template: { from: fromData.postBody, front: true }
-      }
-    }
+        resource: { from: fromData.postBody },
+        id: { from: fromData.resource, name: 'method' },
+      },
+    },
   },
   [DELETE]: {
-    delete: {
-      action: serviceTemplateDelete,
+    null: {
+      action: deleteProvider,
       params: {
-        id: { from: fromData.resource, name: 'id', front: true }
-      }
-    }
-  }
+        id: { from: fromData.resource, name: 'method' },
+      },
+    },
+  },
 }
 
-const serviceTemplateApi = {
-  routes
+const providerApi = {
+  routes,
 }
-
-module.exports = serviceTemplateApi
+module.exports = providerApi

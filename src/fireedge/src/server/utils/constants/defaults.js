@@ -21,21 +21,26 @@ const internalSunstonePath = `${appName}/${appNameSunstone}`
 const internalProvisionPath = `${appName}/${appNameProvision}`
 const baseUrl = `${appName ? `/${appName}/` : '/'}`
 const baseUrlWebsockets = 'websockets/'
+const severityPrepend = 'severity_'
+const assetsClient = '/lib/one/fireedge/dist/client'
+const dockerUrl =
+  'https://hub.docker.com/v2/repositories/library/%s/tags/?page_size=100'
 const apps = {
   [appNameSunstone]: {
     theme: appNameSunstone,
     name: appNameSunstone,
-    assets: true
+    assets: true,
   },
   [appNameProvision]: {
     name: appNameProvision,
-    theme: appNameProvision
-  }
+    theme: appNameProvision,
+  },
 }
 const default2FAOpennebulaVar = 'TWO_FACTOR_AUTH_SECRET'
 const defaultIp = 'localhost'
 const protocol = 'http'
 const defaults = {
+  dockerUrl,
   defaultTypeCrypto: 'aes-256-cbc',
   /**
    * Empty function.
@@ -50,52 +55,42 @@ const defaults = {
   defaultAppName: appName,
   defaultConfigErrorMessage: {
     color: 'red',
-    message: 'file not found: %s'
+    message: 'file not found: %s',
   },
   defaultFilesWebsockets: {
     hooks: {
       path: `${baseUrl}${baseUrlWebsockets}hooks`,
-      methods: ['GET', 'POST']
+      methods: ['GET', 'POST'],
     },
     provision: {
       path: `${baseUrl}${baseUrlWebsockets}${appNameProvision}`,
-      methods: ['GET', 'POST']
-    }
+      methods: ['GET', 'POST'],
+    },
   },
-  defaultFilesRoutes: [
-    '2fa',
-    'auth',
-    'oneflow',
-    'support',
-    'vcenter',
-    'zendesk',
-    appNameProvision,
-    appNameSunstone
-  ],
   defaultApps: apps,
   httpMethod: {
     GET: 'GET',
     POST: 'POST',
     PUT: 'PUT',
-    DELETE: 'DELETE'
+    DELETE: 'DELETE',
   },
   defaultHash: {
     hash: 'sha256',
-    digest: 'hex'
+    digest: 'hex',
   },
   defaultFileStats: '-stats.json',
   from: {
     resource: 'RESOURCE',
     query: 'QUERY',
-    postBody: 'POST_BODY'
+    postBody: 'POST_BODY',
   },
   defaultOpennebulaZones: [
     {
       id: '0',
       name: 'OpenNebula',
       rpc: `${protocol}://${defaultIp}:2633/RPC2`,
-      zeromq: `tcp://${defaultIp}:2101`
-    }
+      zeromq: `tcp://${defaultIp}:2101`,
+    },
   ],
   defaultConfigParseXML: {
     attributeNamePrefix: '',
@@ -105,12 +100,14 @@ const defaults = {
     allowBooleanAttributes: false,
     parseNodeValue: false,
     parseAttributeValue: true,
-    trimValues: true
+    trimValues: true,
   },
   defaultCommandProvision: 'oneprovision',
   defaultCommandProvisionTemplate: 'oneprovision-template',
   defaultCommandProvider: 'oneprovider',
   defaultCommandVcenter: 'onevcenter',
+  defaultCommandVM: 'onevm',
+  defaultCommandMarketApp: 'onemarketapp',
   defaultFolderTmpProvision: 'tmp',
   defaultHideCredentials: true,
   defaultHideCredentialReplacer: '****',
@@ -127,6 +124,8 @@ const defaults = {
   defaultProductionWebpackMode: 'production',
   defaultWebpackDevTool: 'inline-source-map',
   defaultLogPath: '/var/log/one',
+  defaultSourceSystemPath: assetsClient,
+  defaultSystemPath: `/usr/${assetsClient}`,
   defaultSharePath: '/usr/share/one',
   defaultVarPath: '/var/lib/one',
   defaultEtcPath: '/etc/one',
@@ -142,9 +141,14 @@ const defaults = {
   default2FAIssuer: `${appName}-UI`,
   default2FAOpennebulaVar,
   default2FAOpennebulaTmpVar: `TMP_${default2FAOpennebulaVar}`,
-  defaultGetMethod: 'info',
   defaultMessageProblemOpennebula: 'Problem with connection or xml parser',
   defaultIP: defaultIp,
+  defaultSeverities: [
+    `${severityPrepend}1`,
+    `${severityPrepend}2`,
+    `${severityPrepend}3`,
+    `${severityPrepend}4`,
+  ],
   defaultProtocolHotReload: 'http',
   defaultHost: '0.0.0.0',
   defaultPort: 2616,
@@ -188,8 +192,8 @@ const defaults = {
     uk: 'Ukrainian',
     vi: 'Vietnamese',
     zh_CN: 'Chinese (China)',
-    zh_TW: 'Chinese (Taiwan)'
-  }
+    zh_TW: 'Chinese (Taiwan)',
+  },
 }
 
 module.exports = defaults

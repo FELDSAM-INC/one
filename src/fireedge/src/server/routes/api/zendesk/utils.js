@@ -13,14 +13,35 @@
  * See the License for the specific language governing permissions and       *
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
+const { global } = require('window-or-global')
 
-const privateRoutes = []
+/**
+ * Get data fireedge session.
+ *
+ * @param {string} username - username
+ * @param {string} token - pass
+ * @returns {object} user session
+ */
+const getSession = (username = '', token = '') => {
+  if (
+    username &&
+    token &&
+    global &&
+    global.users &&
+    username &&
+    global.users[username] &&
+    global.users[username].tokens
+  ) {
+    const session = global.users[username].tokens.find(
+      (curr = {}, index = 0) => curr.token && curr.token === token
+    )
 
-const publicRoutes = []
-
-const functionRoutes = {
-  private: privateRoutes,
-  public: publicRoutes
+    return session
+  }
 }
 
-module.exports = functionRoutes
+const functions = {
+  getSession,
+}
+
+module.exports = functions

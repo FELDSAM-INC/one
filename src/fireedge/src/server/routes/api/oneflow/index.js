@@ -16,7 +16,7 @@
 
 const { addFunctionAsRoute, setFunctionRoute } = require('server/utils/server')
 const { routes: serviceRoutes } = require('./service')
-const { routes: serviceTemplateRoutes } = require('./service_template')
+const { routes: serviceTemplateRoutes } = require('./template')
 
 const { SERVICE, SERVICE_TEMPLATE } = require('./string-routes')
 

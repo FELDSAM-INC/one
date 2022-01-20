@@ -15,16 +15,21 @@
  * ------------------------------------------------------------------------- */
 
 const { Validator } = require('jsonschema')
-const { action } = require('./schemas')
-const { oneFlowConnection } = require('./functions')
-const { httpMethod, defaultEmptyFunction } = require('server/utils/constants/defaults')
+const { action } = require('server/routes/api/oneflow/schemas')
+const {
+  oneFlowConnection,
+  returnSchemaError,
+} = require('server/routes/api/oneflow/utils')
+const {
+  httpMethod,
+  defaultEmptyFunction,
+} = require('server/utils/constants/defaults')
 const { httpResponse, parsePostData } = require('server/utils/server')
 const {
   ok,
   internalServerError,
-  methodNotAllowed
+  methodNotAllowed,
 } = require('server/utils/constants/http-codes')
-const { returnSchemaError } = require('./functions')
 const { generateNewResourceTemplate } = require('server/utils/opennebula')
 const { Actions: ActionVM } = require('server/utils/constants/commands/vm')
 const { GET, POST, DELETE } = httpMethod
@@ -34,10 +39,18 @@ const { GET, POST, DELETE } = httpMethod
  *
  * @param {Function} next - express stepper
  * @param {object} res - response http
+ * @param {object} res.locals - response http vars locals
+ * @param {object} res.locals.httpCode - response http vars locals http code
  * @param {string} data - data response http
  */
 const success = (next = defaultEmptyFunction, res = {}, data = '') => {
-  if ((next && typeof next === 'function') && (res && res.locals && res.locals.httpCode)) {
+  if (
+    next &&
+    typeof next === 'function' &&
+    res &&
+    res.locals &&
+    res.locals.httpCode
+  ) {
     res.locals.httpCode = httpResponse(ok, data)
     next()
   }
@@ -48,11 +61,22 @@ const success = (next = defaultEmptyFunction, res = {}, data = '') => {
  *
  * @param {Function} next - express stepper
  * @param {object} res - response http
+ * @param {object} res.locals - response http vars locals
+ * @param {object} res.locals.httpCode - response http vars locals http code
  * @param {string} data - data response http
  */
 const error = (next = defaultEmptyFunction, res = {}, data = '') => {
-  if ((next && typeof next === 'function') && (res && res.locals && res.locals.httpCode)) {
-    res.locals.httpCode = httpResponse(internalServerError, data && data.message)
+  if (
+    next &&
+    typeof next === 'function' &&
+    res &&
+    res.locals &&
+    res.locals.httpCode
+  ) {
+    res.locals.httpCode = httpResponse(
+      internalServerError,
+      data && data.message
+    )
     next()
   }
 }
@@ -63,18 +87,35 @@ const error = (next = defaultEmptyFunction, res = {}, data = '') => {
  * @param {object} res - http response
  * @param {Function} next - express stepper
  * @param {object} params - params
+ * @param {string} params.id - service ID
  * @param {object} userData - user data
+ * @param {string} userData.user - user username
+ * @param {string} userData.password - user password
  */
-const service = (res = {}, next = defaultEmptyFunction, params = {}, userData = {}) => {
+const service = (
+  res = {},
+  next = defaultEmptyFunction,
+  params = {},
+  userData = {}
+) => {
   const { user, password } = userData
   if (user && password) {
     const config = { method: GET, path: '/service', user, password }
-    if (params && params.id) {
+    const { id } = params
+    if (Number.isInteger(parseInt(id, 10))) {
       config.path = '/service/{0}'
-      config.request = params.id
-      oneFlowConnection(config, data => success(next, res, data), data => error(next, res, data))
+      config.request = id
+      oneFlowConnection(
+        config,
+        (data) => success(next, res, data),
+        (data) => error(next, res, data)
+      )
     } else {
-      oneFlowConnection(config, data => success(next, res, data), data => error(next, res, data))
+      oneFlowConnection(
+        config,
+        (data) => success(next, res, data),
+        (data) => error(next, res, data)
+      )
     }
   }
 }
@@ -85,13 +126,32 @@ const service = (res = {}, next = defaultEmptyFunction, params = {}, userData = 
  * @param {object} res - http response
  * @param {Function} next - express stepper
  * @param {object} params - params
+ * @param {number} params.id - service id
  * @param {object} userData - user data
+ * @param {string} userData.user - user username
+ * @param {string} userData.password - user password
  */
-const serviceDelete = (res = {}, next = defaultEmptyFunction, params = {}, userData = {}) => {
+const serviceDelete = (
+  res = {},
+  next = defaultEmptyFunction,
+  params = {},
+  userData = {}
+) => {
   const { user, password } = userData
-  if (params && params.id && user && password) {
-    const config = { method: DELETE, path: '/service/{0}', user, password, request: params.id }
-    oneFlowConnection(config, data => success(next, res, data), data => error(next, res, data))
+  const { id } = params
+  if (Number.isInteger(parseInt(id, 10)) && user && password) {
+    const config = {
+      method: DELETE,
+      path: '/service/{0}',
+      user,
+      password,
+      request: params.id,
+    }
+    oneFlowConnection(
+      config,
+      (data) => success(next, res, data),
+      (data) => error(next, res, data)
+    )
   } else {
     res.locals.httpCode = httpResponse(
       methodNotAllowed,
@@ -108,24 +168,39 @@ const serviceDelete = (res = {}, next = defaultEmptyFunction, params = {}, userD
  * @param {object} res - http response
  * @param {Function} next - express stepper
  * @param {object} params - params
+ * @param {number} params.id - service ID
+ * @param {string} params.action - service action
  * @param {object} userData - user data
+ * @param {string} userData.user - user username
+ * @param {string} userData.password - user password
  */
-const serviceAddAction = (res = {}, next = defaultEmptyFunction, params = {}, userData = {}) => {
+const serviceAddAction = (
+  res = {},
+  next = defaultEmptyFunction,
+  params = {},
+  userData = {}
+) => {
   const { user, password } = userData
-  if (params && params.id && params.action && user && password) {
+  const { id, action: serviceAction } = params
+  if (Number.isInteger(parseInt(id, 10)) && serviceAction && user && password) {
     const v = new Validator()
-    const postAction = parsePostData(params.action)
+    const postAction = parsePostData(serviceAction)
     const valSchema = v.validate(postAction, action)
-    if (valSchema.valid) { // validate if "action" is required
+    if (valSchema.valid) {
+      // validate if "action" is required
       const config = {
         method: POST,
         path: '/service/{0}/action',
         user,
         password,
         request: params.id,
-        post: postAction
+        post: postAction,
       }
-      oneFlowConnection(config, data => success(next, res, data), data => error(next, res, data))
+      oneFlowConnection(
+        config,
+        (data) => success(next, res, data),
+        (data) => error(next, res, data)
+      )
     } else {
       res.locals.httpCode = httpResponse(
         internalServerError,
@@ -150,24 +225,39 @@ const serviceAddAction = (res = {}, next = defaultEmptyFunction, params = {}, us
  * @param {object} res - http response
  * @param {Function} next - express stepper
  * @param {object} params - params
+ * @param {number} params.id - service ID
+ * @param {string} params.action - service action
  * @param {object} userData - user data
+ * @param {string} userData.user - user username
+ * @param {string} userData.password - user password
  */
-const serviceAddScale = (res = {}, next = defaultEmptyFunction, params = {}, userData = {}) => {
+const serviceAddScale = (
+  res = {},
+  next = defaultEmptyFunction,
+  params = {},
+  userData = {}
+) => {
   const { user, password } = userData
-  if (params && params.id && params.action && user && password) {
+  const { id, action: serviceAction } = params
+  if (Number.isInteger(parseInt(id, 10)) && serviceAction && user && password) {
     const v = new Validator()
-    const postAction = parsePostData(params.action)
+    const postAction = parsePostData(serviceAction)
     const valSchema = v.validate(postAction, action)
-    if (valSchema.valid) { // validate if "action" is required
+    if (valSchema.valid) {
+      // validate if "action" is required
       const config = {
         method: POST,
         path: '/service/{0}/scale',
         user,
         password,
         request: params.id,
-        post: postAction
+        post: postAction,
       }
-      oneFlowConnection(config, data => success(next, res, data), data => error(next, res, data))
+      oneFlowConnection(
+        config,
+        (data) => success(next, res, data),
+        (data) => error(next, res, data)
+      )
     } else {
       res.locals.httpCode = httpResponse(
         internalServerError,
@@ -192,24 +282,46 @@ const serviceAddScale = (res = {}, next = defaultEmptyFunction, params = {}, use
  * @param {object} res - http response
  * @param {Function} next - express stepper
  * @param {object} params - params
+ * @param {number} params.id - service ID
+ * @param {string} params.action - service action
+ * @param {string} params.role - service role
  * @param {object} userData - user data
+ * @param {string} userData.user - username
+ * @param {string} userData.password - user password
  */
-const serviceAddRoleAction = (res = {}, next = defaultEmptyFunction, params = {}, userData = {}) => {
+const serviceAddRoleAction = (
+  res = {},
+  next = defaultEmptyFunction,
+  params = {},
+  userData = {}
+) => {
   const { user, password } = userData
-  if (params && params.role && params.id && params.action && user && password) {
+  const { role, id, action: serviceAction } = params
+  if (
+    role &&
+    Number.isInteger(parseInt(id, 10)) &&
+    serviceAction &&
+    user &&
+    password
+  ) {
     const v = new Validator()
-    const postAction = parsePostData(params.action)
+    const postAction = parsePostData(serviceAction)
     const valSchema = v.validate(postAction, action)
-    if (valSchema.valid) { // validate if "action" is required
+    if (valSchema.valid) {
+      // validate if "action" is required
       const config = {
         method: POST,
         path: '/service/{0}/role/{1}',
         user,
         password,
-        request: [params.role, params.id],
-        post: postAction
+        request: [id, role],
+        post: postAction,
       }
-      oneFlowConnection(config, data => success(next, res, data), data => error(next, res, data))
+      oneFlowConnection(
+        config,
+        (data) => success(next, res, data),
+        (data) => error(next, res, data)
+      )
     } else {
       res.locals.httpCode = httpResponse(
         internalServerError,
@@ -234,30 +346,50 @@ const serviceAddRoleAction = (res = {}, next = defaultEmptyFunction, params = {}
  * @param {string} user - username
  * @param {string} password - password
  * @param {string} serviceID - service ID
- * @param {Function} success - callback when have service info data
+ * @param {Function} succss - callback when have service info data
  * @param {Function} error - callback when no have service info data
  */
-const getNodesService = (user = '', password = '', serviceID = 0, success = defaultEmptyFunction, error = defaultEmptyFunction) => {
+const getNodesService = (
+  user = '',
+  password = '',
+  serviceID = 0,
+  succss = defaultEmptyFunction,
+  error = defaultEmptyFunction
+) => {
   if (user && password && serviceID) {
-    const config = { method: GET, path: '/service/{0}', user, password, request: serviceID }
+    const config = {
+      method: GET,
+      path: '/service/{0}',
+      user,
+      password,
+      request: serviceID,
+    }
     oneFlowConnection(
       config,
       (serviceData = {}) => {
         const vms = []
-        if (serviceData && serviceData.DOCUMENT && serviceData.DOCUMENT.TEMPLATE && serviceData.DOCUMENT.TEMPLATE.BODY && serviceData.DOCUMENT.TEMPLATE.BODY.roles) {
+        if (
+          serviceData &&
+          serviceData.DOCUMENT &&
+          serviceData.DOCUMENT.TEMPLATE &&
+          serviceData.DOCUMENT.TEMPLATE.BODY &&
+          serviceData.DOCUMENT.TEMPLATE.BODY.roles
+        ) {
           let roles = serviceData.DOCUMENT.TEMPLATE.BODY.roles
           roles = Array.isArray(roles) ? roles : [roles]
-          roles.forEach(role => {
+          roles.forEach((role) => {
             if (role && role.nodes) {
               let nodes = role.nodes
               nodes = Array.isArray(nodes) ? nodes : [nodes]
-              const filteredNodes = nodes.filter(node => node && node.deploy_id >= 0)
+              const filteredNodes = nodes.filter(
+                (node) => node && node.deploy_id >= 0
+              )
               vms.push(...filteredNodes)
             }
           })
         }
         vms.forEach((vm = {}, index) => {
-          success(vm, vms.length, index + 1)
+          succss(vm, vms.length, index + 1)
         })
       },
       error
@@ -279,7 +411,11 @@ const parseSchedActionsToString = (schedAction = '') => {
   try {
     const parsedSchedAction = JSON.parse(schedAction)
     if (Array.isArray(parsedSchedAction)) {
-      rtn = parsedSchedAction.map(action => generateNewResourceTemplate({}, action, [], wrapper)).join(' ')
+      rtn = parsedSchedAction
+        .map((actionSched) =>
+          generateNewResourceTemplate({}, actionSched, [], wrapper)
+        )
+        .join(' ')
     } else if (typeof parsedSchedAction === 'object') {
       rtn = generateNewResourceTemplate({}, parsedSchedAction, [], wrapper)
     } else {
@@ -288,6 +424,7 @@ const parseSchedActionsToString = (schedAction = '') => {
   } catch (err) {
     rtn = schedAction
   }
+
   return rtn
 }
 
@@ -297,13 +434,24 @@ const parseSchedActionsToString = (schedAction = '') => {
  * @param {object} res - http response
  * @param {Function} next - express stepper
  * @param {object} params - params
+ * @param {string} params.sched_action - sched action
+ * @param {number} params.id - sched action
  * @param {object} userData - user data
+ * @param {string} userData.user - username
+ * @param {string} userData.password - user password
  * @param {Function} oneConnection - xmlrpc connection
  */
-const serviceAddSchedAction = (res = {}, next = defaultEmptyFunction, params = {}, userData = {}, oneConnection = defaultEmptyFunction) => {
+const serviceAddSchedAction = (
+  res = {},
+  next = defaultEmptyFunction,
+  params = {},
+  userData = {},
+  oneConnection = defaultEmptyFunction
+) => {
   const { user, password } = userData
-  if (params && params.id && params.sched_action && user && password) {
-    const schedTemplate = parseSchedActionsToString(params.sched_action)
+  const { sched_action: schedAction, id } = params
+  if (Number.isInteger(parseInt(id, 10)) && schedAction && user && password) {
+    const schedTemplate = parseSchedActionsToString(schedAction)
     const nodesUpdated = []
     getNodesService(
       user,
@@ -343,23 +491,41 @@ const serviceAddSchedAction = (res = {}, next = defaultEmptyFunction, params = {
  * @param {object} res - http response
  * @param {Function} next - express stepper
  * @param {object} params - params
+ * @param {number} params.id - service id
+ * @param {number} params.id_sched - sched id
+ * @param {string} params.sched_action - sched action
  * @param {object} userData - user data
+ * @param {string} userData.user - username
+ * @param {string} userData.password - user password
  * @param {Function} oneConnection - xmlrpc connection
  */
-const serviceUpdateSchedAction = (res = {}, next = defaultEmptyFunction, params = {}, userData = {}, oneConnection = defaultEmptyFunction) => {
+const serviceUpdateSchedAction = (
+  res = {},
+  next = defaultEmptyFunction,
+  params = {},
+  userData = {},
+  oneConnection = defaultEmptyFunction
+) => {
   const { user, password } = userData
-  if (params && params.id && params.id_sched && params.sched_action && user && password) {
-    const schedTemplate = parseSchedActionsToString(params.sched_action)
+  const { id, id_sched: idSched, sched_action: schedAction } = params
+  if (
+    Number.isInteger(parseInt(id, 10)) &&
+    Number.isInteger(parseInt(idSched, 10)) &&
+    schedAction &&
+    user &&
+    password
+  ) {
+    const schedTemplate = parseSchedActionsToString(schedAction)
     const nodesUpdated = []
     getNodesService(
       user,
       password,
-      params.id,
+      id,
       (node = {}, nodesLength, index) => {
         const oneConnect = oneConnection(user, password)
         oneConnect(
           ActionVM.VM_SCHED_UPDATE,
-          [node.deploy_id, parseInt(params.id_sched, 10), schedTemplate],
+          [node.deploy_id, parseInt(idSched, 10), schedTemplate],
           (err, value) => {
             if (!err && !isNaN(value)) {
               nodesUpdated.push(node.deploy_id)
@@ -389,22 +555,38 @@ const serviceUpdateSchedAction = (res = {}, next = defaultEmptyFunction, params 
  * @param {object} res - http response
  * @param {Function} next - express stepper
  * @param {object} params - params
+ * @param {number} params.id - service ID
+ * @param {number} params.id_sched - id sched action
  * @param {object} userData - user data
+ * @param {string} userData.user - username
+ * @param {string} userData.password - user password
  * @param {Function} oneConnection - xmlrpc connection
  */
-const serviceDeleteSchedAction = (res = {}, next = defaultEmptyFunction, params = {}, userData = {}, oneConnection = defaultEmptyFunction) => {
+const serviceDeleteSchedAction = (
+  res = {},
+  next = defaultEmptyFunction,
+  params = {},
+  userData = {},
+  oneConnection = defaultEmptyFunction
+) => {
   const { user, password } = userData
-  if (params && params.id && params.id_sched && user && password) {
+  const { id, id_sched: idSched } = params
+  if (
+    Number.isInteger(parseInt(id, 10)) &&
+    Number.isInteger(parseInt(idSched, 10)) &&
+    user &&
+    password
+  ) {
     const nodesUpdated = []
     getNodesService(
       user,
       password,
-      params.id,
+      id,
       (node = {}, nodesLength, index) => {
         const oneConnect = oneConnection(user, password)
         oneConnect(
           ActionVM.VM_SCHED_DELETE,
-          [node.deploy_id, parseInt(params.id_sched, 10)],
+          [node.deploy_id, parseInt(idSched, 10)],
           (err, value) => {
             if (!err && !isNaN(value)) {
               nodesUpdated.push(node.deploy_id)
@@ -436,6 +618,6 @@ const serviceApi = {
   serviceAddRoleAction,
   serviceAddSchedAction,
   serviceUpdateSchedAction,
-  serviceDeleteSchedAction
+  serviceDeleteSchedAction,
 }
 module.exports = serviceApi

@@ -15,12 +15,13 @@
  * ------------------------------------------------------------------------- */
 
 const { setApiRoutes } = require('server/utils/server')
-const { routes: sunstoneRoutes } = require('./routes')
-
-const { SUNSTONE } = require('./string-routes')
+const {
+  routes: marketappRoutes,
+} = require('server/routes/api/marketapp/routes')
+const { MARKETAPP } = require('./string-routes')
 
 const functionRoutes = {
-  private: setApiRoutes(sunstoneRoutes, SUNSTONE),
+  private: setApiRoutes(marketappRoutes, MARKETAPP),
   public: [],
 }
 

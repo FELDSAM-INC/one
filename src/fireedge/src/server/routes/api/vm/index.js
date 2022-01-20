@@ -14,41 +14,13 @@
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
 
-const { httpMethod, from: fromData } = require('server/utils/constants/defaults')
-const { auth } = require('./auth-functions')
-const { POST } = httpMethod
+const { setApiRoutes } = require('server/utils/server')
+const { routes: vmRoutes } = require('server/routes/api/vm/routes')
+const { VM } = require('server/routes/api/vm/string-routes')
 
-const routes = {
-  [POST]: {
-    null: {
-      action: auth,
-      params: {
-        user: {
-          from: fromData.postBody,
-          name: 'user'
-        },
-        token: {
-          from: fromData.postBody,
-          name: 'token'
-        },
-        type: {
-          from: fromData.postBody,
-          name: 'type'
-        },
-        token2fa: {
-          from: fromData.postBody,
-          name: 'token2fa'
-        },
-        remember: {
-          from: fromData.postBody,
-          name: 'remember'
-        }
-      }
-    }
-  }
+const functionRoutes = {
+  private: setApiRoutes(vmRoutes, VM),
+  public: [],
 }
 
-const authApi = {
-  routes
-}
-module.exports = authApi
+module.exports = functionRoutes

@@ -14,7 +14,10 @@
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
 
-const { httpMethod, from: fromData } = require('server/utils/constants/defaults')
+const {
+  httpMethod,
+  from: fromData,
+} = require('server/utils/constants/defaults')
 const {
   service,
   serviceDelete,
@@ -23,49 +26,49 @@ const {
   serviceAddRoleAction,
   serviceAddSchedAction,
   serviceUpdateSchedAction,
-  serviceDeleteSchedAction
-} = require('./service-functions')
+  serviceDeleteSchedAction,
+} = require('server/routes/api/oneflow/service/functions')
 const { GET, POST, DELETE, PUT } = httpMethod
 
 const routes = {
   [GET]: {
-    list: {
+    null: {
       action: service,
       params: {
-        id: { from: fromData.resource, name: 'id' }
-      }
-    }
+        id: { from: fromData.resource, name: 'method' },
+      },
+    },
   },
   [POST]: {
     action: {
       action: serviceAddAction,
       params: {
         id: { from: fromData.resource, name: 'id' },
-        action: { from: fromData.postBody }
-      }
+        action: { from: fromData.postBody },
+      },
     },
     scale: {
       action: serviceAddScale,
       params: {
         id: { from: fromData.resource, name: 'id' },
-        action: { from: fromData.postBody }
-      }
+        action: { from: fromData.postBody },
+      },
     },
-    'role-action': {
+    role_action: {
       action: serviceAddRoleAction,
       params: {
-        role: { from: fromData.resource, name: 'id' },
-        id: { from: fromData.resource, name: 'id2' },
-        action: { from: fromData.postBody }
-      }
+        id: { from: fromData.resource, name: 'id' },
+        role: { from: fromData.resource, name: 'id2' },
+        action: { from: fromData.postBody },
+      },
     },
     sched_action: {
       action: serviceAddSchedAction,
       params: {
         id: { from: fromData.resource, name: 'id' },
-        sched_action: { from: fromData.postBody, name: 'sched_action' }
-      }
-    }
+        sched_action: { from: fromData.postBody, name: 'sched_action' },
+      },
+    },
   },
   [PUT]: {
     sched_action: {
@@ -73,27 +76,27 @@ const routes = {
       params: {
         id: { from: fromData.resource, name: 'id' },
         id_sched: { from: fromData.resource, name: 'id2' },
-        sched_action: { from: fromData.postBody, name: 'sched_action' }
-      }
-    }
+        sched_action: { from: fromData.postBody, name: 'sched_action' },
+      },
+    },
   },
   [DELETE]: {
-    delete: {
+    null: {
       action: serviceDelete,
-      params: { id: { from: fromData.resource, name: 'id', front: true } }
+      params: { id: { from: fromData.resource, name: 'method' } },
     },
     sched_action: {
       action: serviceDeleteSchedAction,
       params: {
-        id: { from: fromData.resource, name: 'id' },
-        id_sched: { from: fromData.resource, name: 'id2' }
-      }
-    }
-  }
+        id: { from: fromData.resource, name: 'method' },
+        id_sched: { from: fromData.resource, name: 'id' },
+      },
+    },
+  },
 }
 
 const serviceApi = {
-  routes
+  routes,
 }
 
 module.exports = serviceApi

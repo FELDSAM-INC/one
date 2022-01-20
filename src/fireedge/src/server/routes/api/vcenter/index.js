@@ -14,13 +14,13 @@
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
 
-const privateRoutes = []
-
-const publicRoutes = []
+const { setApiRoutes } = require('server/utils/server')
+const { routes: vcenterRoutes } = require('server/routes/api/vcenter/routes')
+const { VCENTER } = require('server/routes/api/vcenter/string-routes')
 
 const functionRoutes = {
-  private: privateRoutes,
-  public: publicRoutes
+  private: setApiRoutes(vcenterRoutes, VCENTER),
+  public: [],
 }
 
 module.exports = functionRoutes

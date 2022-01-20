@@ -14,13 +14,13 @@
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
 
-const privateRoutes = []
-
-const publicRoutes = []
+const { setApiRoutes } = require('server/utils/server')
+const { routes: zendeskRoutes } = require('server/routes/api/zendesk/routes')
+const { ZENDESK } = require('server/routes/api/zendesk/string-routes')
 
 const functionRoutes = {
-  private: privateRoutes,
-  public: publicRoutes
+  private: setApiRoutes(zendeskRoutes, ZENDESK),
+  public: [],
 }
 
 module.exports = functionRoutes

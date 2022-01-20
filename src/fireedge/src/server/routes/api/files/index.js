@@ -14,28 +14,16 @@
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
 
-const { httpMethod } = require('server/utils/constants/defaults')
+const { setApiRoutes } = require('server/utils/server')
 const {
-  getConfig,
-  getViews
-} = require('./sunstone-functions')
-const { GET } = httpMethod
+  privateRoutes: filePrivateRoutes,
+  publicRoutes: filePublicRoutes,
+} = require('server/routes/api/files/routes')
+const { FILES } = require('server/routes/api/files/string-routes')
 
-const routes = {
-  [GET]: {
-    views: {
-      action: getViews,
-      params: {}
-    },
-    config: {
-      action: getConfig,
-      params: {}
-    }
-  }
+const functionRoutes = {
+  private: setApiRoutes(filePrivateRoutes, FILES),
+  public: setApiRoutes(filePublicRoutes, FILES),
 }
 
-const sunstoneApi = {
-  routes
-}
-
-module.exports = sunstoneApi
+module.exports = functionRoutes
