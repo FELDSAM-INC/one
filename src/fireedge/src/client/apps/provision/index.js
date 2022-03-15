@@ -21,7 +21,6 @@ import { StaticRouter, BrowserRouter } from 'react-router-dom'
 import { Provider as ReduxProvider } from 'react-redux'
 import { Store } from 'redux'
 
-import SocketProvider from 'client/providers/socketProvider'
 import MuiProvider from 'client/providers/muiProvider'
 import NotistackProvider from 'client/providers/notistackProvider'
 import { TranslateProvider } from 'client/components/HOC'
@@ -37,37 +36,34 @@ buildTranslationLocale()
  * @param {object} props - Props
  * @param {Store} props.store - Redux store
  * @param {string|object} props.location - The URL the server received
- * @param {object} props.context - Context object contains the results of the render
  * @returns {JSXElementConstructor} Provision App
  */
-const Provision = ({ store = {}, location = '', context = {} }) => (
+const Provision = ({ store = {}, location = '' }) => (
   <ReduxProvider store={store}>
-    <SocketProvider>
-      <TranslateProvider>
-        <MuiProvider theme={theme}>
-          <NotistackProvider>
-            {location && context ? (
-              // server build
-              <StaticRouter location={location} context={context}>
-                <App />
-              </StaticRouter>
-            ) : (
-              // browser build
-              <BrowserRouter basename={`${APP_URL}/${ProvisionAppName}`}>
-                <App />
-              </BrowserRouter>
-            )}
-          </NotistackProvider>
-        </MuiProvider>
-      </TranslateProvider>
-    </SocketProvider>
+    <TranslateProvider>
+      <MuiProvider theme={theme}>
+        <NotistackProvider>
+          {location ? (
+            // server build
+            <StaticRouter location={location}>
+              <App />
+            </StaticRouter>
+          ) : (
+            // browser build
+            <BrowserRouter basename={`${APP_URL}/${ProvisionAppName}`}>
+              <App />
+            </BrowserRouter>
+          )}
+        </NotistackProvider>
+      </MuiProvider>
+    </TranslateProvider>
   </ReduxProvider>
 )
 
 Provision.propTypes = {
   location: PropTypes.string,
   context: PropTypes.object,
-  store: PropTypes.object
+  store: PropTypes.object,
 }
 
 Provision.displayName = 'ProvisionApp'
