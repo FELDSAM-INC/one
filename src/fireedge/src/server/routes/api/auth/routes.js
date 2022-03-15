@@ -17,41 +17,42 @@
 const {
   httpMethod,
   from: fromData,
-} = require('server/utils/constants/defaults')
-const { auth } = require('server/routes/api/auth/functions')
-const { POST } = httpMethod
+} = require('../../../utils/constants/defaults')
 
-const routes = {
-  [POST]: {
-    null: {
-      action: auth,
+const { POST } = httpMethod
+const { postBody } = fromData
+
+const basepath = '/auth'
+const AUTHENTICATION = 'authentication'
+
+const Actions = {
+  AUTHENTICATION,
+}
+
+module.exports = {
+  Actions,
+  Commands: {
+    [AUTHENTICATION]: {
+      path: `${basepath}/`,
+      httpMethod: POST,
+      auth: false,
       params: {
         user: {
-          from: fromData.postBody,
-          name: 'user',
+          from: postBody,
         },
         token: {
-          from: fromData.postBody,
-          name: 'token',
+          from: postBody,
         },
         type: {
-          from: fromData.postBody,
-          name: 'type',
+          from: postBody,
         },
         token2fa: {
-          from: fromData.postBody,
-          name: 'token2fa',
+          from: postBody,
         },
         remember: {
-          from: fromData.postBody,
-          name: 'remember',
+          from: postBody,
         },
       },
     },
   },
 }
-
-const authApi = {
-  routes,
-}
-module.exports = authApi

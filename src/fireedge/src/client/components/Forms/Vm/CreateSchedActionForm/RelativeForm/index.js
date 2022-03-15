@@ -13,20 +13,42 @@
  * See the License for the specific language governing permissions and       *
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
-import { createForm } from 'client/utils'
-import { SCHEMA, FIELDS } from 'client/components/Forms/Vm/CreateSchedActionForm/RelativeForm/schema'
+import { isRejectedWithValue, Middleware, Dispatch } from '@reduxjs/toolkit'
 
-const RelativeForm = createForm(SCHEMA, FIELDS, {
-  transformBeforeSubmit: formData => {
-    const { ARGS, TIME: time, PERIOD: _, ...restOfData } = formData
-    const argValues = Object.values(ARGS)
+import * as Auth from 'client/features/Auth/slice'
+import { T, ONEADMIN_GROUP_ID } from 'client/constants'
 
-    const newSchedAction = { TIME: `+${time}`, ...restOfData }
+/**
+ * @param {{ dispatch: Dispatch }} params - Redux parameters
+ * @returns {Middleware} - Unauthenticated middleware
+ */
+export const unauthenticatedMiddleware =
+  ({ dispatch }) =>
+  (next) =>
+  (action) => {
+    if (isRejectedWithValue(action) && action.payload.status === 401) {
+      dispatch(Auth.actions.logout(T.SessionExpired))
+    }
 
-    argValues.length && (newSchedAction.ARGS = argValues.join(','))
-
-    return newSchedAction
+    return next(action)
   }
-})
 
-export default RelativeForm
+/**
+ * @param {{ dispatch: Dispatch, getState: function():object }} params - Redux parameters
+ * @returns {Middleware} - Middleware to logout when user isn't in oneadmin group
+ */
+export const onlyForOneadminMiddleware =
+  ({ dispatch, getState }) =>
+  (next) =>
+  (action) => {
+    const groups = getState()?.[Auth.name]?.user?.GROUPS?.ID
+
+    if (!Auth.actions.logout.match(action) && groups) {
+      const ensuredGroups = [groups].flat()
+
+      !ensuredGroups.includes(ONEADMIN_GROUP_ID) &&
+        dispatch(Auth.actions.logout(T.OnlyForOneadminGroup))
+    }
+
+    return next(action)
+  }
