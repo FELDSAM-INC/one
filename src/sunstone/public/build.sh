@@ -62,7 +62,7 @@ install_patch() {
         fi
     done
 
-    install_enterprise_patch
+    #install_enterprise_patch
 
     if [ "$DO_LINK" = "yes" ]; then
         mv -f dist/main.js ./main.js
