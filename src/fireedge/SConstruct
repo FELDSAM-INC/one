@@ -21,15 +21,15 @@ import os
 Import('env')
 
 
-if env['fireedge']=='yes':
-    print ("Generating FireEdge minified files\n")
-
-    if env['enterprise']=='yes':
-        print("OpenNebula Enterprise FireEdge\n")
-        exit_code=os.system("./build.sh -e")
-    else:
-        exit_code=os.system("./build.sh")
-
-    if exit_code != 0:
-        print ("Error generating minifying FireEdge files\n")
-        exit(-1)
+# if env['fireedge']=='yes':
+#     print ("Generating FireEdge minified files\n")
+#
+#     if env['enterprise']=='yes':
+#         print("OpenNebula Enterprise FireEdge\n")
+#         exit_code=os.system("./build.sh -e")
+#     else:
+#         exit_code=os.system("./build.sh")
+#
+#     if exit_code != 0:
+#         print ("Error generating minifying FireEdge files\n")
+#         exit(-1)
