@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------------- *
- * Copyright 2002-2021, OpenNebula Project, OpenNebula Systems               *
+ * Copyright 2002-2022, OpenNebula Project, OpenNebula Systems               *
  *                                                                           *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may   *
  * not use this file except in compliance with the License. You may obtain   *
@@ -88,12 +88,12 @@ const authApi = createApi({
           isLoginInProgress: withGroupSwitcher && !!token && !isOneAdmin,
         }
       },
-      async onQueryStarted({ remember }, { queryFulfilled, dispatch }) {
+      async onQueryStarted(_, { queryFulfilled, dispatch }) {
         try {
           const { data: queryData } = await queryFulfilled
 
           if (queryData?.jwt) {
-            storage(JWT_NAME, queryData?.jwt, remember)
+            storage(JWT_NAME, queryData?.jwt)
             dispatch(dismissSnackbar({ dismissAll: true }))
           }
 

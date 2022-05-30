@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------------- *
- * Copyright 2002-2021, OpenNebula Project, OpenNebula Systems               *
+ * Copyright 2002-2022, OpenNebula Project, OpenNebula Systems               *
  *                                                                           *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may   *
  * not use this file except in compliance with the License. You may obtain   *
@@ -14,15 +14,36 @@
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
 
-const { setApiRoutes } = require('server/utils/server')
+const { Actions, Commands } = require('server/routes/api/marketapp/routes')
 const {
-  routes: marketappRoutes,
-} = require('server/routes/api/marketapp/routes')
-const { MARKETAPP } = require('./string-routes')
+  exportApp,
+  downloadApp,
+  importMarket,
+  getDockerTags,
+} = require('server/routes/api/marketapp/functions')
 
-const functionRoutes = {
-  private: setApiRoutes(marketappRoutes, MARKETAPP),
-  public: [],
-}
+const {
+  MARKETAPP_EXPORT,
+  MARKETAPP_DOWNLOAD,
+  MARKETAPP_VMIMPORT,
+  MARKETAPP_DOCKERTAGS,
+} = Actions
 
-module.exports = functionRoutes
+module.exports = [
+  {
+    ...Commands[MARKETAPP_EXPORT],
+    action: exportApp,
+  },
+  {
+    ...Commands[MARKETAPP_DOWNLOAD],
+    action: downloadApp,
+  },
+  {
+    ...Commands[MARKETAPP_VMIMPORT],
+    action: importMarket,
+  },
+  {
+    ...Commands[MARKETAPP_DOCKERTAGS],
+    action: getDockerTags,
+  },
+]

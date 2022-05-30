@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------------- *
- * Copyright 2002-2021, OpenNebula Project, OpenNebula Systems               *
+ * Copyright 2002-2022, OpenNebula Project, OpenNebula Systems               *
  *                                                                           *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may   *
  * not use this file except in compliance with the License. You may obtain   *
@@ -15,12 +15,7 @@
  * ------------------------------------------------------------------------- */
 
 const { Validator } = require('jsonschema')
-const {
-  defaultFolderTmpProvision,
-  defaultCommandProvisionTemplate,
-} = require('server/utils/constants/defaults')
-
-const { ok, internalServerError } = require('server/utils/constants/http-codes')
+const { defaults, httpCodes } = require('server/utils/constants')
 const {
   httpResponse,
   parsePostData,
@@ -35,6 +30,8 @@ const {
 } = require('server/routes/api/oneprovision/utils')
 const { provider } = require('server/routes/api/oneprovision/schemas')
 
+const { defaultFolderTmpProvision, defaultCommandProvisionTemplate } = defaults
+const { ok, internalServerError } = httpCodes
 const httpInternalError = httpResponse(internalServerError, '', '')
 
 /**

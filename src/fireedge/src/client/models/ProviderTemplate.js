@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------------- *
- * Copyright 2002-2021, OpenNebula Project, OpenNebula Systems               *
+ * Copyright 2002-2022, OpenNebula Project, OpenNebula Systems               *
  *                                                                           *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may   *
  * not use this file except in compliance with the License. You may obtain   *
@@ -32,7 +32,8 @@
  * @returns {string[]} Location keys
  */
 export const getLocationKeys = (template = {}, providerConfig) => {
-  const { location_key: locationKey } = providerConfig?.[template?.provider] ?? {}
+  const { location_key: locationKey } =
+    providerConfig?.[template?.provider] ?? {}
 
   return typeof locationKey === 'string' ? locationKey.split(',') : locationKey
 }
@@ -45,9 +46,12 @@ export const getLocationKeys = (template = {}, providerConfig) => {
  * @returns {string[]} Location keys
  */
 export const getProvisionTypes = (template = {}, providerConfig) => {
-  const { provision_type: provisionType } = providerConfig?.[template?.provider] ?? {}
+  const { provision_type: provisionType } =
+    providerConfig?.[template?.provider] ?? {}
 
-  return typeof locationKey === 'string' ? provisionType.split(',') : provisionType
+  return typeof locationKey === 'string'
+    ? provisionType.split(',')
+    : provisionType
 }
 
 /**
@@ -65,7 +69,7 @@ export const isValidProviderTemplate = (template, providerConfig) => {
   const hasConnection = connection !== undefined
 
   const locationKeyConnectionNotExists =
-    !hasConnection || keys?.some(key => connection?.[key] === undefined)
+    !hasConnection || keys?.some((key) => connection?.[key] === undefined)
 
   return (
     !(keys && locationKeyConnectionNotExists) ||
@@ -85,10 +89,13 @@ export const getConnectionFixed = (template = {}, providerConfig) => {
   const { connection = {} } = template
   const keys = getLocationKeys(template, providerConfig)
 
-  return Object.entries(connection).reduce((res, [name, value]) => ({
-    ...res,
-    ...(keys?.includes(name) && { [name]: value })
-  }), {})
+  return Object.entries(connection).reduce(
+    (res, [name, value]) => ({
+      ...res,
+      ...(keys?.includes(name) && { [name]: value }),
+    }),
+    {}
+  )
 }
 
 /**
@@ -102,8 +109,11 @@ export const getConnectionEditable = (template = {}, providerConfig) => {
   const { connection = {} } = template
   const keys = getLocationKeys(template, providerConfig)
 
-  return Object.entries(connection).reduce((res, [name, value]) => ({
-    ...res,
-    ...(!keys?.includes(name) && { [name]: value })
-  }), {})
+  return Object.entries(connection).reduce(
+    (res, [name, value]) => ({
+      ...res,
+      ...(!keys?.includes(name) && { [name]: value }),
+    }),
+    {}
+  )
 }

@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------------- *
- * Copyright 2002-2021, OpenNebula Project, OpenNebula Systems               *
+ * Copyright 2002-2022, OpenNebula Project, OpenNebula Systems               *
  *                                                                           *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may   *
  * not use this file except in compliance with the License. You may obtain   *
@@ -17,33 +17,51 @@
 const {
   httpMethod,
   from: fromData,
-} = require('server/utils/constants/defaults')
-const { saveAsTemplate } = require('server/routes/api/vm/functions')
-const { POST } = httpMethod
+} = require('../../../utils/constants/defaults')
 
-const routes = {
-  [POST]: {
-    save: {
-      action: saveAsTemplate,
+const basepath = '/vm'
+const { POST, GET } = httpMethod
+const { resource, postBody } = fromData
+
+const VM_SAVEASTEMPLATE = 'vm.saveastemplate'
+const GUACAMOLE = 'vm.guacamole'
+
+const Actions = {
+  VM_SAVEASTEMPLATE,
+  GUACAMOLE,
+}
+
+module.exports = {
+  Actions,
+  Commands: {
+    [VM_SAVEASTEMPLATE]: {
+      path: `${basepath}/save/:id`,
+      httpMethod: POST,
+      auth: true,
       params: {
         id: {
-          from: fromData.resource,
-          name: 'id',
+          from: resource,
         },
         name: {
-          from: fromData.postBody,
-          name: 'name',
+          from: postBody,
         },
         persistent: {
-          from: fromData.postBody,
-          name: 'persistent',
+          from: postBody,
+        },
+      },
+    },
+    [GUACAMOLE]: {
+      path: `${basepath}/:id/guacamole/:type`,
+      httpMethod: GET,
+      auth: true,
+      params: {
+        id: {
+          from: resource,
+        },
+        type: {
+          from: resource,
         },
       },
     },
   },
 }
-
-const authApi = {
-  routes,
-}
-module.exports = authApi

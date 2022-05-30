@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------------- *
- * Copyright 2002-2021, OpenNebula Project, OpenNebula Systems               *
+ * Copyright 2002-2022, OpenNebula Project, OpenNebula Systems               *
  *                                                                           *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may   *
  * not use this file except in compliance with the License. You may obtain   *
@@ -14,14 +14,18 @@
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
 
-const { setApiRoutes } = require('server/utils/server')
-const { routes: sunstoneRoutes } = require('./routes')
+const { Actions, Commands } = require('server/routes/api/sunstone/routes')
+const { getConfig, getViews } = require('server/routes/api/sunstone/functions')
 
-const { SUNSTONE } = require('./string-routes')
+const { SUNSTONE_VIEWS, SUNSTONE_CONFIG } = Actions
 
-const functionRoutes = {
-  private: setApiRoutes(sunstoneRoutes, SUNSTONE),
-  public: [],
-}
-
-module.exports = functionRoutes
+module.exports = [
+  {
+    ...Commands[SUNSTONE_VIEWS],
+    action: getViews,
+  },
+  {
+    ...Commands[SUNSTONE_CONFIG],
+    action: getConfig,
+  },
+]

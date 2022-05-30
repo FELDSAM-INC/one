@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------------- *
- * Copyright 2002-2021, OpenNebula Project, OpenNebula Systems               *
+ * Copyright 2002-2022, OpenNebula Project, OpenNebula Systems               *
  *                                                                           *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may   *
  * not use this file except in compliance with the License. You may obtain   *
@@ -13,39 +13,42 @@
  * See the License for the specific language governing permissions and       *
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
+// eslint-disable-next-line node/no-deprecated-api
+const { parse } = require('url')
 const { Router } = require('express')
 const { renderToString } = require('react-dom/server')
 const root = require('window-or-global')
 const { createStore, compose, applyMiddleware } = require('redux')
 const thunk = require('redux-thunk').default
 const { ServerStyleSheets } = require('@mui/styles')
+
+// server
+const { getSunstoneConfig, getProvisionConfig } = require('server/utils/yml')
+const { defaultApps } = require('server/utils/constants/defaults')
+
+// client
 const rootReducer = require('client/store/reducers')
-const { getFireedgeConfig } = require('server/utils/yml')
-const {
-  availableLanguages,
-  defaultApps,
-} = require('server/utils/constants/defaults')
-const { APP_URL, STATIC_FILES_URL } = require('client/constants')
 const { upperCaseFirst } = require('client/utils')
+const { APP_URL, STATIC_FILES_URL } = require('client/constants')
 
-// settings
-const appConfig = getFireedgeConfig()
-const langs = appConfig.langs || availableLanguages
+const APP_NAMES = Object.keys(defaultApps)
 
-const languages = Object.keys(langs)
-const scriptLanguages = languages.map((language) => ({
-  key: language,
-  value: `${langs[language]}`,
-}))
+const APP_CONFIG = {
+  [defaultApps.provision.name]: getProvisionConfig() || {},
+  [defaultApps.sunstone.name]:
+    getSunstoneConfig({ includeProtectedConfig: false }) || {},
+}
+
+const ensuredScriptValue = (value) =>
+  JSON.stringify(value).replace(/</g, '\\u003c')
 
 const router = Router()
 
 router.get('*', (req, res) => {
-  const apps = Object.keys(defaultApps)
-  const appName = req.url
-    .split(/\//gi)
+  const appName = parse(req.url)
+    .pathname.split(/\//gi)
     .filter((sub) => sub?.length > 0)
-    .find((resource) => apps.includes(resource))
+    .find((resource) => APP_NAMES.includes(resource))
 
   const sheets = new ServerStyleSheets()
   const composeEnhancer =
@@ -57,15 +60,21 @@ router.get('*', (req, res) => {
     composeEnhancer(applyMiddleware(thunk))
   )
 
-  const storeRender = `<script id="preloadState">window.__PRELOADED_STATE__ = ${JSON.stringify(
-    store.getState()
-  ).replace(/</g, '\\u003c')}</script>`
-
   const App = require(`../../../client/apps/${appName}/index.js`).default
 
   const rootComponent = renderToString(
     sheets.collect(<App location={req.url} store={store} />)
   )
+
+  const config = `
+    <script id="preload-server-side">
+      window.__PRELOADED_CONFIG__ = ${ensuredScriptValue(APP_CONFIG[appName])}
+    </script>`
+
+  const storeRender = `
+    <script id="preloadState">
+      window.__PRELOADED_STATE__ = ${ensuredScriptValue(store.getState())}
+    </script>`
 
   const css = `<style id="jss-server-side">${sheets.toString()}</style>`
 
@@ -86,7 +95,7 @@ router.get('*', (req, res) => {
     <body>
       <div id="root">${rootComponent}</div>
       ${storeRender}
-      <script>${`langs = ${JSON.stringify(scriptLanguages)}`}</script>
+      ${config}
       <script src='${APP_URL}/client/bundle.${appName}.js'></script>
     </body>
     </html>

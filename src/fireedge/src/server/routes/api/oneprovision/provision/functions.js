@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------------- *
- * Copyright 2002-2021, OpenNebula Project, OpenNebula Systems               *
+ * Copyright 2002-2022, OpenNebula Project, OpenNebula Systems               *
  *                                                                           *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may   *
  * not use this file except in compliance with the License. You may obtain   *
@@ -23,12 +23,8 @@ const { basename, dirname } = require('path')
 const { sprintf } = require('sprintf-js')
 
 const { Actions } = require('server/utils/constants/commands/document')
-const {
-  ok,
-  notFound,
-  accepted,
-  internalServerError,
-} = require('server/utils/constants/http-codes')
+const { defaults, httpCodes } = require('server/utils/constants')
+const { publish } = require('server/utils/server')
 const {
   httpResponse,
   parsePostData,
@@ -42,25 +38,29 @@ const {
 } = require('server/utils/server')
 const { checkEmptyObject } = require('server/utils/general')
 const {
-  defaultFolderTmpProvision,
-  defaultCommandProvision,
-  defaultEmptyFunction,
-  defaultErrorTemplate,
-} = require('server/utils/constants/defaults')
-const {
   createTemporalFile,
   createFolderWithFiles,
   createYMLContent,
   renameFolder,
   moveToFolder,
   findRecursiveFolder,
-  publish,
   getEndpoint,
   addOptionalCreateCommand,
   getSpecificConfig,
 } = require('server/routes/api/oneprovision/utils')
 const { provision } = require('server/routes/api/oneprovision/schemas')
 
+const {
+  defaultFolderTmpProvision,
+  defaultCommandProvision,
+  defaultEmptyFunction,
+  defaultErrorTemplate,
+  defaultRegexpStartJSON,
+  defaultRegexpEndJSON,
+  defaultRegexpSplitLine,
+  defaultRegexID,
+} = defaults
+const { ok, notFound, accepted, internalServerError } = httpCodes
 const httpInternalError = httpResponse(internalServerError, '', '')
 
 const logFile = {
@@ -71,10 +71,6 @@ const provisionFile = {
   name: 'provision',
   ext: 'yaml',
 }
-const regexp = /^ID: \d+/
-const regexpStartJSON = /^{/
-const regexpEndJSON = /}$/
-const regexpSplitLine = /\r|\n/
 const relName = 'provision-mapping'
 const ext = 'yml'
 const appendError = '.ERROR'
@@ -147,21 +143,23 @@ const executeWithEmit = (command = [], actions = {}, dataForLog = {}) => {
 
       message
         .toString()
-        .split(regexpSplitLine)
+        .split(defaultRegexpSplitLine)
         .forEach((line) => {
           if (line) {
             if (
-              (regexpStartJSON.test(line) && regexpEndJSON.test(line)) ||
-              (!regexpStartJSON.test(line) &&
-                !regexpEndJSON.test(line) &&
+              (defaultRegexpStartJSON.test(line) &&
+                defaultRegexpEndJSON.test(line)) ||
+              (!defaultRegexpStartJSON.test(line) &&
+                !defaultRegexpEndJSON.test(line) &&
                 pendingMessages.length === 0)
             ) {
               lastLine = line
               publisher(lastLine)
             } else if (
-              (regexpStartJSON.test(line) && !regexpEndJSON.test(line)) ||
-              (!regexpStartJSON.test(line) &&
-                !regexpEndJSON.test(line) &&
+              (defaultRegexpStartJSON.test(line) &&
+                !defaultRegexpEndJSON.test(line)) ||
+              (!defaultRegexpStartJSON.test(line) &&
+                !defaultRegexpEndJSON.test(line) &&
                 pendingMessages.length > 0)
             ) {
               pendingMessages += line
@@ -229,7 +227,7 @@ const logData = (id, fullPath = false) => {
         existsFile(
           stringPath,
           (filedata) => {
-            rtn = { uuid, log: filedata.split(regexpSplitLine) }
+            rtn = { uuid, log: filedata.split(defaultRegexpSplitLine) }
             if (fullPath) {
               rtn.fullPath = stringPath
             }
@@ -712,12 +710,16 @@ const deleteProvision = (
         )
         findFolder && removeFile(findFolder)
       } else {
-        const connect = oneConnection(user, password)
-        connect(
-          Actions.DOCUMENT_UPDATE,
-          [parseInt(params.id, 10), sprintf(defaultErrorTemplate, lastLine), 1],
-          defaultEmptyFunction
-        )
+        const oneConnect = oneConnection(user, password)
+        oneConnect({
+          action: Actions.DOCUMENT_UPDATE,
+          parameters: [
+            parseInt(params.id, 10),
+            sprintf(defaultErrorTemplate, lastLine),
+            1,
+          ],
+          callback: defaultEmptyFunction,
+        })
       }
     }
 
@@ -748,7 +750,7 @@ const deleteProvision = (
  * @param {Function} next - express stepper
  * @param {object} params - params of http request
  * @param {number} params.id - host provision ID
- * @param {string} params.action - provison accion host
+ * @param {string} params.action - provision accion host
  * @param {object} userData - user of http request
  * @param {string} userData.user - username
  * @param {string} userData.password - user password
@@ -795,67 +797,6 @@ const hostCommand = (
 }
 
 /**
- * SSH command of host into provision.
- *
- * @param {object} res - http response
- * @param {Function} next - express stepper
- * @param {object} params - params of http request
- * @param {string} params.action - provision action
- * @param {number} params.id - provision id
- * @param {string} params.command - provision command
- * @param {object} userData - user of http request
- * @param {string} userData.user - username
- * @param {string} userData.password - user password
- */
-const hostCommandSSH = (
-  res = {},
-  next = defaultEmptyFunction,
-  params = {},
-  userData = {}
-) => {
-  const { user, password } = userData
-  const { action, id, command } = params
-  let rtn = httpInternalError
-  if (
-    action &&
-    Number.isInteger(parseInt(id, 10)) &&
-    command &&
-    user &&
-    password
-  ) {
-    const endpoint = getEndpoint()
-    const authCommand = ['--user', user, '--password', password]
-    const paramsCommand = [
-      'host',
-      `${action}`.toLowerCase(),
-      `${id}`.toLowerCase(),
-      `${command}`.toLowerCase(),
-      ...authCommand,
-      ...endpoint,
-    ]
-    const executedCommand = executeCommand(
-      defaultCommandProvision,
-      paramsCommand,
-      getSpecificConfig('oneprovision_prepend_command')
-    )
-    try {
-      const response = executedCommand.success ? ok : internalServerError
-      res.locals.httpCode = httpResponse(
-        response,
-        executedCommand.data ? JSON.parse(executedCommand.data) : params.id
-      )
-      next()
-
-      return
-    } catch (error) {
-      rtn = httpResponse(internalServerError, '', executedCommand.data)
-    }
-  }
-  res.locals.httpCode = rtn
-  next()
-}
-
-/**
  * Create a provision.
  *
  * @param {object} res - http response
@@ -866,25 +807,24 @@ const hostCommandSSH = (
  * @param {string} userData.user - username
  * @param {string} userData.password - user password
  * @param {number} userData.id - user id
- * @param {Function} oneConnection - function of xmlrpc
  */
 const createProvision = (
   res = {},
   next = defaultEmptyFunction,
   params = {},
-  userData = {},
-  oneConnection = defaultEmptyFunction
+  userData = {}
 ) => {
   const basePath = `${global.paths.CPI}/provision`
   const relFile = `${basePath}/${relName}`
   const relFileYML = `${relFile}.${ext}`
   const relFileLOCK = `${relFile}.lock`
   const { user, password, id } = userData
-  const { resource } = params
+  const { data } = params
   const rtn = httpInternalError
-  if (resource && user && password) {
+  if (data && user && password) {
     const optionalCommand = addOptionalCreateCommand()
-    const content = createYMLContent(parsePostData(params.resource))
+    const content = createYMLContent(parsePostData(data))
+
     if (content) {
       const command = 'create'
       const authCommand = ['--user', user, '--password', password]
@@ -948,7 +888,7 @@ const createProvision = (
              */
             const emit = (lastLine, uuid) => {
               if (lastLine && uuid) {
-                if (regexp.test(lastLine) && !checkSync(relFileLOCK)) {
+                if (defaultRegexID.test(lastLine) && !checkSync(relFileLOCK)) {
                   const fileData = parse(filedata) || {}
                   const parseID = lastLine.match('\\d+')
                   const idResource = parseID[0]
@@ -984,7 +924,7 @@ const createProvision = (
              */
             const close = (success, lastLine) => {
               stream.end()
-              if (success && regexp.test(lastLine)) {
+              if (success && defaultRegexID.test(lastLine)) {
                 const newPath = renameFolder(
                   config.path,
                   lastLine.match('\\d+'),
@@ -1057,7 +997,7 @@ const createProvision = (
  * @param {object} res - http response
  * @param {Function} next - express stepper
  * @param {object} params - params of http request
- * @param {number} params.id - proivision id
+ * @param {number} params.id - provision id
  * @param {object} userData - user of http request
  * @param {string} userData.user - username
  * @param {string} userData.password - user password
@@ -1493,7 +1433,6 @@ const provisionFunctionsApi = {
   deleteResource,
   deleteProvision,
   hostCommand,
-  hostCommandSSH,
   createProvision,
   configureProvision,
   configureHost,

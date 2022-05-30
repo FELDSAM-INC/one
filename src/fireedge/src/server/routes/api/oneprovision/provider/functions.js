@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------------- *
- * Copyright 2002-2021, OpenNebula Project, OpenNebula Systems               *
+ * Copyright 2002-2022, OpenNebula Project, OpenNebula Systems               *
  *                                                                           *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may   *
  * not use this file except in compliance with the License. You may obtain   *
@@ -16,16 +16,7 @@
 
 const { parse } = require('yaml')
 const { basename } = require('path')
-const {
-  defaultFolderTmpProvision,
-  defaultCommandProvider,
-  defaultHideCredentials,
-  defaultHideCredentialReplacer,
-  defaultEmptyFunction,
-  defaultProvidersConfigPath,
-} = require('server/utils/constants/defaults')
-
-const { ok, internalServerError } = require('server/utils/constants/http-codes')
+const { defaults, httpCodes } = require('server/utils/constants')
 const {
   httpResponse,
   parsePostData,
@@ -41,6 +32,15 @@ const {
   getSpecificConfig,
 } = require('server/routes/api/oneprovision/utils')
 
+const {
+  defaultFolderTmpProvision,
+  defaultCommandProvider,
+  defaultHideCredentials,
+  defaultHideCredentialReplacer,
+  defaultEmptyFunction,
+  defaultProvidersConfigPath,
+} = defaults
+const { ok, internalServerError } = httpCodes
 const httpInternalError = httpResponse(internalServerError, '', '')
 
 /**
@@ -270,11 +270,12 @@ const createProviders = (
 ) => {
   const { user, password } = userData
   const rtn = httpInternalError
-  if (params && params.resource && user && password) {
+  if (params && params.data && user && password) {
     const authCommand = ['--user', user, '--password', password]
     const endpoint = getEndpoint()
-    const resource = parsePostData(params.resource)
+    const resource = parsePostData(params.data)
     const content = createYMLContent(resource)
+
     if (content) {
       const file = createTemporalFile(
         `${global.paths.CPI}/${defaultFolderTmpProvision}`,
@@ -331,10 +332,10 @@ const updateProviders = (
 ) => {
   const { user, password } = userData
   const rtn = httpInternalError
-  if (params && params.resource && params.id && user && password) {
+  if (params && params.data && params.id && user && password) {
     const authCommand = ['--user', user, '--password', password]
     const endpoint = getEndpoint()
-    const resource = parsePostData(params.resource)
+    const resource = parsePostData(params.data)
     const file = createTemporalFile(
       `${global.paths.CPI}/${defaultFolderTmpProvision}`,
       'json',

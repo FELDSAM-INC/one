@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------------- *
- * Copyright 2002-2021, OpenNebula Project, OpenNebula Systems               *
+ * Copyright 2002-2022, OpenNebula Project, OpenNebula Systems               *
  *                                                                           *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may   *
  * not use this file except in compliance with the License. You may obtain   *
@@ -18,36 +18,41 @@ const {
   httpMethod,
   from: fromData,
 } = require('server/utils/constants/defaults')
-const { setup, qr, del } = require('server/routes/api/2fa/functions')
-const { POST, DELETE, GET } = httpMethod
 
-const routes = {
-  [POST]: {
-    null: {
-      action: setup,
+const { POST, DELETE, GET } = httpMethod
+const basepath = '/tfa'
+const TFA_SETUP = 'tfa.setup'
+const TFA_QR = 'tfa.qr'
+const TFA_DELETE = 'tfa.delete'
+
+const Actions = {
+  TFA_SETUP,
+  TFA_QR,
+  TFA_DELETE,
+}
+
+module.exports = {
+  Actions,
+  Commands: {
+    [TFA_SETUP]: {
+      path: `${basepath}/`,
+      httpMethod: POST,
+      auth: true,
       params: {
         token: {
           from: fromData.postBody,
-          name: 'token',
         },
       },
     },
-  },
-  [GET]: {
-    null: {
-      action: qr,
-      params: {},
+    [TFA_QR]: {
+      path: `${basepath}/`,
+      httpMethod: GET,
+      auth: true,
     },
-  },
-  [DELETE]: {
-    null: {
-      action: del,
-      params: {},
+    [TFA_DELETE]: {
+      path: `${basepath}/`,
+      httpMethod: DELETE,
+      auth: true,
     },
   },
 }
-
-const authApi = {
-  routes,
-}
-module.exports = authApi

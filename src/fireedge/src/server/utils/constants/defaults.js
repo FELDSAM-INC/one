@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------------- *
- * Copyright 2002-2021, OpenNebula Project, OpenNebula Systems               *
+ * Copyright 2002-2022, OpenNebula Project, OpenNebula Systems               *
  *                                                                           *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may   *
  * not use this file except in compliance with the License. You may obtain   *
@@ -48,10 +48,15 @@ const defaults = {
    * @returns {undefined} undefined data
    */
   defaultEmptyFunction: () => undefined,
+  defaultTmpPath: '/tmp',
   defaultErrorTemplate: 'ERROR_FIREEDGE="%1$s"',
   defaultSessionExpiration: 180,
   defaultSessionLimitExpiration: 30,
   defaultRememberSessionExpiration: 43200,
+  defaultRegexpStartJSON: /^{/,
+  defaultRegexID: /^ID: (?<id>\d+)/,
+  defaultRegexpEndJSON: /}$/,
+  defaultRegexpSplitLine: /\r|\n/,
   defaultAppName: appName,
   defaultConfigErrorMessage: {
     color: 'red',
@@ -62,8 +67,12 @@ const defaults = {
       path: `${baseUrl}${baseUrlWebsockets}hooks`,
       methods: ['GET', 'POST'],
     },
-    provision: {
+    [appNameProvision]: {
       path: `${baseUrl}${baseUrlWebsockets}${appNameProvision}`,
+      methods: ['GET', 'POST'],
+    },
+    vcenter: {
+      path: `${baseUrl}${baseUrlWebsockets}vcenter`,
       methods: ['GET', 'POST'],
     },
   },
@@ -84,12 +93,14 @@ const defaults = {
     query: 'QUERY',
     postBody: 'POST_BODY',
   },
+  defaultEnterpriseRepo: 'https://enterprise.opennebula.io/repo/',
+  defaultComunityRepo: 'https://downloads.opennebula.io/repo/',
+  defaultDownloader: 'remotes/datastore/downloader.sh',
   defaultOpennebulaZones: [
     {
       id: '0',
       name: 'OpenNebula',
       rpc: `${protocol}://${defaultIp}:2633/RPC2`,
-      zeromq: `tcp://${defaultIp}:2101`,
     },
   ],
   defaultConfigParseXML: {
@@ -102,8 +113,8 @@ const defaults = {
     parseAttributeValue: true,
     trimValues: true,
   },
-  defaultCommandProvision: 'oneprovision',
-  defaultCommandProvisionTemplate: 'oneprovision-template',
+  defaultCommandProvision: `one${appNameProvision}`,
+  defaultCommandProvisionTemplate: `one${appNameProvision}-template`,
   defaultCommandProvider: 'oneprovider',
   defaultCommandVcenter: 'onevcenter',
   defaultCommandVM: 'onevm',
@@ -112,13 +123,10 @@ const defaults = {
   defaultHideCredentials: true,
   defaultHideCredentialReplacer: '****',
   defaultOneFlowServer: `${protocol}://${defaultIp}:2474`,
-  defaultConfigFile: `${appName}-server.conf`,
   defaultSunstonePath: internalSunstonePath,
-  defaultSunstoneViews: `${appNameSunstone}-views.yaml`,
-  defaultSunstoneConfig: `${appNameSunstone}-server.conf`,
-  defaultProvisionConfig: `${appNameProvision}-server.conf`,
   defaultProvisionPath: internalProvisionPath,
   defaultProvidersConfigPath: 'providers.d',
+  defaultLogsLevels: ['error', 'warm', 'info', 'http', 'verbose', 'debug'],
   defaultTypeLog: 'prod',
   defaultWebpackMode: 'development',
   defaultProductionWebpackMode: 'production',
@@ -153,46 +161,32 @@ const defaults = {
   defaultHost: '0.0.0.0',
   defaultPort: 2616,
   defaultEvents: ['SIGINT', 'SIGTERM'],
-  availableLanguages: {
-    bg_BG: 'Bulgarian (Bulgaria)',
-    bg: 'Bulgarian',
-    ca: 'Catalan',
-    cs_CZ: 'Czech',
-    da: 'Danish',
-    de_CH: 'German (Switzerland)',
-    de: 'German',
-    el_GR: 'Greek (Greece)',
-    en: 'English',
-    es_ES: 'Spanish',
-    et_EE: 'Estonian',
-    fa_IR: 'Persian (Iran)',
-    fa: 'Persian',
-    fr_CA: 'French (Canada)',
-    fr_FR: 'French',
-    hu_HU: 'Hungary',
-    it_IT: 'Italian',
-    ja: 'Japanese',
-    ka: 'Georgian',
-    lt_LT: 'Lithuanian',
-    nl_NL: 'Dutch',
-    pl: 'Polish',
-    pt_PT: 'Portuguese',
-    ro_RO: 'Romanian',
-    ru_RU: 'Russian',
-    ru: 'Russian',
-    si: 'Sinhala',
-    sk_SK: 'Slavak',
-    sr_RS: 'Serbian',
-    sv: 'Swedish',
-    th_TH: 'Thai (Thailand)',
-    th: 'Thai',
-    tr_TR: 'Turkish (Turkey)',
-    tr: 'Turkish',
-    uk_UA: 'Ukrainian (Ukraine)',
-    uk: 'Ukrainian',
-    vi: 'Vietnamese',
-    zh_CN: 'Chinese (China)',
-    zh_TW: 'Chinese (Taiwan)',
+
+  /** CONFIGURATION FILE */
+  defaultConfigFile: `${appName}-server.conf`,
+  defaultSunstoneViews: `${appNameSunstone}-views.yaml`,
+  defaultSunstoneConfig: `${appNameSunstone}-server.conf`,
+  defaultProvisionConfig: `${appNameProvision}-server.conf`,
+  protectedConfigData: {
+    [appNameSunstone]: [
+      'support_url',
+      'vcenter_prepend_command',
+      'sunstone_prepend',
+      'guacd',
+      'tmpdir',
+      'max_upload_file_size',
+      'proxy',
+      'token_remote_support',
+    ],
+    [appNameProvision]: [
+      'oneprovision_prepend_command',
+      'oneprovision_optional_create_command',
+    ],
+  },
+
+  /** HOOK OBJECT NAMES */
+  hookObjectNames: {
+    vn: 'net',
   },
 }
 

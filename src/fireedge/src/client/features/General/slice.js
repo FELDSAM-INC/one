@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------------- *
- * Copyright 2002-2021, OpenNebula Project, OpenNebula Systems               *
+ * Copyright 2002-2022, OpenNebula Project, OpenNebula Systems               *
  *                                                                           *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may   *
  * not use this file except in compliance with the License. You may obtain   *
@@ -22,13 +22,11 @@ import { APPS_IN_BETA, APPS_WITH_SWITCHER } from 'client/constants'
 
 const initial = {
   zone: 0,
-  title: null,
   appTitle: null,
   isBeta: false,
   withGroupSwitcher: false,
   isLoading: false,
   isFixMenu: false,
-
   notifications: [],
 }
 
@@ -40,8 +38,10 @@ const { name, reducer } = createSlice({
       /* LOGOUT ACTION */
       .addCase(authActions.logout, (state) => ({
         ...initial,
+        // persistent app state
         appTitle: state.appTitle,
         isBeta: state.isBeta,
+        withGroupSwitcher: state.withGroupSwitcher,
       }))
 
       /* UI ACTIONS */
@@ -52,10 +52,6 @@ const { name, reducer } = createSlice({
       .addCase(actions.changeLoading, (state, { payload }) => ({
         ...state,
         isLoading: !!payload,
-      }))
-      .addCase(actions.changeTitle, (state, { payload }) => ({
-        ...state,
-        title: payload,
       }))
       .addCase(actions.changeAppTitle, (state, { payload: appTitle }) => {
         const lowerAppTitle = String(appTitle).toLowerCase()

@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------------- *
- * Copyright 2002-2021, OpenNebula Project, OpenNebula Systems               *
+ * Copyright 2002-2022, OpenNebula Project, OpenNebula Systems               *
  *                                                                           *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may   *
  * not use this file except in compliance with the License. You may obtain   *
@@ -15,116 +15,107 @@
  * ------------------------------------------------------------------------- */
 
 const {
-  httpMethod,
   from: fromData,
-} = require('server/utils/constants/defaults')
-const {
-  exportApp,
-  importMarket,
-  getDockerTags,
-} = require('server/routes/api/marketapp/functions')
-const { POST, GET } = httpMethod
+  httpMethod,
+} = require('../../../utils/constants/defaults')
 
-const routes = {
-  [POST]: {
-    export: {
-      action: exportApp,
+const { POST, GET } = httpMethod
+const { query, resource, postBody } = fromData
+
+const basepath = '/marketapp'
+const MARKETAPP_EXPORT = 'marketapp.export'
+const MARKETAPP_DOWNLOAD = 'marketapp.download'
+const MARKETAPP_VMIMPORT = 'marketapp.vmimport'
+const MARKETAPP_DOCKERTAGS = 'marketapp.dockertags'
+
+const Actions = {
+  MARKETAPP_EXPORT,
+  MARKETAPP_DOWNLOAD,
+  MARKETAPP_VMIMPORT,
+  MARKETAPP_DOCKERTAGS,
+}
+
+module.exports = {
+  Actions,
+  Commands: {
+    [MARKETAPP_EXPORT]: {
+      path: `${basepath}/export/:id`,
+      httpMethod: POST,
+      auth: true,
       params: {
         id: {
-          from: fromData.resource,
-          name: 'id',
+          from: resource,
         },
         name: {
-          from: fromData.postBody,
-          name: 'name',
+          from: postBody,
         },
         datastore: {
-          from: fromData.postBody,
-          name: 'datastore',
+          from: postBody,
         },
         file: {
-          from: fromData.postBody,
-          name: 'file',
+          from: postBody,
         },
         associated: {
-          from: fromData.postBody,
-          name: 'associated',
+          from: postBody,
         },
         tag: {
-          from: fromData.postBody,
-          name: 'tag',
+          from: postBody,
         },
         template: {
-          from: fromData.postBody,
-          name: 'template',
+          from: postBody,
         },
         vmname: {
-          from: fromData.postBody,
-          name: 'vmname',
+          from: postBody,
         },
       },
     },
-    vmimport: {
-      action: importMarket,
-      params: {
-        vmId: {
-          from: fromData.resource,
-          name: 'id',
-        },
-        associated: {
-          from: fromData.postBody,
-          name: 'associated',
-        },
-        marketId: {
-          from: fromData.postBody,
-          name: 'marketId',
-        },
-        vmname: {
-          from: fromData.postBody,
-          name: 'vmname',
-        },
-      },
-    },
-    templateimport: {
-      action: importMarket,
-      params: {
-        templateId: {
-          from: fromData.resource,
-          name: 'id',
-        },
-        associated: {
-          from: fromData.postBody,
-          name: 'associated',
-        },
-        marketId: {
-          from: fromData.postBody,
-          name: 'marketId',
-        },
-        vmname: {
-          from: fromData.postBody,
-          name: 'vmname',
-        },
-      },
-    },
-  },
-  [GET]: {
-    dockertags: {
-      action: getDockerTags,
+    [MARKETAPP_DOWNLOAD]: {
+      path: `${basepath}/download/:id`,
+      httpMethod: GET,
+      auth: false,
       params: {
         id: {
-          from: fromData.resource,
-          name: 'id',
+          from: resource,
+        },
+        token: {
+          from: query,
+        },
+      },
+    },
+    [MARKETAPP_VMIMPORT]: {
+      path: `${basepath}/vmimport/:vmId`,
+      httpMethod: POST,
+      auth: true,
+      params: {
+        id: {
+          from: resource,
+        },
+        resource: {
+          from: resource,
+        },
+        associated: {
+          from: postBody,
+        },
+        marketId: {
+          from: postBody,
+        },
+        vmname: {
+          from: postBody,
+        },
+      },
+    },
+    [MARKETAPP_DOCKERTAGS]: {
+      path: `${basepath}/dockertags/:id`,
+      httpMethod: GET,
+      auth: true,
+      params: {
+        id: {
+          from: resource,
         },
         page: {
-          from: fromData.query,
-          name: 'page',
+          from: query,
         },
       },
     },
   },
 }
-
-const authApi = {
-  routes,
-}
-module.exports = authApi

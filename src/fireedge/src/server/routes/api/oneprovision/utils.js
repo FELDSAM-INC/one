@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------------- *
- * Copyright 2002-2021, OpenNebula Project, OpenNebula Systems               *
+ * Copyright 2002-2022, OpenNebula Project, OpenNebula Systems               *
  *                                                                           *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may   *
  * not use this file except in compliance with the License. You may obtain   *
@@ -18,56 +18,19 @@ const { v4 } = require('uuid')
 const { dirname, basename } = require('path')
 // eslint-disable-next-line node/no-deprecated-api
 const { parse } = require('url')
-const events = require('events')
 const { Document, scalarOptions, stringify } = require('yaml')
 const {
   writeFileSync,
-  removeSync,
   readdirSync,
   statSync,
   existsSync,
   mkdirsSync,
   renameSync,
-  moveSync
+  moveSync,
 } = require('fs-extra')
 const { getFireedgeConfig, getProvisionConfig } = require('server/utils/yml')
 const { messageTerminal } = require('server/utils/general')
 const { defaultError } = require('server/utils/server')
-
-const eventsEmitter = new events.EventEmitter()
-
-/**
- * Create a event emiter.
- *
- * @param {string} eventName - name event
- * @param {object} message - object message
- */
-const publish = (eventName = '', message = {}) => {
-  if (eventName && message) {
-    eventsEmitter.emit(eventName, message)
-  }
-}
-
-/**
- * Subscriber to event emitter.
- *
- * @param {string} eventName - event name
- * @param {Function} callback - function executed when event is emited
- */
-const subscriber = (eventName = '', callback = () => undefined) => {
-  if (eventName &&
-    callback &&
-    typeof callback === 'function' &&
-    eventsEmitter.listenerCount(eventName) < 1
-  ) {
-    eventsEmitter.on(
-      eventName,
-      message => {
-        callback(message)
-      }
-    )
-  }
-}
 
 /**
  * Create folder with files.
@@ -87,16 +50,26 @@ const createFolderWithFiles = (path = '', files = [], filename = '') => {
     }
     rtn.name = name
     if (files && Array.isArray(files)) {
-      files.forEach(file => {
+      files.forEach((file) => {
         if (file && file.name && file.ext) {
-          rtn.files.push({ name: file.name, ext: file.ext, path: `${internalPath}/${file.name}.${file.ext}` })
-          createTemporalFile(internalPath, file.ext, (file && file.content) || '', file.name)
+          rtn.files.push({
+            name: file.name,
+            ext: file.ext,
+            path: `${internalPath}/${file.name}.${file.ext}`,
+          })
+          createTemporalFile(
+            internalPath,
+            file.ext,
+            (file && file.content) || '',
+            file.name
+          )
         }
       })
     }
   } catch (error) {
     messageTerminal(defaultError(error && error.message))
   }
+
   return rtn
 }
 
@@ -109,7 +82,12 @@ const createFolderWithFiles = (path = '', files = [], filename = '') => {
  * @param {string} filename - name of the temporal file
  * @returns {object} if file is created
  */
-const createTemporalFile = (path = '', ext = '', content = '', filename = '') => {
+const createTemporalFile = (
+  path = '',
+  ext = '',
+  content = '',
+  filename = ''
+) => {
   let rtn
   const name = filename || v4().replace(/-/g, '').toUpperCase()
   const file = `${path}/${name}.${ext}`
@@ -122,6 +100,7 @@ const createTemporalFile = (path = '', ext = '', content = '', filename = '') =>
   } catch (error) {
     messageTerminal(defaultError(error && error.message))
   }
+
   return rtn
 }
 
@@ -146,22 +125,8 @@ const createYMLContent = (content = '') => {
   } catch (error) {
     messageTerminal(defaultError(error && error.message))
   }
-  return rtn
-}
 
-/**
- * Delete file.
- *
- * @param {string} path - the path for delete
- */
-const removeFile = (path = '') => {
-  if (path) {
-    try {
-      removeSync(path, { force: true })
-    } catch (error) {
-      messageTerminal(defaultError(error && error.message))
-    }
-  }
+  return rtn
 }
 
 /**
@@ -204,6 +169,7 @@ const renameFolder = (path = '', name = '', type = 'replace', callback) => {
       messageTerminal(defaultError(error && error.message))
     }
   }
+
   return rtn
 }
 
@@ -224,6 +190,7 @@ const moveToFolder = (path = '', relative = '/../') => {
       messageTerminal(defaultError(error && error.message))
     }
   }
+
   return rtn
 }
 
@@ -233,7 +200,10 @@ const moveToFolder = (path = '', relative = '/../') => {
  * @returns {Array} command optional params
  */
 const addOptionalCreateCommand = () => {
-  const optionalCreateCommand = getSpecificConfig('oneprovision_optional_create_command')
+  const optionalCreateCommand = getSpecificConfig(
+    'oneprovision_optional_create_command'
+  )
+
   return [optionalCreateCommand].filter(Boolean) // return array position valids, no undefined or nulls
 }
 
@@ -246,16 +216,20 @@ const addOptionalCreateCommand = () => {
  * @returns {string} paths
  */
 const findRecursiveFolder = (path = '', finder = '', rtn = false) => {
+  let search = rtn
+
   if (path && finder) {
     try {
       const dirs = readdirSync(path)
-      dirs.forEach(dir => {
+
+      dirs.forEach((dir) => {
         const name = `${path}/${dir}`
+
         if (statSync(name).isDirectory()) {
           if (basename(name) === finder) {
-            rtn = name
+            search = name
           } else {
-            rtn = findRecursiveFolder(name, finder, rtn)
+            search = findRecursiveFolder(name, finder, search)
           }
         }
       })
@@ -263,7 +237,8 @@ const findRecursiveFolder = (path = '', finder = '', rtn = false) => {
       messageTerminal(defaultError(error && error.message))
     }
   }
-  return rtn
+
+  return search
 }
 
 /**
@@ -280,6 +255,7 @@ const getEndpoint = () => {
     const host = parseUrl.host || ''
     rtn = ['--endpoint', `${protocol}//${host}`]
   }
+
   return rtn
 }
 
@@ -289,18 +265,13 @@ const getEndpoint = () => {
  * @param {string} key - key get
  * @returns {string} value of config item
  */
-const getSpecificConfig = (key = '') => {
-  if (key) {
-    const appConfig = getFireedgeConfig()
-    const provisionConfig = getProvisionConfig()
-    if (Object.hasOwnProperty.call(provisionConfig, key)) {
-      return provisionConfig[key]
-    }
-    if (Object.hasOwnProperty.call(appConfig, key)) {
-      return appConfig[key]
-    }
+const getSpecificConfig = (key) => {
+  if (!key) return ''
+
+  const provisionConfig = getProvisionConfig()
+  if (Object.hasOwnProperty.call(provisionConfig, key)) {
+    return provisionConfig[key]
   }
-  return ''
 }
 
 const functionRoutes = {
@@ -308,14 +279,11 @@ const functionRoutes = {
   createYMLContent,
   createTemporalFile,
   createFolderWithFiles,
-  removeFile,
   renameFolder,
   moveToFolder,
   findRecursiveFolder,
-  publish,
   addOptionalCreateCommand,
-  subscriber,
-  getSpecificConfig
+  getSpecificConfig,
 }
 
 module.exports = functionRoutes

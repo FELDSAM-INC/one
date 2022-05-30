@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------------- *
- * Copyright 2002-2021, OpenNebula Project, OpenNebula Systems               *
+ * Copyright 2002-2022, OpenNebula Project, OpenNebula Systems               *
  *                                                                           *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may   *
  * not use this file except in compliance with the License. You may obtain   *
@@ -20,18 +20,13 @@ const {
   oneFlowConnection,
   returnSchemaError,
 } = require('server/routes/api/oneflow/utils')
-const {
-  httpMethod,
-  defaultEmptyFunction,
-} = require('server/utils/constants/defaults')
+const { defaults, httpCodes } = require('server/utils/constants')
 const { httpResponse, parsePostData } = require('server/utils/server')
-const {
-  ok,
-  internalServerError,
-  methodNotAllowed,
-} = require('server/utils/constants/http-codes')
 const { generateNewResourceTemplate } = require('server/utils/opennebula')
 const { Actions: ActionVM } = require('server/utils/constants/commands/vm')
+
+const { httpMethod, defaultEmptyFunction } = defaults
+const { ok, internalServerError, methodNotAllowed } = httpCodes
 const { GET, POST, DELETE } = httpMethod
 
 /**
@@ -459,10 +454,10 @@ const serviceAddSchedAction = (
       params.id,
       (node = {}, nodesLength, index) => {
         const oneConnect = oneConnection(user, password)
-        oneConnect(
-          ActionVM.VM_SCHED_ADD,
-          [node.deploy_id, schedTemplate],
-          (err, value) => {
+        oneConnect({
+          action: ActionVM.VM_SCHED_ADD,
+          parameters: [node.deploy_id, schedTemplate],
+          callback: (err, value) => {
             if (!err && !isNaN(value)) {
               nodesUpdated.push(node.deploy_id)
             }
@@ -470,8 +465,8 @@ const serviceAddSchedAction = (
               success(next, res, nodesUpdated)
             }
           },
-          false
-        )
+          fillHookResource: false,
+        })
       },
       (data = '') => error(next, res, data)
     )
@@ -523,10 +518,10 @@ const serviceUpdateSchedAction = (
       id,
       (node = {}, nodesLength, index) => {
         const oneConnect = oneConnection(user, password)
-        oneConnect(
-          ActionVM.VM_SCHED_UPDATE,
-          [node.deploy_id, parseInt(idSched, 10), schedTemplate],
-          (err, value) => {
+        oneConnect({
+          action: ActionVM.VM_SCHED_UPDATE,
+          parameters: [node.deploy_id, parseInt(idSched, 10), schedTemplate],
+          callback: (err, value) => {
             if (!err && !isNaN(value)) {
               nodesUpdated.push(node.deploy_id)
             }
@@ -534,8 +529,8 @@ const serviceUpdateSchedAction = (
               success(next, res, nodesUpdated)
             }
           },
-          false
-        )
+          fillHookResource: false,
+        })
       },
       (data = '') => error(next, res, data)
     )
@@ -584,10 +579,10 @@ const serviceDeleteSchedAction = (
       id,
       (node = {}, nodesLength, index) => {
         const oneConnect = oneConnection(user, password)
-        oneConnect(
-          ActionVM.VM_SCHED_DELETE,
-          [node.deploy_id, parseInt(idSched, 10)],
-          (err, value) => {
+        oneConnect({
+          action: ActionVM.VM_SCHED_DELETE,
+          parameters: [node.deploy_id, parseInt(idSched, 10)],
+          callback: (err, value) => {
             if (!err && !isNaN(value)) {
               nodesUpdated.push(node.deploy_id)
             }
@@ -595,8 +590,8 @@ const serviceDeleteSchedAction = (
               success(next, res, nodesUpdated)
             }
           },
-          false
-        )
+          fillHookResource: false,
+        })
       },
       (data = '') => error(next, res, data)
     )

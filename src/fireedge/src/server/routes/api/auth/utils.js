@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------------- *
- * Copyright 2002-2021, OpenNebula Project, OpenNebula Systems               *
+ * Copyright 2002-2022, OpenNebula Project, OpenNebula Systems               *
  *                                                                           *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may   *
  * not use this file except in compliance with the License. You may obtain   *
@@ -20,22 +20,8 @@ const { parse } = require('url')
 const { global, Array } = require('window-or-global')
 const { Actions: ActionUsers } = require('server/utils/constants/commands/user')
 const { Actions: ActionZones } = require('server/utils/constants/commands/zone')
-const {
-  httpMethod,
-  defaultSessionExpiration,
-  default2FAOpennebulaVar,
-  defaultNamespace,
-  defaultEmptyFunction,
-  defaultSessionLimitExpiration,
-  defaultRememberSessionExpiration,
-} = require('server/utils/constants/defaults')
+const { defaults, httpCodes } = require('server/utils/constants')
 const { getFireedgeConfig } = require('server/utils/yml')
-const {
-  ok,
-  unauthorized,
-  accepted,
-  internalServerError,
-} = require('server/utils/constants/http-codes')
 const { createJWT, check2Fa } = require('server/utils/jwt')
 const {
   httpResponse,
@@ -47,6 +33,18 @@ const {
   getDefaultParamsOfOpennebulaCommand,
 } = require('server/utils/opennebula')
 
+const {
+  httpMethod,
+  defaultSessionExpiration,
+  default2FAOpennebulaVar,
+  defaultNamespace,
+  defaultEmptyFunction,
+  defaultSessionLimitExpiration,
+  defaultRememberSessionExpiration,
+} = defaults
+
+const { ok, unauthorized, accepted, internalServerError } = httpCodes
+
 const appConfig = getFireedgeConfig()
 
 const namespace = appConfig.namespace || defaultNamespace
@@ -54,8 +52,6 @@ const namespace = appConfig.namespace || defaultNamespace
 const { GET } = httpMethod
 
 let user = ''
-let key = ''
-let iv = ''
 let pass = ''
 let type = ''
 let tfatoken = ''
@@ -70,20 +66,6 @@ let expireTime = ''
 let relativeTime = ''
 let limitToken = defaultSessionExpiration
 let limitExpirationReuseToken = defaultSessionLimitExpiration
-
-/**
- * Get key opennebula.
- *
- * @returns {string} get key
- */
-const getKey = () => key
-
-/**
- * Get initialization vector.
- *
- * @returns {string} get initialization vector
- */
-const getIV = () => iv
 
 /**
  * Get user opennebula.
@@ -105,30 +87,6 @@ const getPass = () => pass
  * @returns {string} date
  */
 const getRelativeTime = () => relativeTime
-
-/**
- * Opennebula encode-decode key.
- *
- * @param {string} newKey - new key
- * @returns {string} get key
- */
-const setKey = (newKey) => {
-  key = newKey
-
-  return key
-}
-
-/**
- * Initialization vector (encrypt).
- *
- * @param {string} newIV - //16 characters
- * @returns {string} get IV
- */
-const setIV = (newIV) => {
-  iv = newIV
-
-  return iv
-}
 
 /**
  * Username opennebula.
@@ -243,7 +201,7 @@ const setRes = (newRes = {}) => {
  */
 const setDates = () => {
   limitToken = remember
-    ? appConfig.session__remember_expiration || defaultRememberSessionExpiration
+    ? appConfig.session_remember_expiration || defaultRememberSessionExpiration
     : appConfig.session_expiration || defaultSessionExpiration
   limitExpirationReuseToken =
     parseInt(appConfig.session_reuse_token_time, 10) ||
@@ -399,10 +357,13 @@ const getCreatedTokenOpennebula = (username = '') => {
 const setZones = () => {
   if (global && !global.zones) {
     const oneConnect = connectOpennebula()
-    oneConnect(
-      ActionZones.ZONEPOOL_INFO,
-      getDefaultParamsOfOpennebulaCommand(ActionZones.ZONEPOOL_INFO, GET),
-      (err, value) => {
+    oneConnect({
+      action: ActionZones.ZONEPOOL_INFO,
+      parameters: getDefaultParamsOfOpennebulaCommand(
+        ActionZones.ZONEPOOL_INFO,
+        GET
+      ),
+      callback: (err, value) => {
         // res, err, value, response, next
         responseOpennebula(
           () => undefined,
@@ -436,31 +397,36 @@ const setZones = () => {
           next
         )
       },
-      false
-    )
+      fillHookResource: false,
+    })
   }
 }
 
 /**
  * Create token server admin.
  *
- * @param {string} serverAdmin - serveradmin name
- * @param {string} username - user name
- * @returns {string} data encrypted serveradmin
+ * @param {object} config - config create  token serveradmin
+ * @param {string} config.username - user name
+ * @param {string} config.key - serverAdmin key
+ * @param {string} config.iv - serverAdmin iv
+ * @param {string} config.serverAdmin - serverAdmin username
+ * @returns {object|undefined} data encrypted serveradmin
  */
-const createTokenServerAdmin = (serverAdmin = '', username = '') => {
-  let rtn
-  const keyGet = getKey()
-  const ivGet = getIV()
-  if (serverAdmin && username && key && iv) {
+const createTokenServerAdmin = ({
+  username,
+  key,
+  iv,
+  serverAdmin = username,
+}) => {
+  if (username && key && iv) {
+    !(expireTime && typeof expireTime.toSeconds === 'function') && setDates()
     const expire = parseInt(expireTime.toSeconds(), 10)
-    rtn = {
-      token: encrypt(`${serverAdmin}:${username}:${expire}`, keyGet, ivGet),
+
+    return {
+      token: encrypt(`${serverAdmin}:${username}:${expire}`, key, iv),
       time: expire,
     }
   }
-
-  return rtn
 }
 
 /**
@@ -485,13 +451,6 @@ const wrapUserWithServerAdmin = (serverAdminData = {}, userData = {}) => {
     userData.ID &&
     userData.TEMPLATE
   ) {
-    /*********************************************************
-     * equals what is placed in:
-     * src/authm_mad/remotes/server_cipher/server_cipher_auth.rb:44
-     *********************************************************/
-    setKey(serverAdminPassword.substring(0, 32))
-    setIV(serverAdminPassword.substring(0, 16))
-
     const JWTusername = `${serverAdminName}:${userName}`
 
     let tokenWithServerAdmin
@@ -501,7 +460,16 @@ const wrapUserWithServerAdmin = (serverAdminData = {}, userData = {}) => {
       tokenWithServerAdmin = validToken
     } else {
       setGlobalNewToken = true
-      tokenWithServerAdmin = createTokenServerAdmin(serverAdminName, userName)
+      tokenWithServerAdmin = createTokenServerAdmin({
+        serverAdmin: serverAdminName,
+        username: userName,
+        /*********************************************************
+         * equals what is placed in:
+         * src/authm_mad/remotes/server_cipher/server_cipher_auth.rb:44
+         *********************************************************/
+        key: serverAdminPassword.substring(0, 32),
+        iv: serverAdminPassword.substring(0, 16),
+      })
     }
 
     if (tokenWithServerAdmin) {
@@ -545,21 +513,24 @@ const getServerAdminAndWrapUser = (userData = {}) => {
     serverAdminData.key &&
     serverAdminData.iv
   ) {
-    setKey(serverAdminData.key)
-    setIV(serverAdminData.iv)
-    const tokenWithServerAdmin = createTokenServerAdmin(
-      serverAdminData.username,
-      serverAdminData.username
-    )
+    const tokenWithServerAdmin = createTokenServerAdmin({
+      serverAdmin: serverAdminData.username,
+      username: serverAdminData.username,
+      key: serverAdminData.key,
+      iv: serverAdminData.iv,
+    })
     if (tokenWithServerAdmin.token) {
       const oneConnect = connectOpennebula(
         `${serverAdminData.username}:${serverAdminData.username}`,
         tokenWithServerAdmin.token
       )
-      oneConnect(
-        ActionUsers.USER_INFO,
-        getDefaultParamsOfOpennebulaCommand(ActionUsers.USER_INFO, GET),
-        (err, value) => {
+      oneConnect({
+        action: ActionUsers.USER_INFO,
+        parameters: getDefaultParamsOfOpennebulaCommand(
+          ActionUsers.USER_INFO,
+          GET
+        ),
+        callback: (err, value) => {
           responseOpennebula(
             updaterResponse,
             err,
@@ -569,8 +540,8 @@ const getServerAdminAndWrapUser = (userData = {}) => {
             next
           )
         },
-        false
-      )
+        fillHookResource: false,
+      })
     }
   }
 }
@@ -619,6 +590,7 @@ const functionRoutes = {
   setNodeConnect,
   connectOpennebula,
   getCreatedTokenOpennebula,
+  createTokenServerAdmin,
 }
 
 module.exports = functionRoutes

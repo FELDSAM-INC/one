@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------------- *
- * Copyright 2002-2021, OpenNebula Project, OpenNebula Systems               *
+ * Copyright 2002-2022, OpenNebula Project, OpenNebula Systems               *
  *                                                                           *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may   *
  * not use this file except in compliance with the License. You may obtain   *
@@ -29,23 +29,19 @@ const {
   updaterResponse,
 } = require('server/routes/api/auth/utils')
 
-const {
-  internalServerError,
-  unauthorized,
-} = require('server/utils/constants/http-codes')
+const { defaults, httpCodes } = require('server/utils/constants')
 const { Actions } = require('server/utils/constants/commands/user')
-const {
-  httpMethod,
-  defaultEmptyFunction,
-} = require('server/utils/constants/defaults')
-
-const { GET } = httpMethod
-
 const {
   getDefaultParamsOfOpennebulaCommand,
 } = require('server/utils/opennebula')
 
 const { writeInLogger } = require('server/utils/logger')
+
+const { internalServerError, unauthorized } = httpCodes
+
+const { httpMethod, defaultEmptyFunction } = defaults
+
+const { GET } = httpMethod
 
 /**
  * Login user.
@@ -115,20 +111,19 @@ const auth = (
       next()
     }
 
-    oneConnect(
-      Actions.USER_INFO,
-      getDefaultParamsOfOpennebulaCommand(Actions.USER_INFO, GET),
-      (err, value) => {
+    oneConnect({
+      action: Actions.USER_INFO,
+      parameters: getDefaultParamsOfOpennebulaCommand(Actions.USER_INFO, GET),
+      callback: (err, value) => {
         loginUser(err, value, success, error)
       },
-      false
-    )
+      fillHookResource: false,
+    })
   } else {
     next()
   }
 }
 
-const authApi = {
+module.exports = {
   auth,
 }
-module.exports = authApi

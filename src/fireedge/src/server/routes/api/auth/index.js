@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------------- *
- * Copyright 2002-2021, OpenNebula Project, OpenNebula Systems               *
+ * Copyright 2002-2022, OpenNebula Project, OpenNebula Systems               *
  *                                                                           *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may   *
  * not use this file except in compliance with the License. You may obtain   *
@@ -14,13 +14,14 @@
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
 
-const { setApiRoutes } = require('server/utils/server')
-const { routes: authRoutes } = require('server/routes/api/auth/routes')
-const { AUTH } = require('server/routes/api/auth/string-routes')
+const { Actions, Commands } = require('server/routes/api/auth/routes')
+const { auth } = require('server/routes/api/auth/functions')
 
-const functionRoutes = {
-  private: [],
-  public: setApiRoutes(authRoutes, AUTH),
-}
+const { AUTHENTICATION } = Actions
 
-module.exports = functionRoutes
+module.exports = [
+  {
+    ...Commands[AUTHENTICATION],
+    action: auth,
+  },
+]

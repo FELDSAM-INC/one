@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------------- *
- * Copyright 2002-2021, OpenNebula Project, OpenNebula Systems               *
+ * Copyright 2002-2022, OpenNebula Project, OpenNebula Systems               *
  *                                                                           *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may   *
  * not use this file except in compliance with the License. You may obtain   *
@@ -13,26 +13,32 @@
  * See the License for the specific language governing permissions and       *
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
+const { httpMethod } = require('../../../utils/constants/defaults')
 
-const { httpMethod } = require('server/utils/constants/defaults')
-const { getConfig, getViews } = require('server/routes/api/sunstone/functions')
 const { GET } = httpMethod
 
-const routes = {
-  [GET]: {
-    views: {
-      action: getViews,
-      params: {},
+const basepath = '/sunstone'
+
+const SUNSTONE_VIEWS = 'sunstone.views'
+const SUNSTONE_CONFIG = 'sunstone.config'
+
+const Actions = {
+  SUNSTONE_VIEWS,
+  SUNSTONE_CONFIG,
+}
+
+module.exports = {
+  Actions,
+  Commands: {
+    [SUNSTONE_VIEWS]: {
+      path: `${basepath}/views`,
+      httpMethod: GET,
+      auth: true,
     },
-    config: {
-      action: getConfig,
-      params: {},
+    [SUNSTONE_CONFIG]: {
+      path: `${basepath}/config`,
+      httpMethod: GET,
+      auth: true,
     },
   },
 }
-
-const sunstoneApi = {
-  routes,
-}
-
-module.exports = sunstoneApi

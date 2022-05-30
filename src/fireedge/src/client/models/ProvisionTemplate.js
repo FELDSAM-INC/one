@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------------- *
- * Copyright 2002-2021, OpenNebula Project, OpenNebula Systems               *
+ * Copyright 2002-2022, OpenNebula Project, OpenNebula Systems               *
  *                                                                           *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may   *
  * not use this file except in compliance with the License. You may obtain   *
@@ -38,8 +38,7 @@
  * @returns {string} Provider name
  */
 export const getProviderName = ({ defaults, hosts }) =>
-  defaults?.provision?.provider_name ??
-    hosts?.[0]?.provision.provider_name
+  defaults?.provision?.provider_name ?? hosts?.[0]?.provision.provider_name
 
 /**
  * Check if the provision template is valid format.
@@ -47,12 +46,9 @@ export const getProviderName = ({ defaults, hosts }) =>
  * @param {ProvisionTemplate} template - Provision template
  * @returns {boolean} Returns `true` if template is valid
  */
-export const isValidProvisionTemplate = template => {
+export const isValidProvisionTemplate = (template) => {
   const { name, provider } = template
   const providerName = getProviderName(template)
 
-  return !(
-    providerName === undefined ||
-    [name, provider].includes(undefined)
-  )
+  return !(providerName === undefined || [name, provider].includes(undefined))
 }

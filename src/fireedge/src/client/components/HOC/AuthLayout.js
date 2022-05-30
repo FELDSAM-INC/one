@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------------- *
- * Copyright 2002-2021, OpenNebula Project, OpenNebula Systems               *
+ * Copyright 2002-2022, OpenNebula Project, OpenNebula Systems               *
  *                                                                           *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may   *
  * not use this file except in compliance with the License. You may obtain   *
@@ -19,9 +19,10 @@ import PropTypes from 'prop-types'
 
 import { useAuth, useAuthApi } from 'client/features/Auth'
 import { authApi } from 'client/features/AuthApi'
+import { oneApi } from 'client/features/OneApi'
 import groupApi from 'client/features/OneApi/group'
 import FullscreenProgress from 'client/components/LoadingScreen'
-import { findStorageData } from 'client/utils'
+import { findStorageData, findExternalToken, storage } from 'client/utils'
 import { JWT_NAME } from 'client/constants'
 
 /**
@@ -46,6 +47,8 @@ const AuthLayout = ({ subscriptions = [], children }) => {
 
     return () => {
       authSubscription.unsubscribe()
+      dispatch(authApi.util.resetApiState())
+      dispatch(oneApi.util.resetApiState())
     }
   }, [dispatch, jwt])
 
@@ -67,8 +70,8 @@ const AuthLayout = ({ subscriptions = [], children }) => {
 
   useEffect(() => {
     if (!jwt) {
-      const token = findStorageData(JWT_NAME)
-      token && changeJwt(token)
+      const token = findStorageData(JWT_NAME) || findExternalToken()
+      token && changeJwt(token) && storage(JWT_NAME, token)
     }
 
     // first rendering on client

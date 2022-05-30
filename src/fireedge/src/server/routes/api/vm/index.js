@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------------- *
- * Copyright 2002-2021, OpenNebula Project, OpenNebula Systems               *
+ * Copyright 2002-2022, OpenNebula Project, OpenNebula Systems               *
  *                                                                           *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may   *
  * not use this file except in compliance with the License. You may obtain   *
@@ -14,13 +14,21 @@
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
 
-const { setApiRoutes } = require('server/utils/server')
-const { routes: vmRoutes } = require('server/routes/api/vm/routes')
-const { VM } = require('server/routes/api/vm/string-routes')
+const { Actions, Commands } = require('server/routes/api/vm/routes')
+const {
+  saveAsTemplate,
+  generateGuacamoleSession,
+} = require('server/routes/api/vm/functions')
 
-const functionRoutes = {
-  private: setApiRoutes(vmRoutes, VM),
-  public: [],
-}
+const { VM_SAVEASTEMPLATE, GUACAMOLE } = Actions
 
-module.exports = functionRoutes
+module.exports = [
+  {
+    ...Commands[VM_SAVEASTEMPLATE],
+    action: saveAsTemplate,
+  },
+  {
+    ...Commands[GUACAMOLE],
+    action: generateGuacamoleSession,
+  },
+]

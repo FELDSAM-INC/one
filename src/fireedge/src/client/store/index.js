@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------------- *
- * Copyright 2002-2021, OpenNebula Project, OpenNebula Systems               *
+ * Copyright 2002-2022, OpenNebula Project, OpenNebula Systems               *
  *                                                                           *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may   *
  * not use this file except in compliance with the License. You may obtain   *
@@ -20,6 +20,7 @@ import { isDevelopment } from 'client/utils'
 
 import * as Auth from 'client/features/Auth/slice'
 import * as General from 'client/features/General/slice'
+import * as Guacamole from 'client/features/Guacamole/slice'
 import { authApi } from 'client/features/AuthApi'
 import { oneApi } from 'client/features/OneApi'
 import { unauthenticatedMiddleware } from 'client/features/middleware'
@@ -35,6 +36,7 @@ export const createStore = ({ initState = {}, extraMiddleware = [] }) => {
     reducer: {
       [Auth.name]: Auth.reducer,
       [General.name]: General.reducer,
+      [Guacamole.name]: Guacamole.reducer,
       [authApi.reducerPath]: authApi.reducer,
       [oneApi.reducerPath]: oneApi.reducer,
     },

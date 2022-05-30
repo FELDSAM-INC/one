@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------------- *
- * Copyright 2002-2021, OpenNebula Project, OpenNebula Systems               *
+ * Copyright 2002-2022, OpenNebula Project, OpenNebula Systems               *
  *                                                                           *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may   *
  * not use this file except in compliance with the License. You may obtain   *
@@ -14,13 +14,22 @@
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
 
-const { setApiRoutes } = require('server/utils/server')
-const { routes: tfaRoutes } = require('server/routes/api/2fa/routes')
-const { TFA } = require('server/routes/api/2fa/string-routes')
+const { Actions, Commands } = require('server/routes/api/2fa/routes')
+const { setup, qr, del } = require('server/routes/api/2fa/functions')
 
-const functionRoutes = {
-  private: setApiRoutes(tfaRoutes, TFA),
-  public: [],
-}
+const { TFA_SETUP, TFA_QR, TFA_DELETE } = Actions
 
-module.exports = functionRoutes
+module.exports = [
+  {
+    ...Commands[TFA_SETUP],
+    action: setup,
+  },
+  {
+    ...Commands[TFA_QR],
+    action: qr,
+  },
+  {
+    ...Commands[TFA_DELETE],
+    action: del,
+  },
+]

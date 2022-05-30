@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------------- *
- * Copyright 2002-2021, OpenNebula Project, OpenNebula Systems               *
+ * Copyright 2002-2022, OpenNebula Project, OpenNebula Systems               *
  *                                                                           *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may   *
  * not use this file except in compliance with the License. You may obtain   *
@@ -17,19 +17,14 @@
 const { Validator } = require('jsonschema')
 const { role, service, action } = require('server/routes/api/oneflow/schemas')
 const {
-  oneFlowConection,
+  oneFlowConnection,
   returnSchemaError,
 } = require('server/routes/api/oneflow/utils')
-const {
-  httpMethod,
-  defaultEmptyFunction,
-} = require('server/utils/constants/defaults')
+const { defaults, httpCodes } = require('server/utils/constants')
 const { httpResponse, parsePostData } = require('server/utils/server')
-const {
-  ok,
-  internalServerError,
-  methodNotAllowed,
-} = require('server/utils/constants/http-codes')
+
+const { httpMethod, defaultEmptyFunction } = defaults
+const { ok, internalServerError, methodNotAllowed } = httpCodes
 const { GET, POST, DELETE, PUT } = httpMethod
 
 /**
@@ -96,13 +91,13 @@ const serviceTemplate = (
     if (params && params.id) {
       config.path = '/service_template/{0}'
       config.request = params.id
-      oneFlowConection(
+      oneFlowConnection(
         config,
         (data) => success(next, res, data),
         (data) => error(next, res, data)
       )
     } else {
-      oneFlowConection(
+      oneFlowConnection(
         config,
         (data) => success(next, res, data),
         (data) => error(next, res, data)
@@ -135,7 +130,7 @@ const serviceTemplateDelete = (
       password,
       request: params.id,
     }
-    oneFlowConection(
+    oneFlowConnection(
       config,
       (data) => success(next, res, data),
       (data) => error(next, res, data)
@@ -178,7 +173,7 @@ const serviceTemplateCreate = (
         password,
         post: template,
       }
-      oneFlowConection(
+      oneFlowConnection(
         config,
         (data) => success(next, res, data),
         (data) => error(next, res, data)
@@ -229,7 +224,7 @@ const serviceTemplateUpdate = (
         request: params.id,
         post: template,
       }
-      oneFlowConection(
+      oneFlowConnection(
         config,
         (data) => success(next, res, data),
         (data) => error(next, res, data)
@@ -280,7 +275,7 @@ const serviceTemplateAction = (
         request: params.id,
         post: template,
       }
-      oneFlowConection(
+      oneFlowConnection(
         config,
         (data) => success(next, res, data),
         (data) => error(next, res, data)

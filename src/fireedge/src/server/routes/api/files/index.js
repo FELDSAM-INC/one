@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------------- *
- * Copyright 2002-2021, OpenNebula Project, OpenNebula Systems               *
+ * Copyright 2002-2022, OpenNebula Project, OpenNebula Systems               *
  *                                                                           *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may   *
  * not use this file except in compliance with the License. You may obtain   *
@@ -14,16 +14,36 @@
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
 
-const { setApiRoutes } = require('server/utils/server')
+const { Actions, Commands } = require('server/routes/api/files/routes')
 const {
-  privateRoutes: filePrivateRoutes,
-  publicRoutes: filePublicRoutes,
-} = require('server/routes/api/files/routes')
-const { FILES } = require('server/routes/api/files/string-routes')
+  show,
+  list,
+  upload,
+  update,
+  deleteFile,
+} = require('server/routes/api/files/functions')
 
-const functionRoutes = {
-  private: setApiRoutes(filePrivateRoutes, FILES),
-  public: setApiRoutes(filePublicRoutes, FILES),
-}
+const { FILE_SHOW, FILE_LIST, FILE_UPLOAD, FILE_UPDATE, FILE_DELETE } = Actions
 
-module.exports = functionRoutes
+module.exports = [
+  {
+    ...Commands[FILE_SHOW],
+    action: show,
+  },
+  {
+    ...Commands[FILE_LIST],
+    action: list,
+  },
+  {
+    ...Commands[FILE_UPLOAD],
+    action: upload,
+  },
+  {
+    ...Commands[FILE_UPDATE],
+    action: update,
+  },
+  {
+    ...Commands[FILE_DELETE],
+    action: deleteFile,
+  },
+]

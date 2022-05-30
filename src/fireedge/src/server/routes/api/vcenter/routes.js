@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------------- *
- * Copyright 2002-2021, OpenNebula Project, OpenNebula Systems               *
+ * Copyright 2002-2022, OpenNebula Project, OpenNebula Systems               *
  *                                                                           *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may   *
  * not use this file except in compliance with the License. You may obtain   *
@@ -17,109 +17,195 @@
 const {
   httpMethod,
   from: fromData,
-} = require('server/utils/constants/defaults')
-const {
-  importVcenter,
-  list,
-  listAll,
-  cleartags,
-  hosts,
-} = require('server/routes/api/vcenter/functions')
-const { POST, GET } = httpMethod
+} = require('../../../utils/constants/defaults')
 
-const routes = {
-  [POST]: {
-    import: {
-      action: importVcenter,
+const { POST, GET } = httpMethod
+const { resource, postBody, query } = fromData
+
+const basepath = '/vcenter'
+const VCENTER_TOKEN = 'vcenter.token'
+const VCENTER_CLEAR_TAGS = 'vcenter.cleartags'
+const VCENTER_IMPORT_HOSTS = 'vcenter.importhosts'
+const VCENTER_IMPORT_DATASTORES = 'vcenter.importdatastores'
+const VCENTER_IMPORT_TEMPLATES = 'vcenter.importtemplates'
+const VCENTER_IMPORT_NETWORKS = 'vcenter.importnetworks'
+const VCENTER_IMPORT_IMAGES = 'vcenter.importimages'
+const VCENTER_LIST_ALL = 'vcenter.listall'
+const VCENTER_LIST = 'vcenter.list'
+
+const Actions = {
+  VCENTER_TOKEN,
+  VCENTER_CLEAR_TAGS,
+  VCENTER_IMPORT_HOSTS,
+  VCENTER_IMPORT_TEMPLATES,
+  VCENTER_IMPORT_DATASTORES,
+  VCENTER_IMPORT_NETWORKS,
+  VCENTER_IMPORT_IMAGES,
+  VCENTER_LIST_ALL,
+  VCENTER_LIST,
+}
+
+module.exports = {
+  Actions,
+  Commands: {
+    [VCENTER_TOKEN]: {
+      path: `${basepath}/token/:id`,
+      httpMethod: GET,
+      auth: true,
       params: {
-        vobject: {
-          from: fromData.resource,
-          name: 'id',
-        },
-        host: {
-          from: fromData.postBody,
-          name: 'host',
-        },
-        datastore: {
-          from: fromData.postBody,
-          name: 'datastore',
-        },
         id: {
-          from: fromData.postBody,
-          name: 'id',
-        },
-        answers: {
-          from: fromData.postBody,
-          name: 'answers',
+          from: resource,
         },
       },
     },
-    cleartags: {
-      action: cleartags,
+    [VCENTER_CLEAR_TAGS]: {
+      path: `${basepath}/cleartags/:id`,
+      httpMethod: POST,
+      auth: true,
       params: {
         id: {
-          from: fromData.resource,
-          name: 'id',
+          from: resource,
         },
       },
     },
-    hosts: {
-      action: hosts,
+    [VCENTER_IMPORT_HOSTS]: {
+      path: `${basepath}/hosts/:id?`,
+      httpMethod: POST,
+      auth: true,
       params: {
+        id: {
+          from: resource,
+        },
         vcenter: {
-          from: fromData.postBody,
-          name: 'vcenter',
+          from: postBody,
         },
         user: {
-          from: fromData.postBody,
-          name: 'user',
+          from: postBody,
         },
         pass: {
-          from: fromData.postBody,
-          name: 'pass',
+          from: postBody,
         },
       },
     },
-  },
-  [GET]: {
-    null: {
-      action: list,
+    [VCENTER_IMPORT_DATASTORES]: {
+      path: `${basepath}/datastores/:id?`,
+      httpMethod: POST,
+      auth: true,
       params: {
-        vobject: {
-          from: fromData.resource,
-          name: 'method',
+        id: {
+          from: resource,
         },
         host: {
-          from: fromData.query,
-          name: 'host',
-        },
-        datastore: {
-          from: fromData.query,
-          name: 'datastore',
+          from: postBody,
         },
       },
     },
-    listall: {
-      action: listAll,
+    [VCENTER_IMPORT_TEMPLATES]: {
+      path: `${basepath}/templates/:id?`,
+      httpMethod: POST,
+      auth: true,
       params: {
-        vobject: {
-          from: fromData.resource,
-          name: 'id',
-        },
-        host: {
-          from: fromData.query,
-          name: 'host',
+        id: {
+          from: resource,
         },
         datastore: {
-          from: fromData.query,
-          name: 'datastore',
+          from: postBody,
+        },
+        host: {
+          from: postBody,
+        },
+        folder: {
+          from: postBody,
+        },
+        linked_clone: {
+          from: postBody,
+        },
+      },
+    },
+    [VCENTER_IMPORT_NETWORKS]: {
+      path: `${basepath}/networks/:id?`,
+      httpMethod: POST,
+      auth: true,
+      params: {
+        id: {
+          from: resource,
+        },
+        host: {
+          from: postBody,
+        },
+        size: {
+          from: postBody,
+        },
+        type: {
+          from: postBody,
+        },
+        mac: {
+          from: postBody,
+        },
+        ip: {
+          from: postBody,
+        },
+        selectedClusters: {
+          from: postBody,
+        },
+        globalPrefix: {
+          from: postBody,
+        },
+        ulaPrefix: {
+          from: postBody,
+        },
+        ip6Global: {
+          from: postBody,
+        },
+      },
+    },
+    [VCENTER_IMPORT_IMAGES]: {
+      path: `${basepath}/images/:id?`,
+      httpMethod: POST,
+      auth: true,
+      params: {
+        id: {
+          from: resource,
+        },
+        host: {
+          from: postBody,
+        },
+        datastore: {
+          from: postBody,
+        },
+      },
+    },
+    [VCENTER_LIST_ALL]: {
+      path: `${basepath}/listall/:vobject/:host`,
+      httpMethod: GET,
+      auth: true,
+      params: {
+        vobject: {
+          from: resource,
+        },
+        host: {
+          from: resource,
+        },
+        datastore: {
+          from: query,
+        },
+      },
+    },
+    [VCENTER_LIST]: {
+      path: `${basepath}/:vobject/:host`,
+      httpMethod: GET,
+      auth: true,
+      params: {
+        vobject: {
+          from: resource,
+        },
+        host: {
+          from: resource,
+        },
+        datastore: {
+          from: query,
         },
       },
     },
   },
 }
-
-const authApi = {
-  routes,
-}
-module.exports = authApi

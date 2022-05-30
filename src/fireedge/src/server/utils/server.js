@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------------- *
- * Copyright 2002-2021, OpenNebula Project, OpenNebula Systems               *
+ * Copyright 2002-2022, OpenNebula Project, OpenNebula Systems               *
  *                                                                           *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may   *
  * not use this file except in compliance with the License. You may obtain   *
@@ -14,9 +14,10 @@
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
 
+const https = require('https')
+const http = require('http')
 const { env } = require('process')
 const { Map } = require('immutable')
-const multer = require('multer')
 const { global } = require('window-or-global')
 const { resolve } = require('path')
 const {
@@ -36,14 +37,18 @@ const {
   statSync,
   removeSync,
 } = require('fs-extra')
-const { internalServerError } = require('./constants/http-codes')
+const { spawnSync, spawn } = require('child_process')
+const events = require('events')
+const { defaults, httpCodes } = require('server/utils/constants')
 const { messageTerminal } = require('server/utils/general')
 const { validateAuth } = require('server/utils/jwt')
 const { writeInLogger } = require('server/utils/logger')
-const { spawnSync, spawn } = require('child_process')
+const { request: axios } = require('axios')
+
+const eventsEmitter = new events.EventEmitter()
 const {
+  httpMethod,
   defaultApps,
-  from: fromData,
   defaultAppName,
   defaultConfigFile,
   defaultLogFilename,
@@ -56,7 +61,6 @@ const {
   defaultKeyFilename,
   defaultSunstoneAuth,
   defaultWebpackMode,
-  defaultOpennebulaZones,
   defaultEtcPath,
   defaultTypeCrypto,
   defaultHash,
@@ -65,206 +69,14 @@ const {
   defaultSunstoneConfig,
   defaultProvisionPath,
   defaultProvisionConfig,
+  defaultDownloader,
   defaultEmptyFunction,
-} = require('./constants/defaults')
-
-const upload = multer({ dest: '/tmp' })
+} = defaults
+const { internalServerError } = httpCodes
+const { POST } = httpMethod
 
 let cert = ''
 let key = ''
-
-/**
- * Set functions as routes.
- *
- * @param {string} method - http methof
- * @param {string} endpoint - http endpoint
- * @param {string} action - opennebula action
- * @returns {object} object function
- */
-const setFunctionRoute = (method, endpoint, action) => ({
-  httpMethod: method,
-  endpoint,
-  action,
-})
-
-/**
- * Set functions to API routes.
- *
- * @param {object} routes - object of routes
- * @param {string} path - principal route
- * @returns {Array} parsed routes
- */
-const setApiRoutes = (routes = {}, path = '') => {
-  const rtn = []
-  if (Object.keys(routes).length > 0 && routes.constructor === Object) {
-    Object.keys(routes).forEach((route) => {
-      rtn.push(
-        setFunctionRoute(
-          route,
-          path,
-          (req, res, next, connection, userId, user) => {
-            addFunctionAsRoute(req, res, next, routes[route], user, connection)
-          }
-        )
-      )
-    })
-  }
-
-  return rtn
-}
-
-/**
- * Execute actions Function routes
- *
- * @param {Function} action - action.
- * @param {object} res - response http.
- * @param {Function} next - stepper.
- * @param {object} routeParams - params for actions.
- * @param {object} serverDataSource - server params.
- * @param {user} user - user.
- * @param {Function} oneConnection - ONE connection xmlrpc.
- */
-
-const executeAction = (
-  action = defaultEmptyFunction,
-  res = {},
-  next = defaultEmptyFunction,
-  routeParams = {},
-  serverDataSource = {},
-  user = {},
-  oneConnection = defaultEmptyFunction
-) => {
-  action(
-    res,
-    next,
-    getRequestParameters(routeParams, serverDataSource),
-    user,
-    oneConnection
-  )
-}
-
-/**
- * Parse files for actions.
- *
- * @param {Array} files - files
- * @returns {Array} files
- */
-const parseFiles = (files = []) => {
-  let rtn
-  if (files && Array.isArray(files)) {
-    rtn = {}
-    files.forEach((file) => {
-      if (file.fieldname) {
-        rtn[file.fieldname]
-          ? rtn[file.fieldname].push(file)
-          : (rtn[file.fieldname] = [file])
-      }
-    })
-  }
-
-  return rtn
-}
-
-/**
- * Add function as express route.
- *
- * @param {object} req - http request
- * @param {object} res - http response
- * @param {Function} next - express stepper
- * @param {object} routes - new routes
- * @param {object} user - user Data
- * @param {Function} oneConnection - function one XMLRPC
- * @param {string} index - resource index
- */
-const addFunctionAsRoute = (
-  req = {},
-  res = {},
-  next = defaultEmptyFunction,
-  routes = {},
-  user = {},
-  oneConnection = defaultEmptyFunction,
-  index = 0
-) => {
-  if (req && req.serverDataSource && res && next && routes) {
-    const serverDataSource = req.serverDataSource
-    const resources = Object.keys(serverDataSource[fromData.resource])
-    let route =
-      routes[
-        `${serverDataSource[fromData.resource][resources[index]]}`.toLowerCase()
-      ]
-
-    if (!route && index === 0 && routes.null) {
-      route = routes.null
-    }
-
-    if (route) {
-      if (Object.keys(route).length > 0 && route.constructor === Object) {
-        if (
-          route.action &&
-          route.params &&
-          typeof route.action === 'function'
-        ) {
-          const uploadFiles = getRequestFiles(route.params)
-          if (uploadFiles && uploadFiles.length) {
-            const files = upload.array(uploadFiles)
-            files(req, res, (err) => {
-              if (err) {
-                const errorData = (err && err.message) || ''
-                writeInLogger(errorData)
-                messageTerminal({
-                  color: 'red',
-                  message: 'Error: %s',
-                  error: errorData,
-                })
-              }
-              const dataSources = {
-                [fromData.resource]: serverDataSource[fromData.resource],
-                [fromData.query]: req.query,
-                [fromData.postBody]: req.body,
-              }
-              dataSources.files = parseFiles(req && req.files)
-              executeAction(
-                route.action,
-                res,
-                next,
-                route.params,
-                dataSources,
-                user,
-                oneConnection
-              )
-            })
-          } else {
-            executeAction(
-              route.action,
-              res,
-              next,
-              route.params,
-              serverDataSource,
-              user,
-              oneConnection
-            )
-          }
-        } else {
-          addFunctionAsRoute(
-            req,
-            res,
-            next,
-            route,
-            user,
-            oneConnection,
-            index + 1
-          )
-        }
-      } else {
-        next()
-      }
-    } else {
-      next()
-    }
-  } else {
-    next()
-  }
-}
 
 /**
  * Validate if server app have certs.
@@ -296,6 +108,17 @@ const getCert = () => cert
  * @returns {string} key ssl path
  */
 const getKey = () => key
+
+/**
+ * Validate the route http method.
+ *
+ * @param {string} resourceHttpMethod - http method
+ * @returns {string|false} validate the http method of function route
+ */
+const validateHttpMethod = (resourceHttpMethod = '') =>
+  resourceHttpMethod && Object.keys(httpMethod).includes(resourceHttpMethod)
+    ? resourceHttpMethod.toLocaleLowerCase()
+    : false
 
 /**
  * Response http.
@@ -346,18 +169,15 @@ const getQueryData = (server = {}) => {
  * Validate Authentication for websocket.
  *
  * @param {object} server - express app
- * @returns {boolean} if token is valid
+ * @returns {undefined|boolean} if token is valid
  */
 const validateAuthWebsocket = (server = {}) => {
-  let rtn
   const { token } = getQueryData(server)
   if (token) {
-    rtn = validateAuth({
+    return validateAuth({
       headers: { authorization: token },
     })
   }
-
-  return rtn
 }
 
 /**
@@ -384,6 +204,7 @@ const middlewareValidateResourceForHookConnection = (
   next = () => undefined
 ) => {
   const { id, resource, username } = getResourceDataForRequest(server)
+
   if (
     id &&
     resource &&
@@ -489,12 +310,14 @@ const decrypt = (data = '', decryptKey = '', iv = '') => {
  * @param {string} path - path of file
  * @param {Function} success - function executed when file exist
  * @param {Function} error - function executed when file no exists
+ * @param {boolean} notify - dissable the error CLI output
  * @returns {boolean} validate if file exists
  */
 const existsFile = (
   path = '',
   success = defaultEmptyFunction,
-  error = defaultEmptyFunction
+  error = defaultEmptyFunction,
+  notify = true
 ) => {
   let rtn = false
   let file
@@ -508,11 +331,12 @@ const existsFile = (
   } catch (err) {
     errorData = (err && err.message) || ''
     writeInLogger(errorData)
-    messageTerminal({
-      color: 'red',
-      message: 'Error: %s',
-      error: errorData,
-    })
+    notify &&
+      messageTerminal({
+        color: 'red',
+        message: 'Error: %s',
+        error: errorData,
+      })
   }
   if (rtn) {
     success(file, path)
@@ -571,7 +395,18 @@ const genFireedgeKey = () => {
           createFile(
             global.paths.FIREEDGE_KEY_PATH,
             uuidv4.replace(/-/g, ''),
-            () => undefined,
+            () => {
+              const formatError = 'file %s created'
+              writeInLogger(global.paths.FIREEDGE_KEY_PATH, {
+                format: formatError,
+                level: 2,
+              })
+              messageTerminal({
+                color: 'green',
+                message: formatError,
+                error: global.paths.FIREEDGE_KEY_PATH,
+              })
+            },
             (err) => {
               const errorData = (err && err.message) || ''
               writeInLogger(errorData)
@@ -582,7 +417,8 @@ const genFireedgeKey = () => {
               })
             }
           )
-        }
+        },
+        false
       )
     }
     global.paths.FIREEDGE_KEY = uuidv4
@@ -654,14 +490,11 @@ const getSunstoneAuth = () => {
  */
 const getDataZone = (zone = '0', configuredZones) => {
   let rtn
-  const zones =
-    (global && global.zones) || configuredZones || defaultOpennebulaZones
+  const zones = (global && global.zones) || configuredZones
   if (zones && Array.isArray(zones)) {
     rtn = zones[0]
-    if (zone !== null) {
-      rtn = zones.find(
-        (zn) => zn && zn.id !== undefined && String(zn.id) === zone
-      )
+    if (Number.isInteger(parseInt(zone, 10))) {
+      rtn = zones.find((zn) => zn && zn.id && String(zn.id) === zone)
     }
   }
 
@@ -700,6 +533,12 @@ const genPathResources = () => {
     }
     if (!global.paths.FIREEDGE_LOG) {
       global.paths.FIREEDGE_LOG = `${LOG_LOCATION}/${defaultLogFilename}`
+    }
+    if (!global.paths.FIREEDGE_LOG_LEVEL) {
+      global.paths.FIREEDGE_LOG = `${LOG_LOCATION}/${defaultLogFilename}`
+    }
+    if (!global.paths.DOWNLOADER) {
+      global.paths.DOWNLOADER = `${VAR_LOCATION}/${defaultDownloader}`
     }
     if (!global.paths.SUNSTONE_AUTH_PATH) {
       global.paths.SUNSTONE_AUTH_PATH = `${VAR_LOCATION}/.one/${defaultSunstoneAuth}`
@@ -775,7 +614,7 @@ const getRequestParameters = (params = {}, req = {}) => {
   ) {
     Object.entries(params).forEach(([param, value]) => {
       if (param && value && value.from && req[value.from]) {
-        rtn[param] = value.name ? req[value.from][value.name] : req[value.from]
+        rtn[param] = value.all ? req[value.from] : req[value.from][param]
       }
     })
   }
@@ -1071,10 +910,69 @@ const executeCommandAsync = (
   }
 }
 
+/**
+ * Create a event emiter.
+ *
+ * @param {string} eventName - name event
+ * @param {object} message - object message
+ */
+const publish = (eventName = '', message = {}) => {
+  if (eventName && message) {
+    eventsEmitter.emit(eventName, message)
+  }
+}
+
+/**
+ * Subscriber to event emitter.
+ *
+ * @param {string} eventName - event name
+ * @param {Function} callback - function executed when event is emited
+ */
+const subscriber = (eventName = '', callback = () => undefined) => {
+  if (
+    eventName &&
+    callback &&
+    typeof callback === 'function' &&
+    eventsEmitter.listenerCount(eventName) < 1
+  ) {
+    eventsEmitter.on(eventName, (message) => {
+      callback(message)
+    })
+  }
+}
+
+/**
+ * Axios request.
+ *
+ * @param {object} data - data for request
+ * @param {object} data.params - params for request
+ * @param {string} data.method - request method
+ * @param {string} data.agent - request agent
+ * @param {object} callbacks - callbacks
+ * @param {Function} callbacks.success - success callback
+ * @param {Function} callbacks.error - error callback
+ */
+const executeRequest = (data = {}, callbacks = {}) => {
+  const { params = {}, method = POST, agent } = data
+  const { success = defaultEmptyFunction, error = defaultEmptyFunction } =
+    callbacks
+  const defaultsProperties = agent
+    ? {
+        method,
+        httpsAgent:
+          agent === 'https'
+            ? new https.Agent({ rejectUnauthorized: false })
+            : new http.Agent({ rejectUnauthorized: false }),
+        validateStatus: (status) => status >= 200 && status < 400,
+      }
+    : {}
+
+  axios({ ...defaultsProperties, ...params })
+    .then(({ data: dataRequest } = {}) => success(dataRequest))
+    .catch(error)
+}
+
 module.exports = {
-  setFunctionRoute,
-  setApiRoutes,
-  addFunctionAsRoute,
   encrypt,
   decrypt,
   getDataZone,
@@ -1103,4 +1001,8 @@ module.exports = {
   executeCommandAsync,
   checkValidApp,
   removeFile,
+  validateHttpMethod,
+  publish,
+  subscriber,
+  executeRequest,
 }
