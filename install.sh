@@ -763,6 +763,7 @@ INSTALL_FILES=(
     HOOK_VCENTER_FILES:$VAR_LOCATION/remotes/hooks/vcenter
     HOOK_VCENTER_TMPLS:$VAR_LOCATION/remotes/hooks/vcenter/templates
     HOOK_RAFT_FILES:$VAR_LOCATION/remotes/hooks/raft
+    HOOK_ALIAS_IP_FILES:$VAR_LOCATION/remotes/hooks/alias_ip
     COMMON_CLOUD_LIB_FILES:$LIB_LOCATION/ruby/cloud
     CLOUD_AUTH_LIB_FILES:$LIB_LOCATION/ruby/cloud/CloudAuth
     MAN_FILES:$MAN_LOCATION
@@ -1726,6 +1727,8 @@ NETWORK_FILES="src/vnm_mad/remotes/lib/vnm_driver.rb \
                src/vnm_mad/remotes/lib/security_groups.rb \
                src/vnm_mad/remotes/lib/security_groups_iptables.rb \
                src/vnm_mad/remotes/lib/vnfilter.rb \
+               src/vnm_mad/remotes/lib/vnfilter_clean \
+               src/vnm_mad/remotes/lib/vnfilter_post \
                src/vnm_mad/remotes/lib/nic.rb"
 
 NETWORK_HOOKS_PRE_FILES="src/vnm_mad/remotes/hooks/pre/firecracker"
