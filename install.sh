@@ -486,6 +486,7 @@ VAR_DIRS="$VAR_LOCATION/remotes \
           $VAR_LOCATION/remotes/hooks/vcenter \
           $VAR_LOCATION/remotes/hooks/vcenter/templates \
           $VAR_LOCATION/remotes/hooks/raft \
+          $VAR_LOCATION/remotes/hooks/alias_ip \
           $VAR_LOCATION/remotes/datastore \
           $VAR_LOCATION/remotes/datastore/dummy \
           $VAR_LOCATION/remotes/datastore/fs \
@@ -1727,8 +1728,6 @@ NETWORK_FILES="src/vnm_mad/remotes/lib/vnm_driver.rb \
                src/vnm_mad/remotes/lib/security_groups.rb \
                src/vnm_mad/remotes/lib/security_groups_iptables.rb \
                src/vnm_mad/remotes/lib/vnfilter.rb \
-               src/vnm_mad/remotes/lib/vnfilter_clean \
-               src/vnm_mad/remotes/lib/vnfilter_post \
                src/vnm_mad/remotes/lib/nic.rb"
 
 NETWORK_HOOKS_PRE_FILES="src/vnm_mad/remotes/hooks/pre/firecracker"
@@ -2410,8 +2409,7 @@ HOOK_RAFT_FILES="share/hooks/raft/vip.sh"
 # HOOK scripts, to be installed under $VAR_LOCATION/remotes/hooks/alias_ip
 #-------------------------------------------------------------------------------
 
-HOOK_ALIAS_IP_FILES="share/hooks/alias_ip/alias_ip.rb \
-                     share/hooks/alias_ip/vnfilter.rb"
+HOOK_ALIAS_IP_FILES="share/hooks/alias_ip/vnfilter.rb"
 
 #-------------------------------------------------------------------------------
 # Installation scripts, to be installed under $SHARE_LOCATION
