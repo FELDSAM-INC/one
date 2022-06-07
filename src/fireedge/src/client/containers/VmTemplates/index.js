@@ -15,15 +15,17 @@
  * ------------------------------------------------------------------------- */
 import { ReactElement, useState, memo } from 'react'
 import PropTypes from 'prop-types'
-import { BookmarkEmpty } from 'iconoir-react'
-import { Typography, Box, Stack, Chip, IconButton } from '@mui/material'
+import { Pin as GotoIcon, RefreshDouble, Cancel } from 'iconoir-react'
+import { Typography, Box, Stack, Chip } from '@mui/material'
 import { Row } from 'react-table'
 
+import { useLazyGetTemplateQuery } from 'client/features/OneApi/vmTemplate'
 import { VmTemplatesTable } from 'client/components/Tables'
 import VmTemplateActions from 'client/components/Tables/VmTemplates/actions'
 import VmTemplateTabs from 'client/components/Tabs/VmTemplate'
 import SplitPane from 'client/components/SplitPane'
 import MultipleTags from 'client/components/MultipleTags'
+import { SubmitButton } from 'client/components/FormControl'
 import { Tr } from 'client/components/HOC'
 import { T, VmTemplate } from 'client/constants'
 
@@ -38,12 +40,11 @@ function VmTemplates() {
 
   const hasSelectedRows = selectedRows?.length > 0
   const moreThanOneSelected = selectedRows?.length > 1
-  const gridTemplateRows = hasSelectedRows ? '1fr auto 1fr' : '1fr'
 
   return (
-    <SplitPane gridTemplateRows={gridTemplateRows}>
+    <SplitPane gridTemplateRows="1fr auto 1fr">
       {({ getGridProps, GutterComponent }) => (
-        <Box {...getGridProps()}>
+        <Box {...(hasSelectedRows && getGridProps())}>
           <VmTemplatesTable
             onSelectedRowsChange={onSelectedRowsChange}
             globalActions={actions}
@@ -56,8 +57,9 @@ function VmTemplates() {
                 <GroupedTags tags={selectedRows} />
               ) : (
                 <InfoTabs
-                  vmTemplate={selectedRows[0]?.original}
+                  template={selectedRows[0]?.original}
                   gotoPage={selectedRows[0]?.gotoPage}
+                  unselect={() => selectedRows[0]?.toggleRowSelected(false)}
                 />
               )}
             </>
@@ -71,29 +73,53 @@ function VmTemplates() {
 /**
  * Displays details of a VM Template.
  *
- * @param {VmTemplate} vmTemplate - VM Template to display
+ * @param {VmTemplate} template - VM Template id to display
  * @param {Function} [gotoPage] - Function to navigate to a page of a VM Template
+ * @param {Function} [unselect] - Function to unselect a VM Template
  * @returns {ReactElement} VM Template details
  */
-const InfoTabs = memo(({ vmTemplate, gotoPage }) => (
-  <Stack overflow="auto">
-    <Stack direction="row" alignItems="center" gap={1} mb={1}>
-      <Typography color="text.primary" noWrap>
-        {`#${vmTemplate.ID} | ${vmTemplate.NAME}`}
-      </Typography>
-      {gotoPage && (
-        <IconButton title={Tr(T.LocateOnTable)} onClick={gotoPage}>
-          <BookmarkEmpty />
-        </IconButton>
-      )}
+const InfoTabs = memo(({ template, gotoPage, unselect }) => {
+  const [getTemplate, { isFetching }] = useLazyGetTemplateQuery()
+
+  return (
+    <Stack overflow="auto">
+      <Stack direction="row" alignItems="center" gap={1} mb={1}>
+        <SubmitButton
+          data-cy="detail-refresh"
+          icon={<RefreshDouble />}
+          tooltip={Tr(T.Refresh)}
+          isSubmitting={isFetching}
+          onClick={() => getTemplate({ id: template?.ID })}
+        />
+        {typeof gotoPage === 'function' && (
+          <SubmitButton
+            data-cy="locate-on-table"
+            icon={<GotoIcon />}
+            tooltip={Tr(T.LocateOnTable)}
+            onClick={() => gotoPage()}
+          />
+        )}
+        {typeof unselect === 'function' && (
+          <SubmitButton
+            data-cy="unselect"
+            icon={<Cancel />}
+            tooltip={Tr(T.Close)}
+            onClick={() => unselect()}
+          />
+        )}
+        <Typography color="text.primary" noWrap>
+          {`#${template?.ID || ''} | ${template?.NAME || ''}`}
+        </Typography>
+      </Stack>
+      <VmTemplateTabs id={template?.ID} />
     </Stack>
-    <VmTemplateTabs id={vmTemplate.ID} />
-  </Stack>
-))
+  )
+})
 
 InfoTabs.propTypes = {
-  vmTemplate: PropTypes.object.isRequired,
+  template: PropTypes.object,
   gotoPage: PropTypes.func,
+  unselect: PropTypes.func,
 }
 
 InfoTabs.displayName = 'InfoTabs'

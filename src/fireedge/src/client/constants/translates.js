@@ -60,6 +60,7 @@ module.exports = {
   CreateProvider: 'Create Provider',
   CreateProvision: 'Create Provision',
   CreateVmTemplate: 'Create VM Template',
+  CreateServiceTemplate: 'Create Service Template',
   CurrentGroup: 'Current group: %s',
   CurrentOwner: 'Current owner: %s',
   Delete: 'Delete',
@@ -70,6 +71,7 @@ module.exports = {
   DeleteSomething: 'Delete: %s',
   DeleteTemplate: 'Delete Template',
   Deploy: 'Deploy',
+  DeployServiceTemplate: 'Deploy Service Template',
   Detach: 'Detach',
   DetachSomething: 'Detach: %s',
   Disable: 'Disable',
@@ -155,9 +157,11 @@ module.exports = {
   UnReschedule: 'Un-Reschedule',
   Unshare: 'Unshare',
   Update: 'Update',
+  UpdateVmConfiguration: 'Update VM Configuration',
   UpdateProvider: 'Update Provider',
   UpdateScheduleAction: 'Update schedule action: %s',
   UpdateVmTemplate: 'Update VM Template',
+  UpdateServiceTemplate: 'Update Service Template',
 
   /* questions */
   Yes: 'Yes',
@@ -343,6 +347,10 @@ module.exports = {
   Templates: 'Templates',
   VMTemplate: 'VM Template',
   VMTemplates: 'VM Templates',
+  Service: 'Service',
+  Services: 'Services',
+  ServiceTemplate: 'Service Template',
+  ServiceTemplates: 'Service Templates',
 
   /* sections - flow */
   ApplicationsTemplates: 'Applications templates',
@@ -406,11 +414,6 @@ module.exports = {
   Monitoring: 'Monitoring',
   EdgeCluster: 'Edge Cluster',
 
-  /* flow schema */
-  Strategy: 'Strategy',
-  ShutdownAction: 'Shutdown action',
-  ReadyStatusGate: 'Ready status gate',
-
   /* VM schema */
   /* VM schema - remote access */
   Vnc: 'VNC',
@@ -460,6 +463,7 @@ module.exports = {
   Snapshot: 'Snapshot',
   SnapshotName: 'Snapshot name',
   DiskSnapshot: 'Disk snapshot',
+  DiskSize: 'Disk size',
   NewImageName: 'New Image name',
   NewImageNameConcept: 'Name for the new Image where the disk will be saved',
   /* VM schema - network */
@@ -522,6 +526,8 @@ module.exports = {
     When creating several VMs, the wildcard %%idx will be
     replaced with a number starting from 0`,
   NumberOfInstances: 'Number of instances',
+  MakeTemplateAvailableForVROnly:
+    'Make this template available for Virtual Router machines only',
   VmOnHoldState: 'Start VM on hold state',
   VmOnHoldStateConcept: `
     Sets the new VM to hold state, instead of pending.
@@ -573,7 +579,6 @@ module.exports = {
   EnableHotResize: 'Enable hot resize',
   /* VM Template schema - VM Group */
   AssociateToVMGroup: 'Associate VM to a VM Group',
-  Role: 'Role',
   /* VM Template schema - vCenter */
   vCenterTemplateRef: 'vCenter Template reference',
   vCenterClusterRef: 'vCenter Cluster reference',
@@ -659,6 +664,7 @@ module.exports = {
     Number of iothreads for virtio disks.
     By default threads will be assign to disk by round robin algorithm.
     Disk thread id can be forced by disk IOTHREAD attribute`,
+  Raw: 'Raw',
   RawData: 'Raw data',
   RawDataConcept: 'Raw data to be passed directly to the hypervisor',
   RawValidateConcept: `
@@ -697,6 +703,7 @@ module.exports = {
   ContextCustomVarErrorExists: 'Context Custom Variable already exists',
   /* VM Template schema - Input/Output */
   InputOrOutput: 'Input / Output',
+  Input: 'Input',
   Inputs: 'Inputs',
   PciDevices: 'PCI Devices',
   DeviceName: 'Device name',
@@ -758,6 +765,17 @@ module.exports = {
   UnshareVmTemplateDescription: `
     The VM Template(s), along with any image referenced by it, will
     be unshared with the group's users. Permission changed: GROUP USE`,
+
+  /* Service Template schema */
+  /* Service Template schema - general */
+  Strategy: 'Strategy',
+  ShutdownAction: 'Shutdown action',
+  ReadyStatusGate: 'Ready status gate',
+  AutomaticDeletion: 'Automatic deletion',
+  Role: 'Role',
+  Roles: 'Roles',
+  Cardinality: 'Cardinality',
+  Parents: 'Parents',
 
   /* Virtual Network schema - network */
   Driver: 'Driver',

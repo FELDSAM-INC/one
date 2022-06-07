@@ -90,3 +90,8 @@ const FIELDS = (hypervisor) => [
 const SCHEMA = (hypervisor) => getObjectSchemaFromFields(FIELDS(hypervisor))
 
 export { SECTIONS, FIELDS, BOOT_ORDER_FIELD, SCHEMA }
+export * from './bootSchema'
+export * from './kernelSchema'
+export * from './ramdiskSchema'
+export * from './featuresSchema'
+export * from './rawSchema'

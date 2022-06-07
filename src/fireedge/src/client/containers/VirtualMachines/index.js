@@ -15,15 +15,17 @@
  * ------------------------------------------------------------------------- */
 import { ReactElement, useState, memo } from 'react'
 import PropTypes from 'prop-types'
-import { BookmarkEmpty } from 'iconoir-react'
-import { Typography, Box, Stack, Chip, IconButton } from '@mui/material'
+import { Pin as GotoIcon, RefreshDouble, Cancel } from 'iconoir-react'
+import { Typography, Box, Stack, Chip } from '@mui/material'
 import { Row } from 'react-table'
 
+import { useLazyGetVmQuery } from 'client/features/OneApi/vm'
 import { VmsTable } from 'client/components/Tables'
 import VmActions from 'client/components/Tables/Vms/actions'
 import VmTabs from 'client/components/Tabs/Vm'
 import SplitPane from 'client/components/SplitPane'
 import MultipleTags from 'client/components/MultipleTags'
+import { SubmitButton } from 'client/components/FormControl'
 import { Tr } from 'client/components/HOC'
 import { T, VM } from 'client/constants'
 
@@ -38,12 +40,11 @@ function VirtualMachines() {
 
   const hasSelectedRows = selectedRows?.length > 0
   const moreThanOneSelected = selectedRows?.length > 1
-  const gridTemplateRows = hasSelectedRows ? '1fr auto 1fr' : '1fr'
 
   return (
-    <SplitPane gridTemplateRows={gridTemplateRows}>
+    <SplitPane gridTemplateRows="1fr auto 1fr">
       {({ getGridProps, GutterComponent }) => (
-        <Box {...getGridProps()}>
+        <Box {...(hasSelectedRows && getGridProps())}>
           <VmsTable
             onSelectedRowsChange={onSelectedRowsChange}
             globalActions={actions}
@@ -58,6 +59,7 @@ function VirtualMachines() {
                 <InfoTabs
                   vm={selectedRows[0]?.original}
                   gotoPage={selectedRows[0]?.gotoPage}
+                  unselect={() => selectedRows[0]?.toggleRowSelected(false)}
                 />
               )}
             </>
@@ -73,27 +75,51 @@ function VirtualMachines() {
  *
  * @param {VM} vm - VM to display
  * @param {Function} [gotoPage] - Function to navigate to a page of a VM
+ * @param {Function} [unselect] - Function to unselect a VM
  * @returns {ReactElement} VM details
  */
-const InfoTabs = memo(({ vm, gotoPage }) => (
-  <Stack overflow="auto">
-    <Stack direction="row" alignItems="center" gap={1} mb={1}>
-      <Typography color="text.primary" noWrap>
-        {`#${vm.ID} | ${vm.NAME}`}
-      </Typography>
-      {gotoPage && (
-        <IconButton title={Tr(T.LocateOnTable)} onClick={gotoPage}>
-          <BookmarkEmpty />
-        </IconButton>
-      )}
+const InfoTabs = memo(({ vm, gotoPage, unselect }) => {
+  const [getVm, { isFetching }] = useLazyGetVmQuery()
+
+  return (
+    <Stack overflow="auto">
+      <Stack direction="row" alignItems="center" gap={1} mb={1}>
+        <SubmitButton
+          data-cy="detail-refresh"
+          icon={<RefreshDouble />}
+          tooltip={Tr(T.Refresh)}
+          isSubmitting={isFetching}
+          onClick={() => getVm({ id: vm?.ID })}
+        />
+        {typeof gotoPage === 'function' && (
+          <SubmitButton
+            data-cy="locate-on-table"
+            icon={<GotoIcon />}
+            tooltip={Tr(T.LocateOnTable)}
+            onClick={() => gotoPage()}
+          />
+        )}
+        {typeof unselect === 'function' && (
+          <SubmitButton
+            data-cy="unselect"
+            icon={<Cancel />}
+            tooltip={Tr(T.Close)}
+            onClick={() => unselect()}
+          />
+        )}
+        <Typography color="text.primary" noWrap>
+          {`#${vm?.ID} | ${vm?.NAME}`}
+        </Typography>
+      </Stack>
+      <VmTabs id={vm?.ID} />
     </Stack>
-    <VmTabs id={vm.ID} />
-  </Stack>
-))
+  )
+})
 
 InfoTabs.propTypes = {
-  vm: PropTypes.object.isRequired,
+  vm: PropTypes.object,
   gotoPage: PropTypes.func,
+  unselect: PropTypes.func,
 }
 
 InfoTabs.displayName = 'InfoTabs'

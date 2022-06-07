@@ -13,35 +13,17 @@
  * See the License for the specific language governing permissions and       *
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
-import makeStyles from '@mui/styles/makeStyles'
+import { object, ObjectSchema } from 'yup'
 
-export default makeStyles((theme) => ({
-  root: {
-    padding: '0.5em',
-    display: 'grid',
-    gap: '1em',
-    gridAutoFlow: 'column',
-    [theme.breakpoints.down('md')]: {
-      gridAutoFlow: 'initial',
-    },
-  },
-  item: {
-    [theme.breakpoints.down('md')]: {
-      display: 'flex',
-      gap: '1em',
-      '& > *': {
-        width: '50%',
-      },
-    },
-  },
-  actions: {
-    [theme.breakpoints.down('md')]: {
-      borderBottom: `1px solid ${theme.palette.divider}`,
-      padding: '0 1em 1em 1em',
-    },
-    [theme.breakpoints.up('md')]: {
-      order: 1,
-      textAlign: 'end',
-    },
-  },
-}))
+import {
+  CONFIGURATION_SCHEMA,
+  FILES_SCHEMA,
+} from 'client/components/Forms/VmTemplate/CreateForm/Steps/ExtraConfiguration/context/schema'
+
+/**
+ * @param {object} [formProps] - Form props
+ * @param {HYPERVISORS} [formProps.hypervisor] - VM hypervisor
+ * @returns {ObjectSchema} Context schema
+ */
+export const SCHEMA = ({ hypervisor }) =>
+  object().concat(CONFIGURATION_SCHEMA).concat(FILES_SCHEMA(hypervisor))

@@ -89,6 +89,7 @@ const Tabs = ({
       <MTabs
         value={tabSelected}
         variant="scrollable"
+        allowScrollButtonsMobile
         scrollButtons="auto"
         onChange={(_, tab) => setTab(tab)}
         sx={{
@@ -99,16 +100,19 @@ const Tabs = ({
         }}
         {...tabsProps}
       >
-        {tabs.map(({ id, value, name, label, error, icon: Icon }, idx) => (
-          <MTab
-            key={`tab-${name}`}
-            id={`tab-${name}`}
-            icon={error ? <WarningIcon /> : Icon && <Icon />}
-            value={value ?? idx}
-            label={label ?? name}
-            data-cy={`tab-${id}`}
-          />
-        ))}
+        {tabs.map(
+          ({ value, name, id = name, label, error, icon: Icon }, idx) => (
+            <MTab
+              key={`tab-${id}`}
+              id={`tab-${id}`}
+              iconPosition="start"
+              icon={error ? <WarningIcon /> : Icon && <Icon />}
+              value={value ?? idx}
+              label={label ?? id}
+              data-cy={`tab-${id}`}
+            />
+          )
+        )}
       </MTabs>
     ),
     [tabs, tabSelected]
