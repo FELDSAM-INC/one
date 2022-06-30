@@ -691,6 +691,7 @@ module.exports = {
   InputOrOutput: 'Input / Output',
   Inputs: 'Inputs',
   PciDevices: 'PCI Devices',
+  Profile: 'Profile',
   DeviceName: 'Device name',
   Device: 'Device',
   Vendor: 'Vendor',
