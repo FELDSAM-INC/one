@@ -18,16 +18,25 @@ module.exports = {
   Back: 'Back',
   Previous: 'Previous',
   Next: 'Next',
+  Sort: 'Sort',
   SortBy: 'Sort by',
-  FilterBy: 'Filter by',
   Filter: 'Filter',
   Filters: 'Filters',
+  FilterBy: 'Filter by',
+  FilterLabels: 'Filter labels',
+  FilterByLabel: 'Filter by label',
+  First: 'First',
+  Last: 'Last',
+  ApplyLabels: 'Apply labels',
+  Label: 'Label',
+  NoLabels: 'NoLabels',
   All: 'All',
   On: 'On',
   ToggleAllCurrentPageRowsSelected: 'Toggle all current page rows selected',
   NumberOfResourcesSelected: 'All %s resources are selected',
   SelectAllResources: 'Select all %s resources',
   ClearSelection: 'Clear selection',
+  ResetFilters: 'Clear current search query, filters, and sorts',
 
   /* actions */
   Accept: 'Accept',
@@ -57,14 +66,25 @@ module.exports = {
   Create: 'Create',
   CreateHost: 'Create Host',
   CreateMarketApp: 'Create Marketplace App',
+  CreateProvider: 'Create Provider',
+  CreateProvision: 'Create Provision',
+  CreateServiceTemplate: 'Create Service Template',
+  CreateVirtualNetwork: 'Create VM Template',
   CreateVmTemplate: 'Create VM Template',
   CurrentGroup: 'Current group: %s',
   CurrentOwner: 'Current owner: %s',
   Delete: 'Delete',
+  DeleteAllImages: 'Delete all images',
   DeleteDb: 'Delete database',
   DeleteScheduleAction: 'Delete schedule action: %s',
+  DeleteSeveralTemplates: 'Delete several Templates',
+  DeleteSeveralVirtualNetworks: 'Delete several Virtual Networks',
   DeleteSomething: 'Delete: %s',
+  DeleteAddressRange: 'Delete Address Range',
+  DeleteTemplate: 'Delete Template',
+  DeleteVirtualNetwork: 'Delete Virtual Network',
   Deploy: 'Deploy',
+  DeployServiceTemplate: 'Deploy Service Template',
   Detach: 'Detach',
   DetachSomething: 'Detach: %s',
   Disable: 'Disable',
@@ -80,6 +100,7 @@ module.exports = {
   Info: 'Info',
   Instantiate: 'Instantiate',
   InstantiateVmTemplate: 'Instantiate VM Template',
+  LocateOnTable: 'Locate on table',
   Lock: 'Lock',
   Migrate: 'Migrate',
   MigrateLive: 'Migrate live',
@@ -96,10 +117,12 @@ module.exports = {
   Recreate: 'Recreate',
   Refresh: 'Refresh',
   Release: 'Release',
+  ReleaseIp: 'Release IP',
   Remove: 'Remove',
   Rename: 'Rename',
   RenameSomething: 'Rename: %s',
   Reschedule: 'Reschedule',
+  Reserve: 'Reserve',
   Resize: 'Resize',
   ResizeCapacity: 'Resize capacity',
   ResizeSomething: 'Resize: %s',
@@ -149,7 +172,12 @@ module.exports = {
   UnReschedule: 'Un-Reschedule',
   Unshare: 'Unshare',
   Update: 'Update',
+  UpdateProvider: 'Update Provider',
   UpdateScheduleAction: 'Update schedule action: %s',
+  UpdateServiceTemplate: 'Update Service Template',
+  UpdateVirtualNetwork: 'Update Virtual Network',
+  UpdateVmConfiguration: 'Update VM Configuration',
+  UpdateVmTemplate: 'Update VM Template',
 
   /* questions */
   Yes: 'Yes',
@@ -202,7 +230,7 @@ module.exports = {
   HoursBetween0_168: 'Hours should be between 0 and 168',
   WhenYouWantThatTheActionFinishes: 'When you want that the action finishes',
 
-  /* dashboard */
+  /* footer */
   MadeWith: 'Made with',
 
   /* dashboard */
@@ -217,6 +245,7 @@ module.exports = {
   Credentials: 'Credentials',
   SwitchView: 'Switch view',
   SwitchGroup: 'Switch group',
+  TakeMeToTheAppGui: 'Take me to the %s GUI',
 
   /* errors */
   SessionExpired: 'Sorry, your session has expired',
@@ -280,13 +309,17 @@ module.exports = {
   AddUserSshPrivateKey: 'Add user SSH private key',
   SshPassphraseKey: 'SSH private key passphrase',
   AddUserSshPassphraseKey: 'Add user SSH private key passphrase',
+  Labels: 'Labels',
+  NewLabelOrSearch: 'New label or search',
+  LabelAlreadyExists: 'Label already exists',
+  PressToCreateLabel: 'Press enter to create a new label',
+  SavesInTheUserTemplate: "Saved in the User's template",
+  NoLabelsOnList: 'You have not defined any labels, list is empty',
 
   /* sections - system */
   User: 'User',
-  UserDetailId: 'User #%s',
   Users: 'Users',
   Group: 'Group',
-  GroupDetailId: 'Group #%s',
   Groups: 'Groups',
   VDC: 'VDC',
   VDCs: 'VDCs',
@@ -295,10 +328,8 @@ module.exports = {
 
   /* sections - infrastructure */
   Cluster: 'Cluster',
-  ClusterDetailId: 'Cluster #%s',
   Clusters: 'Clusters',
   Host: 'Host',
-  HostDetailId: 'Host #%s',
   Hosts: 'Hosts',
   Infrastructure: 'Infrastructure',
   Zone: 'Zone',
@@ -331,7 +362,6 @@ module.exports = {
   /* sections - templates & instances */
   Instances: 'Instances',
   VM: 'VM',
-  VMDetailId: 'VM #%s',
   VMs: 'VMs',
   VirtualRouter: 'Virtual Router',
   VirtualRouters: 'Virtual Routers',
@@ -340,6 +370,10 @@ module.exports = {
   Templates: 'Templates',
   VMTemplate: 'VM Template',
   VMTemplates: 'VM Templates',
+  Service: 'Service',
+  Services: 'Services',
+  ServiceTemplate: 'Service Template',
+  ServiceTemplates: 'Service Templates',
 
   /* sections - flow */
   ApplicationsTemplates: 'Applications templates',
@@ -381,6 +415,7 @@ module.exports = {
   Format: 'Format',
   Prefix: 'Prefix',
   More: 'More',
+  UsedOfTotal: 'Used / Total',
 
   /* permissions */
   Permissions: 'Permissions',
@@ -401,11 +436,6 @@ module.exports = {
   Deployment: 'Deployment',
   Monitoring: 'Monitoring',
   EdgeCluster: 'Edge Cluster',
-
-  /* flow schema */
-  Strategy: 'Strategy',
-  ShutdownAction: 'Shutdown action',
-  ReadyStatusGate: 'Ready status gate',
 
   /* VM schema */
   /* VM schema - remote access */
@@ -435,16 +465,19 @@ module.exports = {
   /* VM schema - capacity */
   Capacity: 'Capacity',
   PhysicalCpu: 'Physical CPU',
+  PhysicalCpuWithPercent: 'Physical CPU (%)',
   VirtualCpu: 'Virtual CPU',
+  VirtualCpuWithPercent: 'Virtual CPU (%)',
   VirtualCores: 'Virtual Cores',
   Cores: 'Cores',
   Sockets: 'Sockets',
   Memory: 'Memory',
+  MemoryWithUnit: 'Memory %s',
   Cost: 'Cost',
   CostEachMonth: '%s / month',
   CostCpu: 'Cost / CPU',
   CostCpuConcept: 'Cost of each CPU per hour',
-  CostMByte: 'Cost / MByte',
+  CostMemory: 'Cost / Memory',
   CostMemoryConcept: 'Cost of each memory MB per hour',
   CostDiskConcept: 'Cost of each disk GB per hour',
   /* VM schema - storage */
@@ -456,6 +489,7 @@ module.exports = {
   Snapshot: 'Snapshot',
   SnapshotName: 'Snapshot name',
   DiskSnapshot: 'Disk snapshot',
+  DiskSize: 'Disk size',
   NewImageName: 'New Image name',
   NewImageNameConcept: 'Name for the new Image where the disk will be saved',
   /* VM schema - network */
@@ -475,6 +509,9 @@ module.exports = {
   HostnamePortsForwardedToVmPorts: '%1$s ports %2$s forwarded to VM ports %3$s',
   /* VM schema - snapshot */
   VmSnapshotNameConcept: 'The new snapshot name. It can be empty',
+  VmSnapshotHint: `
+    Snapshots in this tab refer to System Snapshots, which includes all disks and
+    the memory state of the VM. For disk snapshots, see the Storage tab`,
   /* VM schema - actions */
   EnforceCapacityChecks: 'Enforce capacity checks',
   EnforceCapacityChecksConcept: `
@@ -506,6 +543,7 @@ module.exports = {
   /* VM Template schema - general */
   CustomHypervisor: 'Custom',
   CustomVariables: 'Custom Variables',
+  CustomAttributes: 'Custom Attributes',
   Hypervisor: 'Hypervisor',
   Logo: 'Logo',
   MakeNewImagePersistent: 'Make the new images persistent',
@@ -518,6 +556,8 @@ module.exports = {
     When creating several VMs, the wildcard %%idx will be
     replaced with a number starting from 0`,
   NumberOfInstances: 'Number of instances',
+  MakeTemplateAvailableForVROnly:
+    'Make this template available for Virtual Router machines only',
   VmOnHoldState: 'Start VM on hold state',
   VmOnHoldStateConcept: `
     Sets the new VM to hold state, instead of pending.
@@ -549,7 +589,7 @@ module.exports = {
   MemoryModification: 'Memory modification',
   AllowUsersToModifyMemory:
     "Allow users to modify this template's default memory on instantiate",
-  MemoryConcept: 'Amount of RAM required for the VM',
+  MemoryConcept: 'Amount of RAM required for the VM, in Megabytes',
   CpuConcept: `
     Percentage of CPU divided by 100 required for the
     Virtual Machine. Half a processor is written 0.5`,
@@ -569,7 +609,6 @@ module.exports = {
   EnableHotResize: 'Enable hot resize',
   /* VM Template schema - VM Group */
   AssociateToVMGroup: 'Associate VM to a VM Group',
-  Role: 'Role',
   /* VM Template schema - vCenter */
   vCenterTemplateRef: 'vCenter Template reference',
   vCenterClusterRef: 'vCenter Cluster reference',
@@ -655,6 +694,7 @@ module.exports = {
     Number of iothreads for virtio disks.
     By default threads will be assign to disk by round robin algorithm.
     Disk thread id can be forced by disk IOTHREAD attribute`,
+  Raw: 'Raw',
   RawData: 'Raw data',
   RawDataConcept: 'Raw data to be passed directly to the hypervisor',
   RawValidateConcept: `
@@ -687,8 +727,13 @@ module.exports = {
     The contextualization package executes an init.sh file if it exists.
     If more than one script file is added, this list contains the scripts
     to run and their order`,
+  ContextCustomVariables: 'Context Custom Variables',
+  ContextCustomVariablesConcept:
+    'Context information will be send to the VM at boot time',
+  ContextCustomVarErrorExists: 'Context Custom Variable already exists',
   /* VM Template schema - Input/Output */
   InputOrOutput: 'Input / Output',
+  Input: 'Input',
   Inputs: 'Inputs',
   PciDevices: 'PCI Devices',
   Profile: 'Profile',
@@ -735,6 +780,8 @@ module.exports = {
     Number of virtual CPUs. This value is optional, the default
     hypervisor behavior is used, usually one virtual CPU`,
   /* VM Template schema - actions */
+  DeleteAllImagesConcept:
+    'Enable to delete the template plus any image defined in DISK',
   CopyOf: 'Copy of ',
   PrefixMultipleConcept:
     'Several templates are selected, please choose prefix to name the new copies',
@@ -743,8 +790,26 @@ module.exports = {
   CloneWithImagesConcept: `
     You can also clone any Image referenced inside this Template.
     They will be cloned to a new Image, and made persistent`,
+  ShareVmTemplateDescription: `
+    The VM Template(s), along with any image referenced by it, will
+    be shared with the group's users. Permission changed: GROUP USE`,
+  UnshareVmTemplateDescription: `
+    The VM Template(s), along with any image referenced by it, will
+    be unshared with the group's users. Permission changed: GROUP USE`,
+
+  /* Service Template schema */
+  /* Service Template schema - general */
+  Strategy: 'Strategy',
+  ShutdownAction: 'Shutdown action',
+  ReadyStatusGate: 'Ready status gate',
+  AutomaticDeletion: 'Automatic deletion',
+  Role: 'Role',
+  Roles: 'Roles',
+  Cardinality: 'Cardinality',
+  Parents: 'Parents',
 
   /* Virtual Network schema - network */
+  Driver: 'Driver',
   IP: 'IP',
   IPv4Concept: 'First IP in the range in dot notation',
   IPv6Concept: 'First IP6 (full 128 bits) in the range',
@@ -755,6 +820,7 @@ module.exports = {
   NetworkAddress: 'Network address',
   NetworkMask: 'Network mask',
   Gateway: 'Gateway',
+  Gateway6: 'IPv6 Gateway',
   GatewayConcept: 'Default gateway for the network',
   Gateway6Concept: 'IPv6 router for this network',
   SearchDomainForDNSResolution: 'Search domains for DNS resolution',
@@ -763,9 +829,9 @@ module.exports = {
   NetworkMethod6Concept: 'Sets IPv6 guest conf. method for NIC in this network',
   DNS: 'DNS',
   DNSConcept: 'DNS servers, a space separated list of servers',
-  AverageBandwidth: 'Average bandwidth (KBytes/s)',
-  PeakBandwidth: 'Peak bandwidth (KBytes/s)',
-  PeakBurst: 'Peak burst (KBytes)',
+  AverageBandwidth: 'Average bandwidth',
+  PeakBandwidth: 'Peak bandwidth',
+  PeakBurst: 'Peak burst',
   InboundAverageBandwidthConcept:
     'Average bitrate for the interface in kilobytes/second for inbound traffic',
   InboundPeakBandwidthConcept:
@@ -780,10 +846,78 @@ module.exports = {
   TransmissionQueue: 'Transmission queue',
   OnlySupportedForVirtioDriver: 'Only supported for virtio driver',
   GuestOptions: 'Guest options',
-  GuestMTU: 'GuestMTU',
+  GuestMTU: 'MTU of the Guest interfaces',
   GuestMTUConcept: 'Sets the MTU for the NICs in this network',
+  NetMethod: 'Method',
+  NetMethod6: 'IPv6 Method',
+  UsedLeases: 'Used leases',
+  TotalLeases: 'Total leases',
+  TotalClusters: 'Total clusters',
+  RecoverNetworkDescription: `
+    Recovers a Virtual Network in ERROR state or waiting for a driver operation to complete.
+    The recovery may be done by failing, succeeding or retrying the current operation.
+    YOU NEED TO MANUALLY CHECK THE VN STATUS, to decide if the operation was successful or not, or if it can be retried.
+
+    States for success/failure recovers: LOCK_CREATE, LOCK_DELETE state.
+    States for a retry recover: LOCK_CREATE, LOCK_DELETE state.
+    States for delete: Any but READY.`,
+  ReservationParent: 'Reservation parent',
+  ReservedFromVNetId: 'Reserved from VNET %s',
+  /* Virtual Network schema - driver configuration */
+  NetworkMode: 'Network mode',
+  Bridge: 'Bridge',
+  BridgeConcept: 'Name of the physical bridge in the nodes to attach VM NICs',
+  PhysicalDevice: 'Physical device',
+  PhysicalDeviceConcept: 'Node NIC to send/receive virtual network traffic',
+  MacSpoofingFilter: ' MAC spoofing filter',
+  IpSpoofingFilter: ' IP spoofing filter',
+  MTU: 'MTU of the interface',
+  MTUConcept: 'Maximum Transmission Unit',
+  VlanId: 'VLAN ID',
+  AutomaticVlanId: 'Automatic VLAN ID',
+  VxlanMode: 'VXLAN mode',
+  VxlanModeConcept: 'Multicast protocol for multi destination BUM traffic',
+  VxlanTunnelEndpoint: 'VXLAN Tunnel endpoint',
+  VxlanTunnelEndpointConcept: 'Tunnel endpoint communication type',
+  VxlanMulticast: 'VXLAN Multicast',
+  VxlanMulticastConcept:
+    'Base multicast address for each VLAN. The MC address is :vxlan_mc + :vlan_id',
+  IpConfiguration: 'IP Configuration',
+  IpConfigurationConcept:
+    'Options passed to ip cmd on operations specific to this Virtual Network',
+  OuterVlanId: 'Outer VLAN ID',
+  AutomaticOuterVlanId: 'Automatic Outer VLAN ID',
+  InvalidAttribute: 'Invalid attribute',
+  /* Virtual Network schema - address range */
+  Addresses: 'Addresses',
+  AddressRange: 'Address Range',
+  FirstIPv4Address: 'First IPv4 address',
+  FirstMacAddress: 'First MAC address',
+  SLAAC: 'SLAAC',
+  IPv6GlobalPrefix: 'IPv6 Global prefix',
+  IPv6ULAPrefix: 'IPv6 ULA prefix',
+  IPAMDriver: 'IPAM driver',
+  InvalidAddress: 'Invalid address',
+  InvalidIPv4: 'Invalid IPv4',
+  InvalidMAC: 'Invalid MAC',
+  DisabledAddressRangeInForm:
+    'Address Ranges need to be managed in the individual Virtual Network panel',
+  /* Virtual Network schema - QoS */
+  QoS: 'QoS',
+  InboundTraffic: 'Inbound traffic',
+  OutboundTraffic: 'Outbound traffic',
+  /* Virtual Network schema - reserve */
+  ReservationFromVirtualNetwork: 'Reservation from Virtual Network',
+  CanSelectAddressFromAR:
+    'You can select the addresses from an specific Address Range',
+  NumberOfAddresses: 'Number of addresses',
+  AddToNewVirtualNetwork: 'Add to a new Virtual Network',
+  AddToExistingReservation: 'Add to an existing Reservation',
+  FirstAddress: 'First address',
+  IpOrMac: 'IP or MAC',
 
   /* security group schema */
+  Security: 'Security',
   TCP: 'TCP',
   UDP: 'UDP',
   ICMP: 'ICMP',
@@ -884,6 +1018,10 @@ module.exports = {
     Can be used only if IOTHREADS > 0. If this input is disabled
     please first configure IOTHREADS value on OS & CPU -> Features`,
 
+  /* Provision schema */
+  /* Provision - general */
+  ProvisionId: 'Provision ID',
+
   /* User inputs */
   UserInputs: 'User Inputs',
   UserInputsConcept: `
@@ -945,7 +1083,7 @@ module.exports = {
   /* Validation - object  */
   'validation.object.noUnknown': 'Has unspecified keys: %s',
   /* Validation - array  */
-  'validation.array.min': 'Must have at least %s items',
-  'validation.array.max': 'Must have less than or equal to %s items',
-  'validation.array.length': 'Must have %s items',
+  'validation.array.min': 'Must have at least %s item(s) to act as a default',
+  'validation.array.max': 'Must have less than or equal to %s item(s)',
+  'validation.array.length': 'Must have %s item(s)',
 }

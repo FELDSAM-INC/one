@@ -31,7 +31,7 @@ import { T } from 'client/constants'
  * @returns {ReactElement} App Template tab
  */
 const AppTemplateTab = ({ id }) => {
-  const { data: marketplaceApp = {} } = useGetMarketplaceAppQuery(id)
+  const { data: marketplaceApp = {} } = useGetMarketplaceAppQuery({ id })
   const { APPTEMPLATE64, VMTEMPLATE64 } = marketplaceApp?.TEMPLATE
 
   const appTemplate = useMemo(
@@ -43,7 +43,7 @@ const AppTemplateTab = ({ id }) => {
 
   return (
     <>
-      <Accordion TransitionProps={{ unmountOnExit: true }}>
+      <Accordion variant="outlined">
         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
           <Translate word={T.AppTemplate} />
         </AccordionSummary>
@@ -57,7 +57,7 @@ const AppTemplateTab = ({ id }) => {
           </pre>
         </AccordionDetails>
       </Accordion>
-      <Accordion TransitionProps={{ unmountOnExit: true }}>
+      <Accordion>
         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
           <Translate word={T.VMTemplate} />
         </AccordionSummary>

@@ -26,7 +26,7 @@ import {
 } from 'yup'
 
 import { T } from 'client/constants'
-import { isDivisibleBy, isBase64 } from 'client/utils/helpers'
+import { isDivisibleBy, isBase64 } from 'client/utils/number'
 
 const buildMethods = () => {
   ;[number, string, boolean, object, array, date].forEach((schemaType) => {
@@ -42,7 +42,8 @@ const buildMethods = () => {
       let result = resolvedSchema._cast(value, options)
 
       if (options.isSubmit) {
-        result = this.submit?.(result, options) ?? result
+        const needChangeAfterSubmit = typeof this.submit === 'function'
+        needChangeAfterSubmit && (result = this.submit(result, options))
       }
 
       return result

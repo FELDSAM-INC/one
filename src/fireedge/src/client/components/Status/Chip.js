@@ -19,44 +19,46 @@ import { styled, Typography, alpha } from '@mui/material'
 import { Copy as CopyIcon, Check as CopiedIcon, Cancel } from 'iconoir-react'
 
 import { useClipboard } from 'client/hooks'
-
-const Chip = styled(Typography)(
-  ({ theme: { palette, typography }, state = 'debug', white, icon }) => {
-    const { dark = state } = palette[state] ?? {}
-
-    const bgColor = alpha(dark, 0.2)
-    const color = white ? palette.common.white : palette.text.primary
-
-    return {
-      color,
-      backgroundColor: bgColor,
-      padding: icon ? '0.1rem 0.5rem' : '0.25rem 0.5rem',
-      borderRadius: 6,
-      textTransform: 'uppercase',
-      fontSize: typography.overline.fontSize,
-      fontWeight: 500,
-      lineHeight: 'normal',
-      cursor: 'default',
-      ...(icon && {
-        display: 'inline-flex',
-        alignItems: 'center',
-        gap: '0.5em',
-        '& > .icon': {
-          cursor: 'pointer',
-          color,
-          '&:hover': {
-            color: white ? palette.getContrastText(color) : dark,
-          },
-        },
-      }),
-    }
-  }
-)
+import { SCHEMES } from 'client/constants'
 
 const callAll =
   (...fns) =>
   (...args) =>
     fns.forEach((fn) => fn && fn?.(...args))
+
+const Chip = styled(Typography)(({ theme: { palette }, ownerState }) => {
+  const { dark = ownerState.state } = palette[ownerState.state] ?? {}
+
+  const isWhite = ownerState.forceWhiteColor
+  const bgColor = alpha(dark, palette.mode === SCHEMES.DARK ? 0.5 : 0.2)
+  const color = isWhite ? palette.common.white : palette.text.primary
+  const iconColor = isWhite ? palette.getContrastText(color) : dark
+
+  return {
+    color,
+    backgroundColor: bgColor,
+    padding: ownerState.hasIcon ? '0.1rem 0.5rem' : '0.25rem 0.5rem',
+    cursor: 'default',
+    userSelect: 'none',
+    ...(ownerState.hasIcon && {
+      display: 'inline-flex',
+      alignItems: 'center',
+      gap: '0.5em',
+      '& > .icon': {
+        cursor: 'pointer',
+        color,
+        '&:hover': { color: iconColor },
+      },
+    }),
+    ...(ownerState.clickable && {
+      WebkitTapHighlightColor: 'transparent',
+      cursor: 'pointer',
+      '&:hover, &:focus': {
+        backgroundColor: alpha(bgColor, 0.3),
+      },
+    }),
+  }
+})
 
 const StatusChip = memo(
   ({
@@ -71,6 +73,13 @@ const StatusChip = memo(
   }) => {
     const { copy, isCopied } = useClipboard()
 
+    const ownerState = {
+      forceWhiteColor,
+      hasIcon: clipboard || onDelete ? 'true' : undefined,
+      clickable: !!onClick,
+      state: stateColor || 'debug',
+    }
+
     const handleCopy = useCallback(
       (evt) => {
         const textToCopy = typeof clipboard === 'string' ? clipboard : text
@@ -83,19 +92,28 @@ const StatusChip = memo(
 
     const handleDelete = useCallback(
       (evt) => {
-        onDelete(text)
+        onDelete?.(text)
         evt.stopPropagation()
       },
       [text, onDelete]
     )
 
+    const handleClick = useCallback(
+      (evt) => {
+        onClick?.(text)
+        evt.stopPropagation()
+      },
+      [text, onClick]
+    )
+
     return (
       <Chip
         component="span"
-        state={stateColor}
-        white={forceWhiteColor ? 'true' : undefined}
-        icon={clipboard || onDelete ? 'true' : undefined}
-        onClick={callAll(onClick, clipboard && handleCopy)}
+        variant="overline"
+        lineHeight="normal"
+        borderRadius="0.5em"
+        ownerState={ownerState}
+        onClick={callAll(handleClick, clipboard && handleCopy)}
         data-cy={dataCy}
         {...props}
       >

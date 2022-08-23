@@ -14,10 +14,15 @@
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
 import { createTheme, ThemeOptions, colors, alpha } from '@mui/material'
+import { iconButtonClasses } from '@mui/material/IconButton'
+import { buttonClasses } from '@mui/material/Button'
+import { NavArrowDown as ExpandMoreIcon } from 'iconoir-react'
+
 import { UbuntuFont } from 'client/theme/fonts'
 import { SCHEMES } from 'client/constants'
 
-const defaultTheme = createTheme()
+const defaultDarkTheme = createTheme({ palette: { mode: 'dark' } })
+const defaultLightTheme = createTheme({ palette: { mode: 'light' } })
 const { grey } = colors
 const black = '#1D1D1D'
 const white = '#ffffff'
@@ -77,11 +82,12 @@ const buttonSvgStyle = {
  * @param {SCHEMES} mode - Scheme type
  * @returns {ThemeOptions} Material theme options
  */
-export default (appTheme, mode = SCHEMES.DARK) => {
+const createAppTheme = (appTheme, mode = SCHEMES.DARK) => {
   const isDarkMode = `${mode}`.toLowerCase() === SCHEMES.DARK
 
   const { primary = defaultPrimary, secondary } = appTheme?.palette || {}
   const defaultContrastText = isDarkMode ? white : 'rgba(0, 0, 0, 0.87)'
+  const defaultTheme = isDarkMode ? defaultDarkTheme : defaultLightTheme
 
   const background = {
     paper: isDarkMode ? primary.light : white,
@@ -249,6 +255,16 @@ export default (appTheme, mode = SCHEMES.DARK) => {
       MuiCssBaseline: {
         styleOverrides: {
           '@font-face': UbuntuFont,
+          '*::-webkit-scrollbar': {
+            width: 14,
+          },
+          '*::-webkit-scrollbar-thumb': {
+            backgroundClip: 'content-box',
+            border: '4px solid transparent',
+            borderRadius: 7,
+            boxShadow: 'inset 0 0 0 10px',
+            color: secondary.light,
+          },
           '.loading_screen': {
             width: '100%',
             height: '100vh',
@@ -270,10 +286,35 @@ export default (appTheme, mode = SCHEMES.DARK) => {
           fieldset: { border: 'none' },
         },
       },
+      MuiTypography: {
+        variants: [
+          {
+            props: { variant: 'underline' },
+            style: {
+              padding: '0 1em 0.2em 0.5em',
+              borderBottom: `2px solid ${secondary.main}`,
+              // subtitle1 variant is used for the underline
+              fontSize: defaultTheme.typography.pxToRem(18),
+              lineHeight: 24 / 18,
+              letterSpacing: 0,
+              fontWeight: 500,
+            },
+          },
+        ],
+      },
       MuiPaper: {
+        defaultProps: {
+          elevation: 0,
+        },
         styleOverrides: {
           root: { backgroundImage: 'unset' },
         },
+        variants: [
+          {
+            props: { variant: 'transparent' },
+            style: { backgroundColor: 'transparent' },
+          },
+        ],
       },
       MuiButtonBase: {
         defaultProps: {
@@ -347,7 +388,7 @@ export default (appTheme, mode = SCHEMES.DARK) => {
             borderWidth: 0,
             borderBottomWidth: 'thin',
             backgroundColor: primary.main,
-            '& .MuiIconButton-root, & .MuiButton-root': {
+            [`& .${iconButtonClasses.root}, & .${buttonClasses.root}`]: {
               color: white,
               border: 'none',
               backgroundColor: 'transparent',
@@ -398,6 +439,11 @@ export default (appTheme, mode = SCHEMES.DARK) => {
             backgroundColor: background.paper,
             borderRadius: `8px 8px 0 0`,
             border: `thin solid ${secondary.main}`,
+            paddingInline: '1rem',
+          },
+          flexContainer: {
+            height: '100%',
+            paddingBlock: '0.5em',
           },
         },
       },
@@ -407,8 +453,18 @@ export default (appTheme, mode = SCHEMES.DARK) => {
             color: 'text.secondary',
             textTransform: 'capitalize',
             fontSize: '1rem',
+            padding: '0 1rem',
+            minHeight: '100%',
+            border: 0,
+            borderRadius: 6,
+            '&:hover': {
+              background: defaultTheme.palette.action.selected,
+              transition: 'background .12s ease-in-out',
+            },
             '&.Mui-selected': {
-              color: secondary.main,
+              color: isDarkMode
+                ? secondary.main
+                : defaultTheme.palette.text.primary,
             },
           },
         },
@@ -445,17 +501,32 @@ export default (appTheme, mode = SCHEMES.DARK) => {
           dense: true,
         },
       },
-      MuiChip: {
-        variants: [
-          {
-            props: { variant: 'text' },
-            style: {
-              border: 0,
-              backgroundColor: 'transparent',
+      MuiAccordion: {
+        defaultProps: {
+          disableGutters: true,
+          TransitionProps: { unmountOnExit: true },
+        },
+        styleOverrides: {
+          root: {
+            flexBasis: '100%',
+            '&:before': { display: 'none' },
+          },
+        },
+      },
+      MuiAccordionSummary: {
+        defaultProps: {
+          expandIcon: <ExpandMoreIcon />,
+        },
+        styleOverrides: {
+          root: {
+            '&.Mui-expanded, &:hover': {
+              backgroundColor: defaultTheme.palette.action.hover,
             },
           },
-        ],
+        },
       },
     },
   }
 }
+
+export default createAppTheme

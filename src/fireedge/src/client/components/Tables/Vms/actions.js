@@ -18,7 +18,7 @@ import { useHistory } from 'react-router-dom'
 import { Typography } from '@mui/material'
 import { makeStyles } from '@mui/styles'
 import {
-  AddSquare,
+  AddCircledOutline,
   PlayOutline,
   SaveFloppyDisk,
   TransitionRight,
@@ -136,7 +136,7 @@ const Actions = () => {
             accessor: VM_ACTIONS.CREATE_DIALOG,
             dataCy: `vm_${VM_ACTIONS.CREATE_DIALOG}`,
             tooltip: T.Create,
-            icon: AddSquare,
+            icon: AddCircledOutline,
             options: [
               {
                 isConfirmDialog: true,
@@ -374,7 +374,6 @@ const Actions = () => {
                 form: MigrateForm,
                 dialogProps: {
                   title: T.Deploy,
-                  subheader: SubHeader,
                   dataCy: `modal-${VM_ACTIONS.DEPLOY}`,
                 },
                 onSubmit: (rows) => async (formData) => {
@@ -582,7 +581,7 @@ const Actions = () => {
                 },
                 onSubmit: (rows) => async () => {
                   const ids = rows?.map?.(({ original }) => original?.ID)
-                  await Promise.all(ids.map((id) => unlock(id)))
+                  await Promise.all(ids.map((id) => unlock({ id })))
                 },
               },
             ],

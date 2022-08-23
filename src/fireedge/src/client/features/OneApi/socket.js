@@ -13,19 +13,26 @@
  * See the License for the specific language governing permissions and       *
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
-import { ThunkDispatch } from 'redux-thunk'
+import { ThunkDispatch, ThunkAction } from 'redux-thunk'
 import socketIO, { Socket } from 'socket.io-client'
+
+import { updateResourceOnPool } from 'client/features/OneApi/common'
 import { WEBSOCKET_URL, SOCKETS } from 'client/constants'
 
 /**
- * @typedef {object} HookStateData - Event data from hook event STATE
+ * @typedef {'VM'|'HOST'|'IMAGE'|'NET'} HookObjectName
+ * - Hook object name to update from socket
+ */
+
+/**
+ * @typedef HookStateData - Event data from hook event STATE
  * @property {HookStateMessage} HOOK_MESSAGE - Hook message from OpenNebula API
  */
 
 /**
- * @typedef {object} HookStateMessage - Hook message from OpenNebula API
+ * @typedef HookStateMessage - Hook message from OpenNebula API
  * @property {'STATE'} HOOK_TYPE - Type of event API
- * @property {('VM'|'HOST'|'IMAGE')} HOOK_OBJECT - Type name of the resource
+ * @property {HookObjectName} HOOK_OBJECT - Type name of the resource
  * @property {string} STATE - The state that triggers the hook.
  * @property {string} [LCM_STATE]
  * - The LCM state that triggers the hook (Only for VM hooks)
@@ -37,6 +44,7 @@ import { WEBSOCKET_URL, SOCKETS } from 'client/constants'
  * @property {object} [VM] - New data of the VM
  * @property {object} [HOST] - New data of the HOST
  * @property {object} [IMAGE] - New data of the IMAGE
+ * @property {object} [NET] - New data of the VNET
  */
 
 /**
@@ -57,51 +65,57 @@ const createWebsocket = (path, query) =>
 
 /**
  * @param {HookStateData} data - Event data from hook event STATE
- * @returns {{name: ('vm'|'host'|'image'), value: object}}
- * - Name and new value of resource
+ * @returns {object} - New value of resource from socket
  */
-const getResourceFromEventState = (data) => {
-  const { HOOK_OBJECT: name, [name]: value } = data?.HOOK_MESSAGE ?? {}
+const getResourceValueFromEventState = (data) => {
+  const hookMessage = data?.HOOK_MESSAGE || {}
 
-  return { name: String(name).toLowerCase(), value }
+  const {
+    HOOK_OBJECT: name,
+    [name]: valueFromObjectName,
+    /**
+     * Virtual Network object Type is NET,
+     * but in the `HOOK_OBJECT` (object XML) is VNET
+     */
+    NET,
+  } = hookMessage
+
+  return valueFromObjectName ?? NET
 }
 
 /**
  * Creates a function to update the data from socket.
  *
  * @param {object} params - Parameters
- * @param {Function(Function)} params.updateQueryData - Api
- * @param {string} params.resource - Resource name
+ * @param {function(Function):ThunkAction} params.updateQueryData - Api
+ * @param {HookObjectName} params.resource - Resource name to subscribe
  * @returns {function(
- * string,
+ * { id: string },
  * { dispatch: ThunkDispatch }
  * ):Promise} Function to update data from socket
  */
 const UpdateFromSocket =
   ({ updateQueryData, resource }) =>
   async (
-    id,
+    { id },
     { cacheEntryRemoved, cacheDataLoaded, updateCachedData, getState, dispatch }
   ) => {
     const { zone } = getState().general
     const { jwt: token } = getState().auth
 
-    const query = { token, zone, resource: resource.toLowerCase(), id }
+    const query = { token, zone, resource, id }
     const socket = createWebsocket(SOCKETS.HOOKS, query)
 
     try {
       await cacheDataLoaded
 
       const listener = ({ data } = {}) => {
-        const { value } = getResourceFromEventState(data)
+        const value = getResourceValueFromEventState(data)
+
         if (!value) return
 
-        dispatch(
-          updateQueryData((draft) => {
-            const index = draft.findIndex(({ ID }) => +ID === +id)
-            index !== -1 ? (draft[index] = value) : draft.push(value)
-          })
-        )
+        const update = updateResourceOnPool({ id, resourceFromQuery: value })
+        dispatch(updateQueryData(update))
 
         updateCachedData((draft) => {
           Object.assign(draft, value)

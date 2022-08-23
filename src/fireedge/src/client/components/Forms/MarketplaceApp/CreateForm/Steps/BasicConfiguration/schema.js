@@ -61,7 +61,7 @@ const TYPE = {
 
 /** @type {Field} App name field */
 const NAME = {
-  name: 'name',
+  name: 'vmname',
   label: T.Name,
   type: INPUT_TYPES.TEXT,
   validation: string()
@@ -154,7 +154,7 @@ const RES_TABLE = {
         },
       },
       [TYPES.VM]: {
-        initialState: { filters: [{ id: 'STATE', value: STATES.POWEROFF }] },
+        initialState: { filters: [{ id: 'state', value: STATES.POWEROFF }] },
       },
       [TYPES.VM_TEMPLATE]: { classes },
     }[type]

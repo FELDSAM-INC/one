@@ -108,7 +108,14 @@ export const MARKETPLACE_ACTIONS = {
 
   // INFORMATION
   RENAME: ACTIONS.RENAME,
-  CHANGE_MODE: ACTIONS.CHANGE_MODE,
   CHANGE_OWNER: ACTIONS.CHANGE_OWNER,
   CHANGE_GROUP: ACTIONS.CHANGE_GROUP,
+}
+
+/**
+ * @enum {{ high: number, low: number }}
+ * Marketplace threshold to specify the maximum and minimum of the bar range
+ */
+export const MARKET_THRESHOLD = {
+  CAPACITY: { high: 66, low: 33 },
 }

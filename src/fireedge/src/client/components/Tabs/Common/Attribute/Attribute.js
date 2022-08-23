@@ -47,7 +47,9 @@ const Attribute = memo(
     handleDelete,
     handleEdit,
     handleGetOptionList,
+    askToDelete = true,
     link,
+    icon,
     name,
     path = name,
     showActionsOnHover = false,
@@ -98,10 +100,16 @@ const Attribute = memo(
             variant="body2"
             title={typeof name === 'string' ? name : undefined}
             flexGrow={1}
-            sx={
-              numberOfParents > 0 ? { pl: `${numberOfParents}em` } : undefined
-            }
+            sx={{
+              ...(numberOfParents > 0 && { pl: `${numberOfParents}em` }),
+              ...(icon && {
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5em',
+              }),
+            }}
           >
+            {icon}
             {name}
           </Typography>
           <ActionWrapper {...(showActionsOnHover && { display: 'none' })}>
@@ -150,7 +158,12 @@ const Attribute = memo(
                     handleClick={handleActiveEditForm}
                   />
                 )}
-                {canDelete && <Actions.Delete name={name} handleClick={show} />}
+                {canDelete && (
+                  <Actions.Delete
+                    name={name}
+                    handleClick={askToDelete ? show : handleDeleteAttribute}
+                  />
+                )}
               </ActionWrapper>
             </>
           )}
@@ -179,7 +192,9 @@ export const AttributePropTypes = {
   handleDelete: PropTypes.func,
   handleEdit: PropTypes.func,
   handleGetOptionList: PropTypes.func,
-  link: PropTypes.string,
+  askToDelete: PropTypes.bool,
+  link: PropTypes.oneOfType([PropTypes.string, PropTypes.bool]),
+  icon: PropTypes.any,
   name: PropTypes.string.isRequired,
   path: PropTypes.string,
   showActionsOnHover: PropTypes.bool,

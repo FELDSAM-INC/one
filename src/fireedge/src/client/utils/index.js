@@ -15,6 +15,7 @@
  * ------------------------------------------------------------------------- */
 export * from 'client/utils/environments'
 export * from 'client/utils/helpers'
+export * from 'client/utils/ip'
 export * from 'client/utils/merge'
 export * from 'client/utils/parser'
 export * from 'client/utils/request'
@@ -22,4 +23,5 @@ export * from 'client/utils/rest'
 export * from 'client/utils/schema'
 export * from 'client/utils/storage'
 export * from 'client/utils/string'
+export * from 'client/utils/number'
 export * from 'client/utils/translation'

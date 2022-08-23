@@ -18,10 +18,11 @@ import { useCallback, useMemo } from 'react'
 import { useDispatch, useSelector, shallowEqual } from 'react-redux'
 
 import { name as generalSlice } from 'client/features/General/slice'
-import { name as authSlice, actions } from 'client/features/Auth/slice'
+import { name as authSlice, actions, logout } from 'client/features/Auth/slice'
 import groupApi from 'client/features/OneApi/group'
 import systemApi from 'client/features/OneApi/system'
 import { ResourceView } from 'client/apps/sunstone/routes'
+import { areStringEqual } from 'client/models/Helper'
 import {
   _APPS,
   RESOURCE_NAMES,
@@ -61,6 +62,15 @@ export const useAuth = () => {
     }
   )
 
+  const userLabels = useMemo(() => {
+    const labels = user?.TEMPLATE?.LABELS?.split(',') ?? []
+
+    return labels
+      .filter(Boolean)
+      .map((label) => label.toUpperCase())
+      .sort(areStringEqual({ numeric: true, ignorePunctuation: true }))
+  }, [user?.TEMPLATE?.LABELS])
+
   return useMemo(
     () => ({
       ...auth,
@@ -75,6 +85,7 @@ export const useAuth = () => {
         ...(user?.TEMPLATE ?? {}),
         ...(user?.TEMPLATE?.FIREEDGE ?? {}),
       },
+      labels: userLabels ?? [],
       isLogged:
         !!jwt &&
         !!user &&
@@ -91,10 +102,10 @@ export const useAuthApi = () => {
 
   return {
     stopFirstRender: () => dispatch(actions.stopFirstRender()),
-    logout: () => dispatch(actions.logout()),
+    logout: () => dispatch(logout()),
     changeView: (view) => dispatch(actions.changeView(view)),
     changeJwt: (jwt) => dispatch(actions.changeJwt(jwt)),
-    changeAuthUser: (user) => dispatch(actions.changeAuthUser({ user })),
+    changeAuthUser: (user) => dispatch(actions.changeAuthUser(user)),
   }
 }
 
@@ -125,6 +136,17 @@ export const useViews = () => {
     [view]
   )
 
+  /**
+   * Check if user has a view for a resource.
+   *
+   * @param {RESOURCE_NAMES} resourceName - Name of resource
+   * @returns {boolean} Returns true if user has a view for a resource
+   */
+  const hasAccessToResource = useCallback(
+    (resourceName) => !!getResourceView(resourceName),
+    [view]
+  )
+
   return useMemo(
     () => ({
       ...Object.values(RESOURCE_NAMES).reduce(
@@ -134,6 +156,7 @@ export const useViews = () => {
         }),
         {}
       ),
+      hasAccessToResource,
       getResourceView,
       views,
       view,

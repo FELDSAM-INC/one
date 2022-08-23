@@ -13,21 +13,20 @@
  * See the License for the specific language governing permissions and       *
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
-import { memo, useMemo } from 'react'
+import { ReactElement, memo, useMemo } from 'react'
 import PropTypes from 'prop-types'
 
+import { Network } from 'iconoir-react'
 import {
-  styled,
   useMediaQuery,
   Typography,
   Box,
   Paper,
   Stack,
-  Accordion as MuiAccordion,
-  AccordionSummary as MuiAccordionSummary,
-  AccordionDetails as MuiAccordionDetails,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
 } from '@mui/material'
-import { NavArrowRight } from 'iconoir-react'
 
 import { rowStyles } from 'client/components/Tables/styles'
 import { StatusChip } from 'client/components/Status'
@@ -38,39 +37,17 @@ import { stringToBoolean } from 'client/models/Helper'
 import { groupBy } from 'client/utils'
 import { T, Nic, NicAlias, PrettySecurityGroupRule } from 'client/constants'
 
-const Accordion = styled((props) => (
-  <MuiAccordion disableGutters elevation={0} square {...props} />
-))(({ theme }) => ({
-  flexBasis: '100%',
-  border: `1px solid ${theme.palette.divider}`,
-  '&:before': { display: 'none' },
-}))
-
-const AccordionSummary = styled((props) => (
-  <MuiAccordionSummary expandIcon={<NavArrowRight />} {...props} />
-))(({ theme }) => ({
-  backgroundColor:
-    theme.palette.mode === 'dark'
-      ? 'rgba(255, 255, 255, .05)'
-      : 'rgba(0, 0, 0, .03)',
-  '&:not(:last-child)': {
-    borderBottom: 0,
-  },
-  flexDirection: 'row-reverse',
-  '& .MuiAccordionSummary-expandIconWrapper.Mui-expanded': {
-    transform: 'rotate(90deg)',
-  },
-  '& .MuiAccordionSummary-content': {
-    marginLeft: theme.spacing(1),
-  },
-}))
-
-const AccordionDetails = styled(MuiAccordionDetails)(({ theme }) => ({
-  padding: theme.spacing(2),
-  borderTop: '1px solid rgba(0, 0, 0, .125)',
-}))
-
 const NicCard = memo(
+  /**
+   * @param {object} props - Props
+   * @param {Nic|NicAlias} props.nic - NIC
+   * @param {ReactElement} [props.actions] - Actions
+   * @param {function({ alias: NicAlias }):ReactElement} [props.aliasActions] - Alias actions
+   * @param {function({ securityGroupId: string }):ReactElement} [props.securityGroupActions] - Security group actions
+   * @param {boolean} [props.showParents] -
+   * @param {boolean} [props.clipboardOnTags] -
+   * @returns {ReactElement} - Card
+   */
   ({
     nic = {},
     actions,
@@ -82,7 +59,6 @@ const NicCard = memo(
     const classes = rowStyles()
     const isMobile = useMediaQuery((theme) => theme.breakpoints.down('md'))
 
-    /** @type {Nic|NicAlias} */
     const {
       NIC_ID,
       NETWORK = '-',
@@ -99,24 +75,32 @@ const NicCard = memo(
 
     const isAlias = !!PARENT?.length
     const isPciDevice = PCI_ID !== undefined
-    const isAdditionalIp = NIC_ID !== undefined || NETWORK === 'Additional IP'
+    const isAdditionalIp = NIC_ID === undefined || NETWORK === 'Additional IP'
 
     const dataCy = isAlias ? 'alias' : 'nic'
 
-    const noClipboardTags = [
-      { text: stringToBoolean(RDP) && 'RDP', dataCy: `${dataCy}-rdp` },
-      { text: stringToBoolean(SSH) && 'SSH', dataCy: `${dataCy}-ssh` },
-      showParents && {
-        text: isAlias ? `PARENT: ${PARENT}` : false,
-        dataCy: `${dataCy}-parent`,
-      },
-    ].filter(({ text } = {}) => Boolean(text))
+    const noClipboardTags = useMemo(
+      () =>
+        [
+          { text: stringToBoolean(RDP) && 'RDP', dataCy: `${dataCy}-rdp` },
+          { text: stringToBoolean(SSH) && 'SSH', dataCy: `${dataCy}-ssh` },
+          showParents && {
+            text: isAlias ? `PARENT: ${PARENT}` : false,
+            dataCy: `${dataCy}-parent`,
+          },
+        ].filter(({ text } = {}) => Boolean(text)),
+      [RDP, SSH, showParents, PARENT]
+    )
 
-    const tags = [
-      { text: IP, dataCy: `${dataCy}-ip` },
-      { text: MAC, dataCy: `${dataCy}-mac` },
-      { text: ADDRESS, dataCy: `${dataCy}-address` },
-    ].filter(({ text } = {}) => Boolean(text))
+    const tags = useMemo(
+      () =>
+        [
+          { text: IP, dataCy: `${dataCy}-ip` },
+          { text: MAC, dataCy: `${dataCy}-mac` },
+          { text: ADDRESS, dataCy: `${dataCy}-address` },
+        ].filter(({ text } = {}) => Boolean(text)),
+      [IP, MAC, ADDRESS]
+    )
 
     return (
       <Paper
@@ -130,8 +114,8 @@ const NicCard = memo(
           {...(!isAlias && !showParents && { pl: '1em' })}
         >
           <div className={classes.title}>
-            <Typography component="span" data-cy={`${dataCy}-name`}>
-              {`${NIC_ID} | ${NETWORK}`}
+            <Typography noWrap component="span" data-cy={`${dataCy}-name`}>
+              {NETWORK}
             </Typography>
             <span className={classes.labels}>
               {isAlias && <StatusChip stateColor="info" text={'ALIAS'} />}
@@ -142,11 +126,24 @@ const NicCard = memo(
                   dataCy={tag.dataCy}
                 />
               ))}
-              <MultipleTags
-                clipboard={clipboardOnTags}
-                limitTags={isMobile ? 1 : 3}
-                tags={tags}
-              />
+            </span>
+          </div>
+          <div className={classes.caption}>
+            {`#${NIC_ID}`}
+            <span>
+              <Network />
+              <Stack
+                direction="row"
+                justifyContent="end"
+                alignItems="center"
+                gap="0.5em"
+              >
+                <MultipleTags
+                  tags={tags}
+                  clipboard={clipboardOnTags}
+                  limitTags={isMobile ? 1 : 3}
+                />
+              </Stack>
             </span>
           </div>
         </Box>
@@ -154,16 +151,16 @@ const NicCard = memo(
           <div className={classes.actions}>{actions}</div>
         )}
         {!!ALIAS?.length && (
-          <Box flexBasis="100%">
-            {ALIAS?.map((alias) => (
+          <Stack gap="1em" flexBasis="100%" my="0.5em">
+            {ALIAS?.map((alias, aliasIdx) => (
               <NicCard
                 key={alias.NIC_ID}
-                nic={alias}
+                nic={{ ...alias, NIC_ID: `${NIC_ID}.${aliasIdx + 1}` }}
                 actions={aliasActions?.({ alias })}
                 showParents={showParents}
               />
             ))}
-          </Box>
+          </Stack>
         )}
         {useMemo(() => {
           if (!Array.isArray(SECURITY_GROUPS) || !SECURITY_GROUPS?.length) {
@@ -173,7 +170,7 @@ const NicCard = memo(
           const rulesById = Object.entries(groupBy(SECURITY_GROUPS, 'ID'))
 
           return (
-            <Accordion TransitionProps={{ unmountOnExit: true }}>
+            <Accordion variant="outlined" data-cy="security-groups">
               <AccordionSummary>
                 <Typography variant="body1">
                   <Translate word={T.SecurityGroups} />

@@ -30,13 +30,15 @@ import { Row as RowType } from 'react-table'
  */
 const Row = memo(({ original, ...props }) => {
   const classes = rowStyles()
-  const { ZOMBIE_VM } = original
+  const { DEPLOY_ID, VM_NAME } = original
 
   return (
-    <div {...props}>
+    <div data-cy={`zombie-${DEPLOY_ID}`} {...props}>
       <div className={classes.main}>
         <div className={classes.title}>
-          <Typography component="span">{ZOMBIE_VM}</Typography>
+          <Typography noWrap component="span">
+            {VM_NAME}
+          </Typography>
         </div>
       </div>
     </div>

@@ -13,54 +13,148 @@
  * See the License for the specific language governing permissions and       *
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
-/* eslint-disable jsdoc/require-jsdoc */
-import { useState } from 'react'
-import { Container, Stack, Chip } from '@mui/material'
+import { ReactElement, useState, memo } from 'react'
+import PropTypes from 'prop-types'
+import GotoIcon from 'iconoir-react/dist/Pin'
+import RefreshDouble from 'iconoir-react/dist/RefreshDouble'
+import Cancel from 'iconoir-react/dist/Cancel'
+import { Typography, Box, Stack, Chip } from '@mui/material'
+import { Row } from 'react-table'
 
+import {
+  useLazyGetVNTemplateQuery,
+  useUpdateVNTemplateMutation,
+} from 'client/features/OneApi/networkTemplate'
 import { VNetworkTemplatesTable } from 'client/components/Tables'
 import VNetworkTemplateTabs from 'client/components/Tabs/VNetworkTemplate'
 import SplitPane from 'client/components/SplitPane'
 import MultipleTags from 'client/components/MultipleTags'
+import { SubmitButton } from 'client/components/FormControl'
+import { Tr } from 'client/components/HOC'
+import { T, VNetworkTemplate } from 'client/constants'
 
+/**
+ * Displays a list of VNet Templates with a split pane between the list and selected row(s).
+ *
+ * @returns {ReactElement} VNet Templates list and selected row(s)
+ */
 function VNetworkTemplates() {
   const [selectedRows, onSelectedRowsChange] = useState(() => [])
 
-  return (
-    <Stack height={1} py={2} overflow="auto" component={Container}>
-      <SplitPane>
-        <VNetworkTemplatesTable onSelectedRowsChange={onSelectedRowsChange} />
+  const hasSelectedRows = selectedRows?.length > 0
+  const moreThanOneSelected = selectedRows?.length > 1
 
-        {selectedRows?.length > 0 && (
-          <Stack overflow="auto" data-cy={'detail'}>
-            {selectedRows?.length === 1 ? (
-              <VNetworkTemplateTabs id={selectedRows[0]?.values.ID} />
-            ) : (
-              <Stack
-                direction="row"
-                flexWrap="wrap"
-                gap={1}
-                alignItems="center"
-              >
-                <MultipleTags
-                  limitTags={10}
-                  tags={selectedRows?.map(
-                    ({ original, id, toggleRowSelected }) => (
-                      <Chip
-                        key={id}
-                        variant="text"
-                        label={original?.NAME ?? id}
-                        onDelete={() => toggleRowSelected(false)}
-                      />
-                    )
-                  )}
+  return (
+    <SplitPane gridTemplateRows="1fr auto 1fr">
+      {({ getGridProps, GutterComponent }) => (
+        <Box height={1} {...(hasSelectedRows && getGridProps())}>
+          <VNetworkTemplatesTable
+            onSelectedRowsChange={onSelectedRowsChange}
+            useUpdateMutation={useUpdateVNTemplateMutation}
+          />
+
+          {hasSelectedRows && (
+            <>
+              <GutterComponent direction="row" track={1} />
+              {moreThanOneSelected ? (
+                <GroupedTags tags={selectedRows} />
+              ) : (
+                <InfoTabs
+                  vnTemplate={selectedRows[0]?.original}
+                  gotoPage={selectedRows[0]?.gotoPage}
+                  unselect={() => selectedRows[0]?.toggleRowSelected(false)}
                 />
-              </Stack>
-            )}
-          </Stack>
-        )}
-      </SplitPane>
-    </Stack>
+              )}
+            </>
+          )}
+        </Box>
+      )}
+    </SplitPane>
   )
 }
+
+/**
+ * Displays details of a VNet Template.
+ *
+ * @param {VNetworkTemplate} vnTemplate - VNet Template to display
+ * @param {Function} [gotoPage] - Function to navigate to a page of a VNet Template
+ * @param {Function} [unselect] - Function to unselect
+ * @returns {ReactElement} VNet Template details
+ */
+const InfoTabs = memo(({ vnTemplate, gotoPage, unselect }) => {
+  const [get, { data: lazyData, isFetching }] = useLazyGetVNTemplateQuery()
+  const id = lazyData?.ID ?? vnTemplate.ID
+  const name = lazyData?.NAME ?? vnTemplate.NAME
+
+  return (
+    <Stack overflow="auto">
+      <Stack direction="row" alignItems="center" gap={1} mx={1} mb={1}>
+        <Typography color="text.primary" noWrap flexGrow={1}>
+          {`#${id} | ${name}`}
+        </Typography>
+
+        {/* -- ACTIONS -- */}
+        <SubmitButton
+          data-cy="detail-refresh"
+          icon={<RefreshDouble />}
+          tooltip={Tr(T.Refresh)}
+          isSubmitting={isFetching}
+          onClick={() => get({ id })}
+        />
+        {typeof gotoPage === 'function' && (
+          <SubmitButton
+            data-cy="locate-on-table"
+            icon={<GotoIcon />}
+            tooltip={Tr(T.LocateOnTable)}
+            onClick={() => gotoPage()}
+          />
+        )}
+        {typeof unselect === 'function' && (
+          <SubmitButton
+            data-cy="unselect"
+            icon={<Cancel />}
+            tooltip={Tr(T.Close)}
+            onClick={() => unselect()}
+          />
+        )}
+        {/* -- END ACTIONS -- */}
+      </Stack>
+      <VNetworkTemplateTabs id={id} />
+    </Stack>
+  )
+})
+
+InfoTabs.propTypes = {
+  vnTemplate: PropTypes.object,
+  gotoPage: PropTypes.func,
+  unselect: PropTypes.func,
+}
+
+InfoTabs.displayName = 'InfoTabs'
+
+/**
+ * Displays a list of tags that represent the selected rows.
+ *
+ * @param {Row[]} tags - Row(s) to display as tags
+ * @returns {ReactElement} List of tags
+ */
+const GroupedTags = memo(({ tags = [] }) => (
+  <Stack direction="row" flexWrap="wrap" gap={1} alignContent="flex-start">
+    <MultipleTags
+      limitTags={10}
+      tags={tags?.map(({ original, id, toggleRowSelected, gotoPage }) => (
+        <Chip
+          key={id}
+          label={original?.NAME ?? id}
+          onClick={gotoPage}
+          onDelete={() => toggleRowSelected(false)}
+        />
+      ))}
+    />
+  </Stack>
+))
+
+GroupedTags.propTypes = { tags: PropTypes.array }
+GroupedTags.displayName = 'GroupedTags'
 
 export default VNetworkTemplates

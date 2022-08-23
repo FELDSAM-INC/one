@@ -31,6 +31,7 @@ import {
   timeFromMilliseconds,
   getUniqueLabels,
   getColorFromString,
+  stringToBoolean,
 } from 'client/models/Helper'
 import { isExternalURL } from 'client/utils'
 import {
@@ -47,10 +48,11 @@ const VmTemplateCard = memo(
    * @param {object} props - Props
    * @param {VM} props.template - Virtual machine resource
    * @param {object} props.rootProps - Props to root component
+   * @param {function(string):Promise} [props.onClickLabel] - Callback to click label
    * @param {function(string):Promise} [props.onDeleteLabel] - Callback to delete label
    * @returns {ReactElement} - Card
    */
-  ({ template, rootProps, onDeleteLabel }) => {
+  ({ template, rootProps, onClickLabel, onDeleteLabel }) => {
     const classes = rowStyles()
     const { [RESOURCE_NAMES.VM_TEMPLATE]: templateView } = useViews()
 
@@ -64,12 +66,12 @@ const VmTemplateCard = memo(
       GNAME,
       REGTIME,
       LOCK,
-      VROUTER,
-      TEMPLATE: { HYPERVISOR, LABELS, LOGO = '' } = {},
+      TEMPLATE: { VROUTER, HYPERVISOR, LABELS, LOGO = '' } = {},
     } = template
 
     const isExternalImage = useMemo(() => isExternalURL(LOGO), [LOGO])
     const time = useMemo(() => timeFromMilliseconds(+REGTIME), [REGTIME])
+    const isVR = useMemo(() => stringToBoolean(VROUTER), [VROUTER])
 
     const logoSource = useMemo(() => {
       if (!LOGO) return `${STATIC_FILES_URL}/${DEFAULT_TEMPLATE_LOGO}`
@@ -82,9 +84,10 @@ const VmTemplateCard = memo(
         getUniqueLabels(LABELS).map((label) => ({
           text: label,
           stateColor: getColorFromString(label),
+          onClick: onClickLabel,
           onDelete: enableEditLabels && onDeleteLabel,
         })),
-      [LABELS, enableEditLabels, onDeleteLabel]
+      [LABELS, enableEditLabels, onClickLabel, onDeleteLabel]
     )
 
     return (
@@ -98,11 +101,13 @@ const VmTemplateCard = memo(
         </div>
         <div className={classes.main}>
           <div className={classes.title}>
-            <Typography component="span">{NAME}</Typography>
+            <Typography noWrap component="span">
+              {NAME}
+            </Typography>
             <span className={classes.labels}>
               {HYPERVISOR && <StatusChip text={HYPERVISOR} />}
               {LOCK && <Lock />}
-              {VROUTER && <StatusChip text={VROUTER} />}
+              {isVR && <StatusChip text={'VROUTER'} />}
               <MultipleTags tags={labels} />
             </span>
           </div>
@@ -131,6 +136,7 @@ VmTemplateCard.propTypes = {
   rootProps: PropTypes.shape({
     className: PropTypes.string,
   }),
+  onClickLabel: PropTypes.func,
   onDeleteLabel: PropTypes.func,
 }
 

@@ -33,15 +33,11 @@ import { StatusCircle, StatusChip } from 'client/components/Status'
 import { Tr } from 'client/components/HOC'
 import { rowStyles } from 'client/components/Tables/styles'
 
-import {
-  getState,
-  getLastHistory,
-  getIps,
-  getErrorMessage,
-} from 'client/models/VirtualMachine'
+import { getState, getLastHistory, getIps } from 'client/models/VirtualMachine'
 import {
   timeFromMilliseconds,
   getUniqueLabels,
+  getErrorMessage,
   getColorFromString,
 } from 'client/models/Helper'
 import { prettyBytes } from 'client/utils'
@@ -52,11 +48,12 @@ const VirtualMachineCard = memo(
    * @param {object} props - Props
    * @param {VM} props.vm - Virtual machine resource
    * @param {object} props.rootProps - Props to root component
+   * @param {function(string):Promise} [props.onClickLabel] - Callback to click label
    * @param {function(string):Promise} [props.onDeleteLabel] - Callback to delete label
    * @param {ReactElement} [props.actions] - Actions
    * @returns {ReactElement} - Card
    */
-  ({ vm, rootProps, actions, onDeleteLabel }) => {
+  ({ vm, rootProps, actions, onClickLabel, onDeleteLabel }) => {
     const classes = rowStyles()
     const { [RESOURCE_NAMES.VM]: vmView } = useViews()
 
@@ -70,7 +67,7 @@ const VirtualMachineCard = memo(
       ETIME,
       LOCK,
       USER_TEMPLATE: { LABELS } = {},
-      TEMPLATE: { CPU, MEMORY } = {},
+      TEMPLATE: { VCPU = '-', MEMORY } = {},
     } = vm
 
     const { HOSTNAME = '--', VM_MAD: hypervisor } = useMemo(
@@ -78,10 +75,11 @@ const VirtualMachineCard = memo(
       [vm.HISTORY_RECORDS]
     )
 
-    const time = useMemo(
-      () => timeFromMilliseconds(+ETIME || +STIME),
-      [ETIME, STIME]
-    )
+    const [time, timeFormat] = useMemo(() => {
+      const fromMill = timeFromMilliseconds(+ETIME || +STIME)
+
+      return [fromMill, fromMill.toFormat('ff')]
+    }, [ETIME, STIME])
 
     const { color: stateColor, name: stateName } = getState(vm)
     const error = useMemo(() => getErrorMessage(vm), [vm])
@@ -93,9 +91,10 @@ const VirtualMachineCard = memo(
         getUniqueLabels(LABELS).map((label) => ({
           text: label,
           stateColor: getColorFromString(label),
+          onClick: onClickLabel,
           onDelete: enableEditLabels && onDeleteLabel,
         })),
-      [LABELS, enableEditLabels, onDeleteLabel]
+      [LABELS, enableEditLabels, onClickLabel, onDeleteLabel]
     )
 
     return (
@@ -125,27 +124,24 @@ const VirtualMachineCard = memo(
           </div>
           <div className={classes.caption}>
             <span data-cy="id">{`#${ID}`}</span>
-            <span title={useMemo(() => time.toFormat('ff'), [ETIME, STIME])}>
+            <span title={timeFormat}>
               {`${+ETIME ? T.Done : T.Started} `}
               <Timer initial={time} />
             </span>
-            <span title={`${Tr(T.PhysicalCpu)}: ${CPU}`}>
+            <span title={`${Tr(T.VirtualCpu)}: ${VCPU}`}>
               <Cpu />
-              <span data-cy="cpu">{CPU}</span>
+              <span data-cy="vcpu">{VCPU}</span>
             </span>
             <span title={`${Tr(T.Memory)}: ${memValue}`}>
               <MemoryIcon width={20} height={20} />
               <span data-cy="memory">{memValue}</span>
             </span>
-            <span
-              className={classes.captionItem}
-              title={`${Tr(T.Hostname)}: ${HOSTNAME}`}
-            >
+            <span title={`${Tr(T.Hostname)}: ${HOSTNAME}`}>
               <HardDrive />
               <span data-cy="hostname">{HOSTNAME}</span>
             </span>
             {!!ips?.length && (
-              <span className={classes.captionItem}>
+              <span title={`${Tr(T.IP)}`}>
                 <Network />
                 <Stack direction="row" justifyContent="end" alignItems="center">
                   <MultipleTags tags={ips} clipboard />
@@ -165,6 +161,7 @@ VirtualMachineCard.propTypes = {
   rootProps: PropTypes.shape({
     className: PropTypes.string,
   }),
+  onClickLabel: PropTypes.func,
   onDeleteLabel: PropTypes.func,
   actions: PropTypes.any,
 }

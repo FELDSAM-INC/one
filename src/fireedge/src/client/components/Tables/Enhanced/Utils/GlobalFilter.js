@@ -13,71 +13,81 @@
  * See the License for the specific language governing permissions and       *
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
-import { Fragment, useMemo, ReactElement } from 'react'
+import { ReactElement, Fragment, memo, useMemo } from 'react'
 import PropTypes from 'prop-types'
 
-import { Stack, Button } from '@mui/material'
+import { Stack } from '@mui/material'
 import { Filter } from 'iconoir-react'
-import { TableInstance, UseTableInstanceProps } from 'react-table'
+import { UseFiltersInstanceProps, UseFiltersState } from 'react-table'
 
+import { LABEL_COLUMN_ID } from 'client/components/Tables/Enhanced/Utils/GlobalLabel'
 import HeaderPopover from 'client/components/Header/Popover'
 import { Translate } from 'client/components/HOC'
 import { T } from 'client/constants'
 
 /**
- * Render all selected sorters.
+ * Render all selected filters.
  *
- * @param {object} props - Props
- * @param {string} [props.className] - Class name for the container
- * @param {TableInstance} props.useTableProps - Table props
  * @returns {ReactElement} Component JSX
  */
-const GlobalFilter = ({ className, useTableProps }) => {
-  /** @type {UseTableInstanceProps} */
-  const { rows, columns, setAllFilters } = useTableProps
+const GlobalFilter = memo(
+  (tableProps) => {
+    /** @type {UseFiltersInstanceProps} */
+    const { rows, columns, state } = tableProps
 
-  const columnsCanFilter = useMemo(
-    () => columns.filter(({ canFilter }) => canFilter),
-    [columns]
-  )
+    /** @type {UseFiltersState} */
+    const { filters } = state
 
-  return !columnsCanFilter.length ? null : (
-    <Stack className={className} direction="row" gap="0.5em" flexWrap="wrap">
-      <HeaderPopover
-        id="filter-by-button"
-        icon={<Filter />}
-        buttonLabel={T.FilterBy}
-        buttonProps={{
-          'data-cy': 'filter-by-button',
-          variant: 'outlined',
-          color: 'secondary',
-          disabled: rows?.length === 0,
-        }}
-        popperProps={{ placement: 'bottom-end' }}
-      >
-        {() => (
-          <Stack sx={{ width: { xs: '100%', md: 500 }, p: 2 }}>
-            {columnsCanFilter.map((column, idx) => (
-              <Fragment key={idx}>{column.render('Filter')}</Fragment>
-            ))}
-            <Button
-              variant="contained"
-              color="secondary"
-              onClick={() => setAllFilters([])}
-              sx={{ mt: 2, alignSelf: 'flex-end' }}
-            >
-              <Translate word={T.Clear} />
-            </Button>
-          </Stack>
-        )}
-      </HeaderPopover>
-    </Stack>
-  )
-}
+    const columnsCanFilter = useMemo(
+      () => columns.filter(({ canFilter }) => canFilter),
+      []
+    )
+
+    if (columnsCanFilter.length === 0) {
+      return null
+    }
+
+    const filtersAreNotLabel = useMemo(
+      () => filters?.filter(({ id }) => id !== LABEL_COLUMN_ID),
+      [filters]
+    )
+
+    return (
+      <Stack direction="row" gap="0.5em" flexWrap="wrap">
+        <HeaderPopover
+          id="filter-by-button"
+          icon={<Filter />}
+          headerTitle={<Translate word={T.FilterBy} />}
+          buttonLabel={<Translate word={T.Filter} />}
+          buttonProps={{
+            'data-cy': 'filter-by-button',
+            disableElevation: true,
+            variant: filtersAreNotLabel.length > 0 ? 'contained' : 'outlined',
+            color: 'secondary',
+            disabled: rows?.length === 0,
+          }}
+          popperProps={{ placement: 'bottom-end' }}
+        >
+          {() => (
+            <Stack sx={{ width: { xs: '100%', md: 500 } }}>
+              {columnsCanFilter.map((column, idx) => (
+                <Fragment key={idx}>{column.render('Filter')}</Fragment>
+              ))}
+            </Stack>
+          )}
+        </HeaderPopover>
+      </Stack>
+    )
+  },
+  (next, prev) =>
+    next.rows === prev.rows && next.state.filters === prev.state.filters
+)
 
 GlobalFilter.propTypes = {
-  className: PropTypes.string,
-  useTableProps: PropTypes.object.isRequired,
+  preFilteredRows: PropTypes.array,
+  state: PropTypes.object,
 }
+
+GlobalFilter.displayName = 'GlobalFilter'
 
 export default GlobalFilter

@@ -26,7 +26,6 @@ export const rowStyles = makeStyles(
       borderRadius: 6,
       display: 'flex',
       gap: 8,
-      boxShadow: shadows[1],
       [breakpoints.down('md')]: {
         flexWrap: 'wrap',
       },
@@ -51,7 +50,6 @@ export const rowStyles = makeStyles(
       display: 'flex',
       gap: 6,
       alignItems: 'center',
-      flexWrap: 'wrap',
     },
     labels: {
       display: 'inline-flex',
@@ -63,7 +61,7 @@ export const rowStyles = makeStyles(
       color: palette.text.secondary,
       marginTop: 4,
       display: 'flex',
-      gap: '0.5em',
+      gap: '1em',
       alignItems: 'center',
       flexWrap: 'wrap',
       wordWrap: 'break-word',

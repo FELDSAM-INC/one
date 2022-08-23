@@ -15,7 +15,7 @@
  * ------------------------------------------------------------------------- */
 import { useMemo } from 'react'
 import { useHistory } from 'react-router-dom'
-import { AddSquare, Trash } from 'iconoir-react'
+import { AddCircledOutline, Trash } from 'iconoir-react'
 
 import { useViews } from 'client/features/Auth'
 import { useAddHostToClusterMutation } from 'client/features/OneApi/cluster'
@@ -27,7 +27,7 @@ import {
 } from 'client/features/OneApi/host'
 import { Translate } from 'client/components/HOC'
 
-import { ChangeClusterForm } from 'client/components/Forms/Host'
+import { ChangeClusterForm } from 'client/components/Forms/Cluster'
 import {
   createActions,
   GlobalAction,
@@ -77,7 +77,7 @@ const Actions = () => {
             accessor: HOST_ACTIONS.CREATE_DIALOG,
             dataCy: `host_${HOST_ACTIONS.CREATE_DIALOG}`,
             tooltip: T.Create,
-            icon: AddSquare,
+            icon: AddCircledOutline,
             action: () => history.push(PATH.INFRASTRUCTURE.HOSTS.CREATE),
           },
           {
@@ -91,6 +91,7 @@ const Actions = () => {
               {
                 dialogProps: {
                   title: T.SelectCluster,
+                  dataCy: 'modal-select-cluster',
                 },
                 form: (rows) => ChangeClusterForm(),
                 onSubmit: (rows) => async (formData) => {
@@ -153,6 +154,7 @@ const Actions = () => {
                 dialogProps: {
                   title: T.Delete,
                   children: MessageToConfirmAction,
+                  dataCy: `modal-host-${HOST_ACTIONS.DELETE}`,
                 },
                 onSubmit: (rows) => async () => {
                   const ids = rows?.map?.(({ original }) => original?.ID)

@@ -77,13 +77,18 @@ const InformationPanel = ({ app = {}, actions }) => {
       name: T.StartTime,
       value: timeToString(REGTIME),
     },
-    { name: T.Type, value: typeName },
+    { name: T.Type, value: <StatusChip text={typeName} /> },
     { name: T.Size, value: prettyBytes(SIZE, 'MB') },
     {
       name: T.State,
       value: <StatusChip text={stateName} stateColor={stateColor} />,
+      dataCy: 'state',
     },
-    { name: T.Locked, value: levelLockToString(LOCK?.LOCKED) },
+    {
+      name: T.Locked,
+      value: levelLockToString(LOCK?.LOCKED),
+      dataCy: 'locked',
+    },
     { name: T.Format, value: FORMAT },
     { name: T.Version, value: VERSION },
   ]

@@ -41,7 +41,7 @@ module.exports = {
   Actions,
   Commands: {
     [SERVICE_TEMPLATE_SHOW]: {
-      path: `${basepath}/:id`,
+      path: `${basepath}/:id?`,
       httpMethod: GET,
       auth: true,
       params: {
@@ -58,7 +58,7 @@ module.exports = {
         id: {
           from: resource,
         },
-        template: {
+        action: {
           from: postBody,
         },
       },

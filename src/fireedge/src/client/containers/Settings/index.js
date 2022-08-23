@@ -14,28 +14,35 @@
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
 import { ReactElement } from 'react'
-import { Container, Typography, Divider, Stack } from '@mui/material'
+import { Typography, Divider, Box } from '@mui/material'
 
 import { Translate } from 'client/components/HOC'
 import { T } from 'client/constants'
 
 import ConfigurationUISection from 'client/containers/Settings/ConfigurationUI'
 import AuthenticationSection from 'client/containers/Settings/Authentication'
+import LabelsSection from 'client/containers/Settings/LabelsSection'
 
 /** @returns {ReactElement} Settings container */
 const Settings = () => (
-  <Container disableGutters>
+  <>
     <Typography variant="h5">
       <Translate word={T.Settings} />
     </Typography>
 
     <Divider sx={{ my: '1em' }} />
 
-    <Stack gap="1em">
+    <Box
+      display="grid"
+      gridTemplateColumns={{ sm: '1fr', md: 'repeat(2, minmax(49%, 1fr))' }}
+      gridTemplateRows="minmax(0, 18em)"
+      gap="1em"
+    >
       <ConfigurationUISection />
+      <LabelsSection />
       <AuthenticationSection />
-    </Stack>
-  </Container>
+    </Box>
+  </>
 )
 
 export default Settings

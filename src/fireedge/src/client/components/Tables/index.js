@@ -23,6 +23,8 @@ import ImagesTable from 'client/components/Tables/Images'
 import MarketplaceAppsTable from 'client/components/Tables/MarketplaceApps'
 import MarketplacesTable from 'client/components/Tables/Marketplaces'
 import SecurityGroupsTable from 'client/components/Tables/SecurityGroups'
+import ServicesTable from 'client/components/Tables/Services'
+import ServiceTemplatesTable from 'client/components/Tables/ServiceTemplates'
 import SkeletonTable from 'client/components/Tables/Skeleton'
 import UsersTable from 'client/components/Tables/Users'
 import VirtualizedTable from 'client/components/Tables/Virtualized'
@@ -32,6 +34,8 @@ import VNetworksTable from 'client/components/Tables/VNetworks'
 import VNetworkTemplatesTable from 'client/components/Tables/VNetworkTemplates'
 import VRoutersTable from 'client/components/Tables/VRouters'
 import ZonesTable from 'client/components/Tables/Zones'
+
+export * from 'client/components/Tables/Enhanced/Utils'
 
 export {
   SkeletonTable,
@@ -46,6 +50,8 @@ export {
   MarketplaceAppsTable,
   MarketplacesTable,
   SecurityGroupsTable,
+  ServicesTable,
+  ServiceTemplatesTable,
   UsersTable,
   VmsTable,
   VmTemplatesTable,

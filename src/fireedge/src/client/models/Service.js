@@ -13,12 +13,14 @@
  * See the License for the specific language governing permissions and       *
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
-import { object, ObjectSchema } from 'yup'
 
-import {} from 'client/utils'
-import {} from 'client/constants'
+import { Service, SERVICE_STATES, STATES } from 'client/constants'
 
-/** @type {ObjectSchema} Step schema */
-const SCHEMA = object()
-
-export { SCHEMA }
+/**
+ * Returns information about Service state.
+ *
+ * @param {Service} service - Service
+ * @returns {STATES.StateInfo} - Service state object
+ */
+export const getState = ({ TEMPLATE = {} } = {}) =>
+  SERVICE_STATES[TEMPLATE?.BODY?.state]

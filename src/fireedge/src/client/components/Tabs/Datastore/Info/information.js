@@ -23,7 +23,7 @@ import { List } from 'client/components/Tabs/Common'
 import { getState, getType, getCapacityInfo } from 'client/models/Datastore'
 import { stringToBoolean } from 'client/models/Helper'
 import { prettyBytes } from 'client/utils'
-import { T, Datastore, DATASTORE_ACTIONS } from 'client/constants'
+import { T, Datastore, DATASTORE_ACTIONS, DS_THRESHOLD } from 'client/constants'
 
 /**
  * Renders mainly information tab.
@@ -69,7 +69,12 @@ const InformationPanel = ({ datastore = {}, actions }) => {
     {
       name: T.Capacity,
       value: (
-        <LinearProgressWithLabel value={percentOfUsed} label={percentLabel} />
+        <LinearProgressWithLabel
+          value={percentOfUsed}
+          label={percentLabel}
+          high={DS_THRESHOLD.CAPACITY.high}
+          low={DS_THRESHOLD.CAPACITY.low}
+        />
       ),
       dataCy: 'capacity',
     },
@@ -81,7 +86,7 @@ const InformationPanel = ({ datastore = {}, actions }) => {
       <List
         title={T.Information}
         list={info}
-        containerProps={{ sx: { gridRow: 'span 3' } }}
+        containerProps={{ sx: { gridRow: 'span 2' } }}
       />
     </>
   )

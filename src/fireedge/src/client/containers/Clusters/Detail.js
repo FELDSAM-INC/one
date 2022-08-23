@@ -13,12 +13,16 @@
  * See the License for the specific language governing permissions and       *
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
-/* eslint-disable jsdoc/require-jsdoc */
+import { ReactElement } from 'react'
 import { useParams, Redirect } from 'react-router-dom'
-import { Container, Box } from '@mui/material'
 
 import ClusterTabs from 'client/components/Tabs/Cluster'
 
+/**
+ * Displays the detail information about a Cluster.
+ *
+ * @returns {ReactElement} Cluster detail component.
+ */
 function ClusterDetail() {
   const { id } = useParams()
 
@@ -26,17 +30,7 @@ function ClusterDetail() {
     return <Redirect to="/" />
   }
 
-  return (
-    <Box
-      py={2}
-      overflow="auto"
-      display="flex"
-      flexDirection="column"
-      component={Container}
-    >
-      {<ClusterTabs id={id} />}
-    </Box>
-  )
+  return <ClusterTabs id={id} />
 }
 
 export default ClusterDetail

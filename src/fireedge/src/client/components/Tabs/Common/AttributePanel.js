@@ -42,6 +42,8 @@ const {
   DELETE_ATTRIBUTE: DELETE,
 } = ACTIONS
 
+const ALL_ACTIONS = [COPY, ADD, EDIT, DELETE]
+
 // This attributes has special restrictions
 const SPECIAL_ATTRIBUTES = {
   VCENTER_CCR_REF: {
@@ -87,8 +89,11 @@ const AttributePanel = memo(
     handleEdit,
     handleDelete,
     handleAdd,
-    actions = [],
+    allActionsEnabled = true,
+    actions = allActionsEnabled ? ALL_ACTIONS : [],
     filtersSpecialAttributes = true,
+    collapse = false,
+    askToDelete = true,
   }) => {
     const classes = useStyles()
 
@@ -110,6 +115,7 @@ const AttributePanel = memo(
         canDelete: canUseAction(name, DELETE),
         handleEdit,
         handleDelete,
+        askToDelete,
       })
     )
 
@@ -121,6 +127,7 @@ const AttributePanel = memo(
         title={title}
         list={formatAttributes}
         handleAdd={actions?.includes?.(ADD) && handleAdd}
+        collapse={collapse}
       />
     )
   }
@@ -132,8 +139,11 @@ AttributePanel.propTypes = {
   handleAdd: PropTypes.func,
   handleEdit: PropTypes.func,
   handleDelete: PropTypes.func,
-  title: PropTypes.string,
+  title: PropTypes.any,
   filtersSpecialAttributes: PropTypes.bool,
+  allActionsEnabled: PropTypes.bool,
+  collapse: PropTypes.bool,
+  askToDelete: PropTypes.bool,
 }
 
 AttributePanel.displayName = 'AttributePanel'

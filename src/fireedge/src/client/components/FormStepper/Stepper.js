@@ -16,7 +16,7 @@
 /* eslint-disable jsdoc/require-jsdoc */
 import PropTypes from 'prop-types'
 
-import { alpha, Box, Button, Typography } from '@mui/material'
+import { Box, Button, Typography } from '@mui/material'
 import Stepper from '@mui/material/Stepper'
 import Step from '@mui/material/Step'
 import StepLabel from '@mui/material/StepLabel'
@@ -32,11 +32,12 @@ import { Translate } from 'client/components/HOC'
 import { T, SCHEMES } from 'client/constants'
 
 const StepperStyled = styled(Stepper)(({ theme }) => ({
+  backdropFilter: 'blur(3px)',
   position: 'sticky',
   top: -15,
   minHeight: 100,
-  background: alpha(theme.palette.background.paper, 0.95),
   zIndex: theme.zIndex.mobileStepper,
+  backgroundColor: theme.palette.action.hover,
 }))
 
 const ConnectorStyled = styled(StepConnector)(({ theme }) => ({
@@ -74,6 +75,16 @@ const StepIconStyled = styled(StepIcon)(({ theme }) => ({
   [`&.${stepIconClasses.error}`]: {
     color: theme.palette.error.main,
   },
+}))
+
+const ButtonsWrapper = styled(Box)(({ theme }) => ({
+  padding: '1em 0.5em',
+  textAlign: 'end',
+  backdropFilter: 'blur(3px)',
+  position: 'sticky',
+  top: 85,
+  zIndex: theme.zIndex.mobileStepper + 1,
+  backgroundColor: theme.palette.action.hover,
 }))
 
 const CustomStepper = ({
@@ -116,7 +127,7 @@ const CustomStepper = ({
         </Step>
       ))}
     </StepperStyled>
-    <Box marginY={2} textAlign="end">
+    <ButtonsWrapper>
       <Button
         data-cy="stepper-back-button"
         disabled={disabledBack || isSubmitting}
@@ -133,7 +144,7 @@ const CustomStepper = ({
         size="small"
         label={<Translate word={activeStep === lastStep ? T.Finish : T.Next} />}
       />
-    </Box>
+    </ButtonsWrapper>
   </>
 )
 

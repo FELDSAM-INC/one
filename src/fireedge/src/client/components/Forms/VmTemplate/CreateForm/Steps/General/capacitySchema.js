@@ -24,7 +24,7 @@ import {
 import { Translate } from 'client/components/HOC'
 import { formatNumberByCurrency } from 'client/models/Helper'
 import { Field } from 'client/utils'
-import { T, HYPERVISORS } from 'client/constants'
+import { T, HYPERVISORS, VmTemplateFeatures } from 'client/constants'
 
 const commonValidation = number()
   .positive()
@@ -37,9 +37,10 @@ const commonValidation = number()
 /** @type {Field} Memory field */
 export const MEMORY = generateCapacityInput({
   name: 'MEMORY',
-  label: T.Memory,
+  label: [T.MemoryWithUnit, '(MB)'],
   tooltip: T.MemoryConcept,
   validation: commonValidation
+    .integer()
     .required()
     .when('HYPERVISOR', (hypervisor, schema) =>
       hypervisor === HYPERVISORS.vcenter ? schema.isDivisibleBy(4) : schema
@@ -69,7 +70,7 @@ export const MEMORY_FIELDS = [MEMORY, ...HR_MEMORY_FIELDS, ...MOD_MEMORY_FIELDS]
 /** @type {Field} Physical CPU field */
 export const PHYSICAL_CPU = generateCapacityInput({
   name: 'CPU',
-  label: T.PhysicalCpu,
+  label: T.PhysicalCpuWithPercent,
   tooltip: T.CpuConcept,
   validation: commonValidation.required(),
 })
@@ -87,7 +88,7 @@ export const CPU_FIELDS = [PHYSICAL_CPU, ...MOD_CPU_FIELDS]
 /** @type {Field} Virtual CPU field */
 export const VIRTUAL_CPU = generateCapacityInput({
   name: 'VCPU',
-  label: T.VirtualCpu,
+  label: T.VirtualCpuWithPercent,
   tooltip: T.VirtualCpuConcept,
   validation: commonValidation,
 })
@@ -185,5 +186,9 @@ export const DISK_COST = generateCostCapacityInput({
   },
 })
 
-/** @type {Field[]} List of showback fields */
-export const SHOWBACK_FIELDS = [MEMORY_COST, CPU_COST, DISK_COST]
+/**
+ * @param {VmTemplateFeatures} features - Features of the template
+ * @returns {Field[]} List of showback fields
+ */
+export const SHOWBACK_FIELDS = (features) =>
+  [MEMORY_COST, !features?.hide_cpu && CPU_COST, DISK_COST].filter(Boolean)

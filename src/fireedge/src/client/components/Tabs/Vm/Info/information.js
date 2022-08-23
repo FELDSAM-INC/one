@@ -13,14 +13,16 @@
  * See the License for the specific language governing permissions and       *
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
-import { ReactElement } from 'react'
+import { ReactElement, useMemo } from 'react'
 import PropTypes from 'prop-types'
 import { generatePath } from 'react-router-dom'
+import { Stack } from '@mui/material'
 
+import { useViews } from 'client/features/Auth'
 import { useGetClusterQuery } from 'client/features/OneApi/cluster'
 import { useRenameVmMutation } from 'client/features/OneApi/vm'
 
-import { StatusChip } from 'client/components/Status'
+import { StatusCircle, StatusChip } from 'client/components/Status'
 import { List } from 'client/components/Tabs/Common'
 import { Translate } from 'client/components/HOC'
 import MultipleTags from 'client/components/MultipleTags'
@@ -36,8 +38,10 @@ import {
   levelLockToString,
   timeToString,
 } from 'client/models/Helper'
-import { T, VM, VM_ACTIONS } from 'client/constants'
+import { T, VM, VM_ACTIONS, RESOURCE_NAMES } from 'client/constants'
 import { PATH } from 'client/apps/sunstone/routesOne'
+
+const { CLUSTER, HOST } = RESOURCE_NAMES
 
 /**
  * Renders mainly information tab.
@@ -49,6 +53,10 @@ import { PATH } from 'client/apps/sunstone/routesOne'
  */
 const InformationPanel = ({ vm = {}, actions }) => {
   const [renameVm] = useRenameVmMutation()
+
+  const { view, hasAccessToResource } = useViews()
+  const clusterAccess = useMemo(() => hasAccessToResource(CLUSTER), [view])
+  const hostAccess = useMemo(() => hasAccessToResource(HOST), [view])
 
   const { ID, NAME, RESCHED, STIME, ETIME, LOCK, DEPLOY_ID } = vm
   const { name: stateName, color: stateColor } = getState(vm)
@@ -86,7 +94,10 @@ const InformationPanel = ({ vm = {}, actions }) => {
     {
       name: T.State,
       value: (
-        <StatusChip dataCy="state" text={stateName} stateColor={stateColor} />
+        <Stack direction="row" alignItems="center" gap={1}>
+          <StatusCircle color={stateColor} />
+          <StatusChip dataCy="state" text={stateName} stateColor={stateColor} />
+        </Stack>
       ),
     },
     {
@@ -133,6 +144,7 @@ const InformationPanel = ({ vm = {}, actions }) => {
       name: T.Host,
       value: `#${hostId} ${hostname}`,
       link:
+        hostAccess &&
         !Number.isNaN(+hostId) &&
         generatePath(PATH.INFRASTRUCTURE.HOSTS.DETAIL, { id: hostId }),
       dataCy: 'hostid',
@@ -141,6 +153,7 @@ const InformationPanel = ({ vm = {}, actions }) => {
       name: T.Cluster,
       value: `#${clusterId} ${clusterName}`,
       link:
+        clusterAccess &&
         !Number.isNaN(+clusterId) &&
         generatePath(PATH.INFRASTRUCTURE.CLUSTERS.DETAIL, { id: clusterId }),
       dataCy: 'clusterid',

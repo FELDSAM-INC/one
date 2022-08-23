@@ -13,12 +13,35 @@
  * See the License for the specific language governing permissions and       *
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
-import { createForm } from 'client/utils'
-import {
-  SCHEMA,
-  FIELDS,
-} from 'client/components/Forms/Host/ChangeClusterForm/schema'
+import { ReactElement, useMemo } from 'react'
+import PropTypes from 'prop-types'
+import { Stack } from '@mui/material'
 
-const ChangeClusterForm = createForm(SCHEMA, FIELDS)
+import FormWithSchema from 'client/components/Forms/FormWithSchema'
+import { SECTIONS } from 'client/components/Forms/Vm/UpdateConfigurationForm/booting/schema'
+import { HYPERVISORS } from 'client/constants'
 
-export default ChangeClusterForm
+/**
+ * @param {object} props - Component props
+ * @param {HYPERVISORS} props.hypervisor - VM hypervisor
+ * @returns {ReactElement} OS section component
+ */
+const OsSection = ({ hypervisor }) => {
+  const sections = useMemo(() => SECTIONS({ hypervisor }), [hypervisor])
+
+  return (
+    <Stack
+      display="grid"
+      gap="1em"
+      sx={{ gridTemplateColumns: { sm: '1fr', md: '1fr 1fr' } }}
+    >
+      {sections.map(({ id, ...section }) => (
+        <FormWithSchema key={id} cy={id} {...section} />
+      ))}
+    </Stack>
+  )
+}
+
+OsSection.propTypes = { hypervisor: PropTypes.string }
+
+export default OsSection

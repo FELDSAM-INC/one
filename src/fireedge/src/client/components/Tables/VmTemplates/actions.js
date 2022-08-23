@@ -13,12 +13,12 @@
  * See the License for the specific language governing permissions and       *
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
-/* eslint-disable jsdoc/require-jsdoc */
 import { useMemo } from 'react'
 import { useHistory } from 'react-router-dom'
+import { Typography } from '@mui/material'
 import {
-  AddSquare,
-  Import,
+  AddCircledOutline,
+  // Import,
   Trash,
   PlayOutline,
   Lock,
@@ -32,40 +32,64 @@ import {
   useUnlockTemplateMutation,
   useCloneTemplateMutation,
   useRemoveTemplateMutation,
+  useChangeTemplateOwnershipMutation,
+  useChangeTemplatePermissionsMutation,
 } from 'client/features/OneApi/vmTemplate'
+
+import { ChangeUserForm, ChangeGroupForm } from 'client/components/Forms/Vm'
+import { CloneForm, DeleteForm } from 'client/components/Forms/VmTemplate'
+import {
+  createActions,
+  GlobalAction,
+} from 'client/components/Tables/Enhanced/Utils'
+
 import { Tr, Translate } from 'client/components/HOC'
-
-import { CloneForm } from 'client/components/Forms/VmTemplate'
-import { createActions } from 'client/components/Tables/Enhanced/Utils'
 import { PATH } from 'client/apps/sunstone/routesOne'
-
 import { T, VM_TEMPLATE_ACTIONS, RESOURCE_NAMES } from 'client/constants'
 
-const MessageToConfirmAction = (rows) => {
-  const names = rows?.map?.(({ original }) => original?.NAME)
+const ListVmTemplateNames = ({ rows = [] }) =>
+  rows?.map?.(({ id, original }) => {
+    const { ID, NAME } = original
 
-  return (
-    <>
-      <p>
-        <Translate word={T.VMTemplates} />
-        {`: ${names.join(', ')}`}
-      </p>
-      <p>
-        <Translate word={T.DoYouWantProceed} />
-      </p>
-    </>
-  )
-}
+    return (
+      <Typography
+        key={`vm-template-${id}`}
+        variant="inherit"
+        component="span"
+        display="block"
+      >
+        {`#${ID} ${NAME}`}
+      </Typography>
+    )
+  })
+
+const SubHeader = (rows) => <ListVmTemplateNames rows={rows} />
+
+const MessageToConfirmAction = (rows, description) => (
+  <>
+    <ListVmTemplateNames rows={rows} />
+    {description && <Translate word={description} />}
+    <Translate word={T.DoYouWantProceed} />
+  </>
+)
 
 MessageToConfirmAction.displayName = 'MessageToConfirmAction'
 
+/**
+ * Generates the actions to operate resources on VM Template table.
+ *
+ * @returns {GlobalAction} - Actions
+ */
 const Actions = () => {
   const history = useHistory()
   const { view, getResourceView } = useViews()
+
   const [lock] = useLockTemplateMutation()
   const [unlock] = useUnlockTemplateMutation()
   const [clone] = useCloneTemplateMutation()
   const [remove] = useRemoveTemplateMutation()
+  const [changeOwnership] = useChangeTemplateOwnershipMutation()
+  const [changePermissions] = useChangeTemplatePermissionsMutation()
 
   return useMemo(
     () =>
@@ -75,18 +99,8 @@ const Actions = () => {
           {
             accessor: VM_TEMPLATE_ACTIONS.CREATE_DIALOG,
             tooltip: T.Create,
-            icon: AddSquare,
+            icon: AddCircledOutline,
             action: () => history.push(PATH.TEMPLATE.VMS.CREATE),
-          },
-          {
-            accessor: VM_TEMPLATE_ACTIONS.IMPORT_DIALOG,
-            tooltip: T.Import,
-            icon: Import,
-            selected: { max: 1 },
-            disabled: true,
-            action: (rows) => {
-              // TODO: go to IMPORT form
-            },
           },
           {
             accessor: VM_TEMPLATE_ACTIONS.INSTANTIATE_DIALOG,
@@ -112,6 +126,17 @@ const Actions = () => {
               history.push(path, [RESOURCE_NAMES.VM_TEMPLATE, template])
             },
           },
+          /* {
+            // TODO: Import VM Template from vCenter
+            accessor: VM_TEMPLATE_ACTIONS.IMPORT_DIALOG,
+            tooltip: T.Import,
+            icon: Import,
+            selected: { max: 1 },
+            disabled: true,
+            action: (rows) => {
+              // TODO: go to IMPORT form
+            },
+          }, */
           {
             accessor: VM_TEMPLATE_ACTIONS.UPDATE_DIALOG,
             label: T.Update,
@@ -147,30 +172,26 @@ const Actions = () => {
                       .filter(Boolean)
                       .join(' - ')
                   },
+                  dataCy: 'modal-clone',
                 },
                 form: (rows) => {
-                  const vmTemplates = rows?.map(({ original }) => original)
-                  const stepProps = { isMultiple: vmTemplates.length > 1 }
-                  const initialValues = {
-                    name: `Copy of ${vmTemplates?.[0]?.NAME}`,
-                  }
+                  const names = rows?.map(({ original }) => original?.NAME)
+                  const stepProps = { isMultiple: names.length > 1 }
+                  const initialValues = { name: `Copy of ${names?.[0]}` }
 
                   return CloneForm({ stepProps, initialValues })
                 },
-                onSubmit: (rows) => async (formData) => {
-                  const { prefix, ...restOfData } = formData
+                onSubmit:
+                  (rows) =>
+                  async ({ prefix, name } = {}) => {
+                    const vmTemplates = rows?.map?.(
+                      ({ original: { ID, NAME } = {} }) =>
+                        // overwrite all names with prefix+NAME
+                        ({ id: ID, name: prefix ? `${prefix} ${NAME}` : name })
+                    )
 
-                  const vmTemplates = rows?.map?.(
-                    ({ original: { ID, NAME } = {} }) => {
-                      // overwrite all names with prefix+NAME
-                      const name = prefix ? `${prefix} ${NAME}` : NAME
-
-                      return { id: ID, ...restOfData, name }
-                    }
-                  )
-
-                  await Promise.all(vmTemplates.map(clone))
-                },
+                    await Promise.all(vmTemplates.map(clone))
+                  },
               },
             ],
           },
@@ -179,34 +200,73 @@ const Actions = () => {
             icon: Group,
             selected: true,
             color: 'secondary',
+            dataCy: 'template-ownership',
             options: [
               {
                 accessor: VM_TEMPLATE_ACTIONS.CHANGE_OWNER,
                 name: T.ChangeOwner,
-                disabled: true,
-                isConfirmDialog: true,
-                onSubmit: () => undefined,
+                dialogProps: {
+                  title: T.ChangeOwner,
+                  subheader: SubHeader,
+                  dataCy: `modal-${VM_TEMPLATE_ACTIONS.CHANGE_OWNER}`,
+                },
+                form: ChangeUserForm,
+                onSubmit: (rows) => (newOwnership) => {
+                  rows?.map?.(({ original }) =>
+                    changeOwnership({ id: original?.ID, ...newOwnership })
+                  )
+                },
               },
               {
                 accessor: VM_TEMPLATE_ACTIONS.CHANGE_GROUP,
                 name: T.ChangeGroup,
-                disabled: true,
-                isConfirmDialog: true,
-                onSubmit: () => undefined,
+                dialogProps: {
+                  title: T.ChangeGroup,
+                  subheader: SubHeader,
+                  dataCy: `modal-${VM_TEMPLATE_ACTIONS.CHANGE_GROUP}`,
+                },
+                form: ChangeGroupForm,
+                onSubmit: (rows) => async (newOwnership) => {
+                  const ids = rows?.map?.(({ original }) => original?.ID)
+                  await Promise.all(
+                    ids.map((id) => changeOwnership({ id, ...newOwnership }))
+                  )
+                },
               },
               {
                 accessor: VM_TEMPLATE_ACTIONS.SHARE,
-                disabled: true,
                 name: T.Share,
                 isConfirmDialog: true,
-                onSubmit: () => undefined,
+                dialogProps: {
+                  title: T.Share,
+                  dataCy: `modal-${VM_TEMPLATE_ACTIONS.SHARE}`,
+                  children: (rows) =>
+                    MessageToConfirmAction(rows, T.ShareVmTemplateDescription),
+                },
+                onSubmit: (rows) => () => {
+                  rows?.map?.(({ original }) =>
+                    changePermissions({ id: original?.ID, groupUse: '1' })
+                  )
+                },
               },
               {
                 accessor: VM_TEMPLATE_ACTIONS.UNSHARE,
-                disabled: true,
                 name: T.Unshare,
                 isConfirmDialog: true,
-                onSubmit: () => undefined,
+                dialogProps: {
+                  title: T.Unshare,
+                  dataCy: `modal-${VM_TEMPLATE_ACTIONS.UNSHARE}`,
+                  children: (rows) =>
+                    MessageToConfirmAction(
+                      rows,
+                      T.UnshareVmTemplateDescription
+                    ),
+                },
+                onSubmit: (rows) => () => {
+                  rows?.map?.(({ original }) =>
+                    changePermissions({ id: original?.ID, groupUse: '0' })
+                  )
+                },
               },
             ],
           },
@@ -215,6 +275,7 @@ const Actions = () => {
             icon: Lock,
             selected: true,
             color: 'secondary',
+            dataCy: 'template-lock',
             options: [
               {
                 accessor: VM_TEMPLATE_ACTIONS.LOCK,
@@ -222,6 +283,7 @@ const Actions = () => {
                 isConfirmDialog: true,
                 dialogProps: {
                   title: T.Lock,
+                  dataCy: `modal-${VM_TEMPLATE_ACTIONS.LOCK}`,
                   children: MessageToConfirmAction,
                 },
                 onSubmit: (rows) => async () => {
@@ -235,11 +297,12 @@ const Actions = () => {
                 isConfirmDialog: true,
                 dialogProps: {
                   title: T.Unlock,
+                  dataCy: `modal-${VM_TEMPLATE_ACTIONS.UNLOCK}`,
                   children: MessageToConfirmAction,
                 },
                 onSubmit: (rows) => async () => {
                   const ids = rows?.map?.(({ original }) => original?.ID)
-                  await Promise.all(ids.map((id) => unlock(id)))
+                  await Promise.all(ids.map((id) => unlock({ id })))
                 },
               },
             ],
@@ -252,14 +315,27 @@ const Actions = () => {
             color: 'error',
             options: [
               {
-                isConfirmDialog: true,
                 dialogProps: {
-                  title: T.Delete,
-                  children: MessageToConfirmAction,
+                  dataCy: `modal-${VM_TEMPLATE_ACTIONS.DELETE}`,
+                  title: (rows) => {
+                    const isMultiple = rows?.length > 1
+                    const { ID, NAME } = rows?.[0]?.original ?? {}
+
+                    return [
+                      Tr(
+                        isMultiple ? T.DeleteSeveralTemplates : T.DeleteTemplate
+                      ),
+                      !isMultiple && `#${ID} ${NAME}`,
+                    ]
+                      .filter(Boolean)
+                      .join(' - ')
+                  },
                 },
-                onSubmit: (rows) => async () => {
+                form: DeleteForm,
+                onSubmit: (rows) => async (formData) => {
+                  const { image } = formData ?? {}
                   const ids = rows?.map?.(({ original }) => original?.ID)
-                  await Promise.all(ids.map((id) => remove({ id })))
+                  await Promise.all(ids.map((id) => remove({ id, image })))
                 },
               },
             ],

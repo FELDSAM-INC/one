@@ -36,7 +36,13 @@ const FIRST_STEP = 0
  * @param {StepsForm} stepsForm - Steps form config
  * @returns {ReactElement} Stepper form component
  */
-const DefaultFormStepper = ({ onSubmit, steps, defaultValues, resolver }) => {
+const DefaultFormStepper = ({
+  onSubmit,
+  steps,
+  defaultValues,
+  resolver,
+  initialValues,
+}) => {
   const methods = useForm({
     mode: 'onSubmit',
     defaultValues,
@@ -44,7 +50,11 @@ const DefaultFormStepper = ({ onSubmit, steps, defaultValues, resolver }) => {
   })
 
   return (
-    <FormProvider {...methods}>
+    <FormProvider
+      {...methods}
+      initialValues={initialValues}
+      getResolver={() => resolver(methods.watch())}
+    >
       <FormStepper steps={steps} schema={resolver} onSubmit={onSubmit} />
     </FormProvider>
   )
@@ -54,6 +64,7 @@ DefaultFormStepper.propTypes = {
   onSubmit: PropTypes.func,
   steps: PropTypes.arrayOf(PropTypes.object),
   defaultValues: PropTypes.object,
+  initialValues: PropTypes.object,
   resolver: PropTypes.func,
 }
 

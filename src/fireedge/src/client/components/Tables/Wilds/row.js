@@ -33,10 +33,12 @@ const Row = memo(({ original, ...props }) => {
   const { DEPLOY_ID, VM_NAME } = original
 
   return (
-    <div {...props}>
+    <div data-cy={`wild-${DEPLOY_ID}`} {...props}>
       <div className={classes.main}>
         <div className={classes.title}>
-          <Typography component="span">{VM_NAME}</Typography>
+          <Typography noWrap component="span">
+            {VM_NAME}
+          </Typography>
         </div>
         <div className={classes.caption}>
           <span>{`#${DEPLOY_ID}`}</span>

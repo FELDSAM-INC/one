@@ -44,14 +44,6 @@ export default makeStyles((theme) => ({
           easing: theme.transitions.easing.sharp,
           duration: theme.transitions.duration.enteringScreen,
         }),
-        '& $parentSubItem': {
-          '&.Mui-selected': {
-            backgroundColor: alpha(theme.palette.secondary.main, 0.2),
-          },
-          '&.Mui-selected:hover': {
-            backgroundColor: alpha(theme.palette.secondary.main, 0.3),
-          },
-        },
         '& #logo__text': {
           visibility: 'visible',
         },
@@ -118,17 +110,14 @@ export default makeStyles((theme) => ({
     overflowX: 'hidden',
     textTransform: 'capitalize',
     transition: 'color 0.3s',
-    '&::-webkit-scrollbar': {
-      width: 14,
+  },
+  parentSubItem: {
+    '&.Mui-selected': {
+      backgroundColor: alpha(theme.palette.secondary.main, 0.2),
     },
-    '&::-webkit-scrollbar-thumb': {
-      backgroundClip: 'content-box',
-      border: '4px solid transparent',
-      borderRadius: 7,
-      boxShadow: 'inset 0 0 0 10px',
-      color: theme.palette.secondary.light,
+    '&.Mui-selected:hover': {
+      backgroundColor: alpha(theme.palette.secondary.main, 0.3),
     },
   },
-  parentSubItem: {},
   subItemWrapper: {},
 }))

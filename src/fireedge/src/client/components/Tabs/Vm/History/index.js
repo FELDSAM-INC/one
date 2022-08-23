@@ -36,7 +36,7 @@ import { getActionsAvailable } from 'client/models/Helper'
  * @returns {ReactElement} History tab
  */
 const VmHistoryTab = ({ tabProps: { actions } = {}, id }) => {
-  const { data: vm = {} } = useGetVmQuery(id)
+  const { data: vm = {} } = useGetVmQuery({ id })
 
   const [records, actionsAvailable] = useMemo(() => {
     const hypervisor = getHypervisor(vm)
@@ -49,7 +49,10 @@ const VmHistoryTab = ({ tabProps: { actions } = {}, id }) => {
   }, [vm])
 
   return (
-    <div style={{ display: 'grid', gap: '1em', paddingBlock: '0.8em' }}>
+    <div
+      style={{ display: 'grid', gap: '1em', paddingBlock: '0.8em' }}
+      data-cy="history"
+    >
       {records.map((history, idx) => (
         <HistoryRecord key={idx} history={history} actions={actionsAvailable} />
       ))}

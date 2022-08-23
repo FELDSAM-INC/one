@@ -236,7 +236,10 @@ export const filterFieldsByHypervisor = (
   fields
     .map((field) => (typeof field === 'function' ? field(hypervisor) : field))
     .filter(
-      ({ notOnHypervisors } = {}) => !notOnHypervisors?.includes?.(hypervisor)
+      ({ notOnHypervisors, onlyOnHypervisors } = {}) =>
+        (!notOnHypervisors && !onlyOnHypervisors) ||
+        (notOnHypervisors && !notOnHypervisors.includes?.(hypervisor)) ||
+        onlyOnHypervisors?.includes?.(hypervisor)
     )
 
 /**
@@ -421,47 +424,6 @@ export const cleanEmpty = (variable) =>
     : cleanEmptyObject(variable)
 
 /**
- * Check if value is in base64.
- *
- * @param {string} stringToValidate - String to check
- * @param {object} options - Options
- * @param {boolean} options.exact - Only match and exact string
- * @returns {boolean} Returns `true` if string is a base64
- */
-export const isBase64 = (stringToValidate, options = {}) => {
-  if (stringToValidate === '') return false
-
-  const { exact = true } = options
-
-  const BASE64_REG =
-    /(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)/g
-  const EXACT_BASE64_REG =
-    /(?:^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$)/
-
-  const regex = exact ? EXACT_BASE64_REG : BASE64_REG
-
-  return regex.test(stringToValidate)
-}
-
-/**
- * Check if value is divisible by another number.
- *
- * @param {string|number} number - Value to check
- * @param {string|number} divisor - Divisor number
- * @returns {boolean} Returns `true` if value is divisible by another
- */
-export const isDivisibleBy = (number, divisor) => !(number % divisor)
-
-/**
- * Returns factors of a number.
- *
- * @param {number} value - Number
- * @returns {number[]} Returns list of numbers
- */
-export const getFactorsOfNumber = (value) =>
-  [...Array(+value + 1).keys()].filter((idx) => value % idx === 0)
-
-/**
  * Returns an array with the separator interspersed between elements of the given array.
  *
  * @param {any} arr - Array
@@ -477,4 +439,29 @@ export const intersperse = (arr, sep) => {
   return ensuredArr
     .slice(1)
     .reduce((xs, x, i) => xs.concat([sep, x]), [ensuredArr[0]])
+}
+
+/**
+ * Returns the unknown properties of an object.
+ *
+ * @param {object} obj - Object
+ * @param {string[]|object} knownAttributes - Attributes to check
+ * @returns {object} Returns object with unknown properties
+ */
+export const getUnknownAttributes = (obj = {}, knownAttributes) => {
+  const unknown = {}
+
+  const entries = Object.entries(obj)
+
+  const attributes = Array.isArray(knownAttributes)
+    ? knownAttributes
+    : Object.getOwnPropertyNames({ ...knownAttributes })
+
+  for (const [key, value] of entries) {
+    if (!attributes.includes(key) && value !== undefined) {
+      unknown[key] = obj[key]
+    }
+  }
+
+  return unknown
 }

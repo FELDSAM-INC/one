@@ -24,31 +24,34 @@ import { RESOURCE_NAMES } from 'client/constants'
 
 import Tabs from 'client/components/Tabs'
 import Capacity from 'client/components/Tabs/Vm/Capacity'
-import Configuration from 'client/components/Tabs/Vm/Configuration'
 import Info from 'client/components/Tabs/Vm/Info'
 import Network from 'client/components/Tabs/Vm/Network'
 import History from 'client/components/Tabs/Vm/History'
 import SchedActions from 'client/components/Tabs/Vm/SchedActions'
 import Snapshot from 'client/components/Tabs/Vm/Snapshot'
 import Storage from 'client/components/Tabs/Vm/Storage'
+import Configuration from 'client/components/Tabs/Vm/Configuration'
+import Template from 'client/components/Tabs/Vm/Template'
 
 const getTabComponent = (tabName) =>
   ({
     capacity: Capacity,
-    configuration: Configuration,
     info: Info,
     network: Network,
     history: History,
-    schedActions: SchedActions,
+    sched_actions: SchedActions,
     snapshot: Snapshot,
     storage: Storage,
+    configuration: Configuration,
+    template: Template,
   }[tabName])
 
 const VmTabs = memo(({ id }) => {
   const { view, getResourceView } = useViews()
-  const { isLoading, isError, error } = useGetVmQuery(id, {
-    refetchOnMountOrArgChange: 10,
-  })
+  const { isLoading, isError, error } = useGetVmQuery(
+    { id },
+    { refetchOnMountOrArgChange: 10 }
+  )
 
   const tabsAvailable = useMemo(() => {
     const resource = RESOURCE_NAMES.VM

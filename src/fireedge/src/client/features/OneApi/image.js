@@ -76,12 +76,11 @@ const imageApi = oneApi.injectEndpoints({
       },
       transformResponse: (data) => data?.IMAGE ?? {},
       providesTags: (_, __, { id }) => [{ type: IMAGE, id }],
-      onCacheEntryAdded: ({ id }, endpointProps) =>
-        UpdateFromSocket({
-          updateQueryData: (updateFn) =>
-            imageApi.util.updateQueryData('getImages', undefined, updateFn),
-          resource: IMAGE.toLowerCase(),
-        })(id, endpointProps),
+      onCacheEntryAdded: UpdateFromSocket({
+        updateQueryData: (updateFn) =>
+          imageApi.util.updateQueryData('getImages', undefined, updateFn),
+        resource: 'IMAGE',
+      }),
     }),
     allocateImage: builder.mutation({
       /**
@@ -89,7 +88,7 @@ const imageApi = oneApi.injectEndpoints({
        *
        * @param {object} params - Request params
        * @param {string} params.template - A string containing the template of the image on syntax XML
-       * @param {string} params.id - The datastore ID
+       * @param {string} params.datastore - The datastore ID
        * @param {boolean} [params.capacity] - `true` to avoid checking datastore capacity
        * @returns {number} Image id
        * @throws Fails when response isn't code 200
@@ -186,7 +185,7 @@ const imageApi = oneApi.injectEndpoints({
 
         return { params, command }
       },
-      invalidatesTags: (_, __, id) => [{ type: IMAGE, id }, IMAGE_POOL],
+      invalidatesTags: (_, __, { id }) => [{ type: IMAGE, id }, IMAGE_POOL],
     }),
     changeImageType: builder.mutation({
       /**
@@ -222,7 +221,7 @@ const imageApi = oneApi.injectEndpoints({
 
         return { params, command }
       },
-      invalidatesTags: (_, __, id) => [{ type: IMAGE, id }],
+      invalidatesTags: (_, __, { id }) => [{ type: IMAGE, id }],
     }),
     changeImagePermissions: builder.mutation({
       /**
@@ -380,7 +379,7 @@ const imageApi = oneApi.injectEndpoints({
 
         return { params, command }
       },
-      invalidatesTags: (_, __, id) => [{ type: IMAGE, id }, IMAGE_POOL],
+      invalidatesTags: (_, __, { id }) => [{ type: IMAGE, id }, IMAGE_POOL],
     }),
   }),
 })

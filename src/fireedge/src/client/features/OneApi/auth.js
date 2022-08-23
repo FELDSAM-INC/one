@@ -13,37 +13,21 @@
  * See the License for the specific language governing permissions and       *
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
-import { createApi } from '@reduxjs/toolkit/query/react'
-
 import { Actions, Commands } from 'server/routes/api/auth/routes'
+
+import { actions as authActions } from 'client/features/Auth/slice'
 import { dismissSnackbar } from 'client/features/General/actions'
-import { actions } from 'client/features/Auth/slice'
+import { oneApi, ONE_RESOURCES_POOL } from 'client/features/OneApi'
 import userApi from 'client/features/OneApi/user'
 
-import http from 'client/utils/rest'
-import { requestConfig, storage } from 'client/utils'
+import { jsonToXml } from 'client/models/Helper'
+import { storage } from 'client/utils'
 import { JWT_NAME, FILTER_POOL, ONEADMIN_ID } from 'client/constants'
 
+const { GROUP_POOL, ...restOfPool } = ONE_RESOURCES_POOL
 const { ALL_RESOURCES, PRIMARY_GROUP_RESOURCES } = FILTER_POOL
 
-const authApi = createApi({
-  reducerPath: 'authApi',
-  baseQuery: async ({ params, command, needState }, { getState, signal }) => {
-    try {
-      const config = requestConfig(params, command)
-      const response = await http.request({ ...config, signal })
-      const state = needState ? getState() : {}
-
-      return { data: response.data ?? {}, meta: { state } }
-    } catch (axiosError) {
-      const { message, data = {}, status, statusText } = axiosError
-      const { message: messageFromServer, data: errorFromOned } = data
-
-      const error = message ?? errorFromOned ?? messageFromServer ?? statusText
-
-      return { error: { status: status, data: error } }
-    }
-  },
+const authApi = oneApi.injectEndpoints({
   endpoints: (builder) => ({
     getAuthUser: builder.query({
       /**
@@ -55,7 +39,7 @@ const authApi = createApi({
       async onQueryStarted(_, { queryFulfilled, dispatch }) {
         try {
           const { data: user } = await queryFulfilled
-          dispatch(actions.changeAuthUser({ user }))
+          dispatch(authActions.changeAuthUser(user))
         } catch {}
       },
     }),
@@ -91,41 +75,106 @@ const authApi = createApi({
       async onQueryStarted(_, { queryFulfilled, dispatch }) {
         try {
           const { data: queryData } = await queryFulfilled
+          const { jwt, ...user } = queryData
 
-          if (queryData?.jwt) {
-            storage(JWT_NAME, queryData?.jwt)
+          if (jwt) {
+            storage(JWT_NAME, jwt)
             dispatch(dismissSnackbar({ dismissAll: true }))
           }
 
-          dispatch(actions.changeAuthUser(queryData))
+          dispatch(authActions.changeJwt(jwt))
+          dispatch(authActions.changeAuthUser(user))
         } catch {}
       },
     }),
     changeAuthGroup: builder.mutation({
       /**
-       * @param {object} data - User credentials
-       * @param {string} data.group - Group id
+       * @param {object} params - Request parameters
+       * @param {string} params.group - Group id
        * @returns {Promise} Response data from request
        * @throws Fails when response isn't code 200
        */
       queryFn: async ({ group } = {}, { getState, dispatch }) => {
         try {
           if (group === ALL_RESOURCES) {
-            dispatch(actions.changeFilterPool(ALL_RESOURCES))
+            dispatch(authActions.changeFilterPool(ALL_RESOURCES))
 
             return { data: '' }
           }
 
           const authUser = getState().auth.user
-          const queryData = { id: authUser.ID, group: group }
+          const queryData = { id: authUser.ID, group }
 
-          const response = await dispatch(
+          const newGroup = await dispatch(
             userApi.endpoints.changeGroup.initiate(queryData)
           ).unwrap()
 
-          dispatch(actions.changeFilterPool(PRIMARY_GROUP_RESOURCES))
+          dispatch(authActions.changeFilterPool(PRIMARY_GROUP_RESOURCES))
+          dispatch(authActions.changeAuthUser({ GID: `${group}` }))
 
-          return { data: response }
+          return { data: newGroup }
+        } catch (error) {
+          return { error }
+        }
+      },
+      invalidatesTags: [...Object.values(restOfPool)],
+    }),
+    addLabel: builder.mutation({
+      /**
+       * @param {object} params - Request parameters
+       * @param {string} params.newLabel - Label to add
+       * @returns {Promise} Response data from request
+       * @throws Fails when response isn't code 200
+       */
+      queryFn: async ({ newLabel } = {}, { getState, dispatch }) => {
+        try {
+          if (!newLabel) return { data: '' }
+
+          const authUser = getState().auth.user
+          const currentLabels = authUser?.TEMPLATE?.LABELS?.split(',') ?? []
+          const upperCaseLabels = currentLabels.map((l) => l.toUpperCase())
+          const upperCaseNewLabel = newLabel.toUpperCase()
+
+          const exists = upperCaseLabels.some((l) => l === upperCaseNewLabel)
+          if (exists) return { data: upperCaseNewLabel }
+
+          const newLabels = currentLabels.concat(upperCaseNewLabel).join()
+          const template = jsonToXml({ LABELS: newLabels })
+          const queryData = { id: authUser.ID, template, replace: 1 }
+
+          await dispatch(
+            userApi.endpoints.updateUser.initiate(queryData)
+          ).unwrap()
+
+          return { data: upperCaseNewLabel }
+        } catch (error) {
+          return { error }
+        }
+      },
+    }),
+    removeLabel: builder.mutation({
+      /**
+       * @param {object} params - Request parameters
+       * @param {string} params.label - Label to remove
+       * @returns {Promise} Response data from request
+       * @throws Fails when response isn't code 200
+       */
+      queryFn: async ({ label } = {}, { getState, dispatch }) => {
+        try {
+          if (!label) return { data: '' }
+
+          const authUser = getState().auth.user
+          const currentLabels = authUser?.TEMPLATE?.LABELS?.split(',') ?? []
+
+          const newLabels = currentLabels.filter((l) => l !== label).join()
+          const template = jsonToXml({ LABELS: newLabels })
+          const queryData = { id: authUser.ID, template, replace: 1 }
+
+          await dispatch(
+            userApi.endpoints.updateUser.initiate(queryData)
+          ).unwrap()
+
+          return { data: label }
         } catch (error) {
           return { error }
         }
@@ -135,11 +184,15 @@ const authApi = createApi({
 })
 
 export const {
+  // Queries
   useGetAuthUserQuery,
   useLazyGetAuthUserQuery,
 
+  // Mutations
   useLoginMutation,
   useChangeAuthGroupMutation,
+  useAddLabelMutation,
+  useRemoveLabelMutation,
 } = authApi
 
-export { authApi }
+export default authApi

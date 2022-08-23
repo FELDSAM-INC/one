@@ -13,63 +13,70 @@
  * See the License for the specific language governing permissions and       *
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
-import { useState, useMemo, JSXElementConstructor } from 'react'
-import { Container, TextField, Autocomplete, Grid, Box } from '@mui/material'
+import { useState, useMemo, ReactElement } from 'react'
+import { TextField, Autocomplete, Grid, Box } from '@mui/material'
 
+import Commands from 'server/utils/constants/commands'
 import ResponseForm from 'client/containers/TestApi/ResponseForm'
-import { InputCode } from 'client/components/FormControl'
-
 import { Tr } from 'client/components/HOC'
 import { T } from 'client/constants'
-import Commands from 'server/utils/constants/commands'
-
-import testApiStyles from 'client/containers/TestApi/styles'
 
 const COMMANDS = Object.keys(Commands)?.sort()
 
 /**
- * @returns {JSXElementConstructor} - Component that allows you
+ * @returns {ReactElement} - Component that allows you
  * to fetch, resolve, and interact with OpenNebula API.
  */
 function TestApi() {
-  const classes = testApiStyles()
   const [name, setName] = useState(() => COMMANDS[0])
-  const [response, setResponse] = useState('')
+  const [response, setResponse] = useState({})
 
   const handleChangeCommand = (_, value) => setName(value)
   const handleChangeResponse = (res) => setResponse(res)
 
+  const totalResults = useMemo(() => {
+    const data = response?.data || {}
+    const [firstKey, firstValue] = Object.entries(data)[0] ?? []
+    const isPool = firstKey?.endsWith('_POOL')
+
+    if (!isPool) return
+
+    return Object.values(firstValue)?.[0]?.length
+  }, [response])
+
   return (
-    <Container
-      disableGutters
-      sx={{ display: 'flex', flexFlow: 'column', height: '100%' }}
-    >
-      <Grid container direction="row" spacing={2} className={classes.root}>
-        <Grid item xs={12} md={6}>
-          <Autocomplete
-            disablePortal
-            color="secondary"
-            options={useMemo(() => COMMANDS, [])}
-            value={name}
-            onChange={handleChangeCommand}
-            renderInput={(params) => (
-              <TextField {...params} label={Tr(T.SelectRequest)} />
-            )}
-          />
-          {name && name !== '' && (
-            <ResponseForm
-              handleChangeResponse={handleChangeResponse}
-              command={{ name, ...Commands[name] }}
-            />
+    <Grid container direction="row" spacing={2} width={1} height={1}>
+      <Grid item xs={12} md={6}>
+        <Autocomplete
+          disablePortal
+          color="secondary"
+          options={useMemo(() => COMMANDS, [])}
+          value={name}
+          onChange={handleChangeCommand}
+          renderInput={(params) => (
+            <TextField {...params} label={Tr(T.SelectRequest)} />
           )}
-        </Grid>
-        <Grid item xs={12} md={6}>
-          <Box height="100%" minHeight={200}>
-            <InputCode code={response} readOnly />
-          </Box>
-        </Grid>
+        />
+        {name && name !== '' && (
+          <ResponseForm
+            handleChangeResponse={handleChangeResponse}
+            command={{ name, ...Commands[name] }}
+          />
+        )}
       </Grid>
-    </Container>
+      <Grid item xs={12} md={6} sx={{ height: { xs: '50%', md: 1 } }}>
+        <Box height="100%" overflow="auto" bgcolor="background.paper" p={1}>
+          {totalResults && <p>{`Total results: ${totalResults}`}</p>}
+          <pre>
+            <code
+              style={{ whiteSpace: 'break-spaces', wordBreak: 'break-all' }}
+            >
+              {JSON.stringify(response, null, 2)}
+            </code>
+          </pre>
+        </Box>
+      </Grid>
+    </Grid>
   )
 }
 

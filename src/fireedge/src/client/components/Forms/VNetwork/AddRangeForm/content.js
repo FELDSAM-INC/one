@@ -13,60 +13,56 @@
  * See the License for the specific language governing permissions and       *
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
-/* eslint-disable jsdoc/require-jsdoc */
+import { ReactElement } from 'react'
 import PropTypes from 'prop-types'
-import { Box } from '@mui/material'
 import { useFormContext, useWatch } from 'react-hook-form'
+import { Box } from '@mui/material'
 
+import { FormWithSchema } from 'client/components/Forms'
 import { AttributePanel } from 'client/components/Tabs/Common'
-import { SCHEMA } from 'client/components/Forms/VmTemplate/CreateForm/Steps/CustomVariables/schema'
+import {
+  FIELDS,
+  MUTABLE_FIELDS,
+} from 'client/components/Forms/VNetwork/AddRangeForm/schema'
 import { cleanEmpty, cloneObject, set } from 'client/utils'
-import { T, ACTIONS } from 'client/constants'
+import { T } from 'client/constants'
 
-const ALL_ACTIONS = [
-  ACTIONS.COPY_ATTRIBUTE,
-  ACTIONS.ADD_ATTRIBUTE,
-  ACTIONS.EDIT_ATTRIBUTE,
-  ACTIONS.DELETE_ATTRIBUTE,
-]
+export const CUSTOM_ATTRS_ID = 'custom-attributes'
 
-export const STEP_ID = 'custom-variables'
-
-const Content = () => {
+/**
+ * @param {object} props - Props
+ * @param {boolean} [props.isUpdate] - Is `true` the form will be filter immutable attributes
+ * @returns {ReactElement} Form content component
+ */
+const Content = ({ isUpdate }) => {
   const { setValue } = useFormContext()
-  const customVars = useWatch({ name: STEP_ID })
+  const customAttrs = useWatch({ name: CUSTOM_ATTRS_ID }) || {}
 
   const handleChangeAttribute = (path, newValue) => {
-    const newCustomVars = cloneObject(customVars)
+    const newCustomAttrs = cloneObject(customAttrs)
 
-    set(newCustomVars, path, newValue)
-    setValue(STEP_ID, cleanEmpty(newCustomVars))
+    set(newCustomAttrs, path, newValue)
+    setValue(CUSTOM_ATTRS_ID, cleanEmpty(newCustomAttrs))
   }
 
   return (
     <Box display="grid" gap="1em">
+      <FormWithSchema fields={isUpdate ? MUTABLE_FIELDS : FIELDS} />
       <AttributePanel
+        collapse
+        askToDelete={false}
+        allActionsEnabled
+        title={T.CustomInformation}
         handleAdd={handleChangeAttribute}
         handleEdit={handleChangeAttribute}
         handleDelete={handleChangeAttribute}
-        attributes={customVars}
-        actions={ALL_ACTIONS}
+        attributes={customAttrs}
         filtersSpecialAttributes={false}
       />
     </Box>
   )
 }
 
-const CustomVariables = () => ({
-  id: STEP_ID,
-  label: T.CustomVariables,
-  resolver: SCHEMA,
-  optionsValidate: { abortEarly: false },
-  content: Content,
-})
+Content.propTypes = { isUpdate: PropTypes.bool }
 
-Content.propTypes = {
-  data: PropTypes.any,
-}
-
-export default CustomVariables
+export default Content

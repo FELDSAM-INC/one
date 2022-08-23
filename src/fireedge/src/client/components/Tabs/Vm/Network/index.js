@@ -47,7 +47,7 @@ const { ATTACH_NIC, DETACH_NIC, ATTACH_SEC_GROUP, DETACH_SEC_GROUP } =
  * @returns {ReactElement} Networks tab
  */
 const VmNetworkTab = ({ tabProps: { actions } = {}, id }) => {
-  const { data: vm } = useGetVmQuery(id)
+  const { data: vm } = useGetVmQuery({ id })
 
   const [nics, hypervisor, actionsAvailable] = useMemo(() => {
     const groupedNics = getNics(vm, {
@@ -69,7 +69,7 @@ const VmNetworkTab = ({ tabProps: { actions } = {}, id }) => {
         <AttachAction vmId={id} currentNics={nics} hypervisor={hypervisor} />
       )}
 
-      <Stack direction="column" gap="1em" py="0.8em">
+      <Stack gap="1em" py="0.8em">
         {nics.map((nic) => {
           const { IP, MAC, ADDRESS } = nic
           const key = IP ?? MAC ?? ADDRESS // address only exists form PCI nics

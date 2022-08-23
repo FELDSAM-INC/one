@@ -24,7 +24,7 @@ export default makeStyles(({ palette, typography, breakpoints }) => ({
   },
   toolbar: {
     ...typography.body1,
-    marginBottom: 16,
+    marginBottom: '1em',
     display: 'grid',
     gridTemplateRows: 'auto auto',
     gridTemplateAreas: `

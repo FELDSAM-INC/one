@@ -29,7 +29,6 @@ import {
   EXTERNAL_IP_ATTRS,
   HISTORY_ACTIONS,
   HYPERVISORS,
-  StateInfo,
   VM,
   Disk,
   Nic,
@@ -97,35 +96,13 @@ export const isVCenter = (vm) => getHypervisor(vm) === HYPERVISORS.vcenter
 
 /**
  * @param {VM} vm - Virtual machine
- * @returns {StateInfo} State information from resource
+ * @returns {STATES.StateInfo} State information from resource
  */
 export const getState = (vm) => {
   const { STATE, LCM_STATE } = vm ?? {}
   const state = VM_STATES[+STATE]
 
   return state?.name === STATES.ACTIVE ? VM_LCM_STATES[+LCM_STATE] : state
-}
-
-/**
- * @param {VM} vm - Virtual machine
- * @returns {string[]} Labels from resource
- */
-export const getLabels = (vm) => {
-  const { USER_TEMPLATE } = vm ?? {}
-  const { LABELS } = USER_TEMPLATE ?? {}
-
-  return LABELS?.split(',') ?? []
-}
-
-/**
- * @param {VM} vm - Virtual machine
- * @returns {string} Error message from resource
- */
-export const getErrorMessage = (vm) => {
-  const { USER_TEMPLATE } = vm ?? {}
-  const { ERROR, SCHED_MESSAGE } = USER_TEMPLATE ?? {}
-
-  return [ERROR, SCHED_MESSAGE].filter(Boolean)[0]
 }
 
 /**
@@ -352,4 +329,19 @@ export const nicsIncludesTheConnectionType = (vm, type) => {
   if (!['SSH', 'RDP'].includes(ensuredConnection)) return false
 
   return getNics(vm).some((nic) => stringToBoolean(nic[ensuredConnection]))
+}
+
+/**
+ * Scales the VCPU value by CPU factor to get the real CPU value.
+ *
+ * @param {number} [vcpu] - VCPU value
+ * @param {number} cpuFactor - Factor CPU
+ * @returns {number|undefined} Real CPU value
+ */
+export const scaleVcpuByCpuFactor = (vcpu, cpuFactor) => {
+  if (!cpuFactor || isNaN(+vcpu) || +vcpu === 0) return
+  if (+cpuFactor === 1) return vcpu
+
+  // round 2 decimals to avoid floating point errors
+  return Math.round(+vcpu * +cpuFactor * 100) / 100
 }

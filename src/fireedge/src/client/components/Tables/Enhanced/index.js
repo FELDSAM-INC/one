@@ -18,8 +18,9 @@ import { useMemo } from 'react'
 import PropTypes from 'prop-types'
 
 import clsx from 'clsx'
-import { InfoEmpty } from 'iconoir-react'
-import { Box } from '@mui/material'
+import InfoEmpty from 'iconoir-react/dist/InfoEmpty'
+import RemoveIcon from 'iconoir-react/dist/RemoveSquare'
+import { Box, Chip } from '@mui/material'
 import {
   useGlobalFilter,
   useFilters,
@@ -32,14 +33,16 @@ import {
   UseRowSelectRowProps,
 } from 'react-table'
 
-import Pagination from 'client/components/Tables/Enhanced/pagination'
 import {
   GlobalActions,
   GlobalSearch,
   GlobalFilter,
+  GlobalLabel,
   GlobalSort,
   GlobalSelectedRows,
+  LABEL_COLUMN_ID,
 } from 'client/components/Tables/Enhanced/Utils'
+import Pagination from 'client/components/Tables/Enhanced/pagination'
 import EnhancedTableStyles from 'client/components/Tables/Enhanced/styles'
 
 import { Translate } from 'client/components/HOC'
@@ -55,8 +58,10 @@ const EnhancedTable = ({
   initialState,
   refetch,
   isLoading,
+  useUpdateMutation,
   displaySelectedRows,
   disableRowSelect,
+  disableGlobalLabel,
   disableGlobalSort,
   onSelectedRowsChange,
   pageSize = 10,
@@ -67,6 +72,7 @@ const EnhancedTable = ({
   classes = {},
   rootProps = {},
   searchProps = {},
+  noDataMessage,
 }) => {
   const styles = EnhancedTableStyles()
 
@@ -104,11 +110,10 @@ const EnhancedTable = ({
       autoResetSelectedRow: false,
       autoResetSelectedRows: false,
       autoResetSortBy: false,
+      autoResetPage: false,
+      autoResetGlobalFilter: false,
       // -------------------------------------
-      initialState: {
-        pageSize,
-        ...initialState,
-      },
+      initialState: { pageSize, ...initialState },
     },
     useGlobalFilter,
     useFilters,
@@ -121,21 +126,42 @@ const EnhancedTable = ({
     getTableProps,
     prepareRow,
     toggleAllRowsSelected,
-    preFilteredRows,
+    preGlobalFilteredRowsById,
     rows,
     page,
     gotoPage,
     pageCount,
-    state: { pageIndex, selectedRowIds },
+    setFilter,
+    setAllFilters,
+    setSortBy,
+    setGlobalFilter,
+    state,
   } = useTableProps
 
-  useMountedLayoutEffect(() => {
-    const selectedRows = preFilteredRows.filter(
-      (row) => !!selectedRowIds[row.id]
-    )
+  const gotoRowPage = async (row) => {
+    const pageIdx = Math.floor(row.index / pageSize)
 
-    onSelectedRowsChange?.(selectedRows)
-  }, [selectedRowIds])
+    await gotoPage(pageIdx)
+
+    // scroll to the row in the table view (if it's visible)
+    document
+      ?.querySelector(`.selected[role='row'][data-cy$='-${row.id}']`)
+      ?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  }
+
+  const selectedRows = useMemo(() => {
+    const selectedIds = Object.keys(state.selectedRowIds ?? {})
+
+    return selectedIds
+      .map((id) => preGlobalFilteredRowsById[id])
+      .filter(Boolean)
+  }, [state.selectedRowIds])
+
+  useMountedLayoutEffect(() => {
+    onSelectedRowsChange?.(
+      selectedRows.map((row) => ({ ...row, gotoPage: () => gotoRowPage(row) }))
+    )
+  }, [state.selectedRowIds])
 
   const handleChangePage = (newPage) => {
     gotoPage(newPage)
@@ -143,8 +169,22 @@ const EnhancedTable = ({
     const canNextPage =
       pageCount === -1 ? page.length >= pageSize : newPage < pageCount - 1
 
-    newPage > pageIndex && !canNextPage && fetchMore?.()
+    newPage > state.pageIndex && !canNextPage && fetchMore?.()
   }
+
+  const handleResetFilters = () => {
+    setGlobalFilter()
+    setAllFilters([])
+    setSortBy([])
+  }
+
+  const cannotFilterByLabel = useMemo(
+    () =>
+      disableGlobalLabel || !columns.some((col) => col.id === LABEL_COLUMN_ID),
+    [disableGlobalLabel]
+  )
+
+  const canResetFilter = state.filters?.length > 0 || state.sortBy?.length > 0
 
   return (
     <Box
@@ -161,6 +201,7 @@ const EnhancedTable = ({
           singleSelect={singleSelect}
           disableRowSelect={disableRowSelect}
           globalActions={globalActions}
+          selectedRows={selectedRows}
           useTableProps={useTableProps}
         />
 
@@ -182,26 +223,52 @@ const EnhancedTable = ({
 
         {/* FILTERS */}
         <div className={styles.filters}>
-          <GlobalFilter useTableProps={useTableProps} />
-          {!disableGlobalSort && <GlobalSort useTableProps={useTableProps} />}
+          {!cannotFilterByLabel && (
+            <GlobalLabel
+              {...useTableProps}
+              selectedRows={selectedRows}
+              useUpdateMutation={useUpdateMutation}
+            />
+          )}
+          <GlobalFilter {...useTableProps} />
+          {!disableGlobalSort && <GlobalSort {...useTableProps} />}
         </div>
 
         {/* SELECTED ROWS */}
         {displaySelectedRows && (
           <div>
-            <GlobalSelectedRows useTableProps={useTableProps} />
+            <GlobalSelectedRows
+              useTableProps={useTableProps}
+              gotoRowPage={gotoRowPage}
+            />
           </div>
         )}
       </div>
 
+      {/* RESET FILTERS */}
+      <Chip
+        label={<Translate word={T.ResetFilters} />}
+        onClick={canResetFilter ? handleResetFilters : undefined}
+        icon={<RemoveIcon />}
+        sx={{
+          visibility: canResetFilter ? 'visible' : 'hidden',
+          width: 'fit-content',
+          padding: '0.75em',
+          marginBottom: '0.5em',
+        }}
+      />
+
       <div className={clsx(styles.body, classes.body)}>
         {/* NO DATA MESSAGE */}
-        {!isLoading && !isUninitialized && page?.length === 0 && (
-          <span className={styles.noDataMessage}>
-            <InfoEmpty />
-            <Translate word={T.NoDataAvailable} />
-          </span>
-        )}
+        {!isLoading &&
+          !isUninitialized &&
+          page?.length === 0 &&
+          (noDataMessage || (
+            <span className={styles.noDataMessage}>
+              <InfoEmpty />
+              <Translate word={T.NoDataAvailable} />
+            </span>
+          ))}
 
         {/* DATALIST PER PAGE */}
         {page.map((row) => {
@@ -224,6 +291,18 @@ const EnhancedTable = ({
               original={original}
               value={values}
               className={isSelected ? 'selected' : ''}
+              {...(!cannotFilterByLabel && {
+                onClickLabel: (label) => {
+                  const currentFilter =
+                    state.filters
+                      ?.filter(({ id }) => id === LABEL_COLUMN_ID)
+                      ?.map(({ value }) => value)
+                      ?.flat() || []
+
+                  const nextFilter = [...new Set([...currentFilter, label])]
+                  setFilter(LABEL_COLUMN_ID, nextFilter)
+                },
+              })}
               onClick={() => {
                 typeof onRowClick === 'function' && onRowClick(original)
 
@@ -261,15 +340,22 @@ EnhancedTable.propTypes = {
   }),
   refetch: PropTypes.func,
   isLoading: PropTypes.bool,
+  disableGlobalLabel: PropTypes.bool,
   disableGlobalSort: PropTypes.bool,
   disableRowSelect: PropTypes.bool,
   displaySelectedRows: PropTypes.bool,
+  useUpdateMutation: PropTypes.func,
   onSelectedRowsChange: PropTypes.func,
   onRowClick: PropTypes.func,
   pageSize: PropTypes.number,
   RowComponent: PropTypes.any,
   showPageCount: PropTypes.bool,
   singleSelect: PropTypes.bool,
+  noDataMessage: PropTypes.oneOfType([
+    PropTypes.string,
+    PropTypes.node,
+    PropTypes.bool,
+  ]),
 }
 
 export * from 'client/components/Tables/Enhanced/Utils'

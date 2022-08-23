@@ -22,6 +22,7 @@ import {
   TabsProps,
   Tab as MTab,
   Fade,
+  Stack,
 } from '@mui/material'
 import { WarningCircledOutline } from 'iconoir-react'
 
@@ -55,7 +56,7 @@ const Content = ({
     key={`tab-${id ?? name}`}
     data-cy={`tab-content-${id ?? name}`}
     hidden={hidden}
-    border={addBorder}
+    border={addBorder ? 'true' : undefined}
   >
     <Fade in timeout={400}>
       <TabContent sx={{ p: '1em .5em' }}>
@@ -90,6 +91,7 @@ const Tabs = ({
       <MTabs
         value={tabSelected}
         variant="scrollable"
+        allowScrollButtonsMobile
         scrollButtons="auto"
         onChange={(_, tab) => setTab(tab)}
         sx={{
@@ -100,16 +102,19 @@ const Tabs = ({
         }}
         {...tabsProps}
       >
-        {tabs.map(({ id, value, name, label, error, icon: Icon }, idx) => (
-          <MTab
-            key={`tab-${name}`}
-            id={`tab-${name}`}
-            icon={error ? <WarningIcon /> : Icon && <Icon />}
-            value={value ?? idx}
-            label={label ?? name}
-            data-cy={`tab-${id}`}
-          />
-        ))}
+        {tabs.map(
+          ({ value, name, id = name, label, error, icon: Icon }, idx) => (
+            <MTab
+              key={`tab-${id}`}
+              id={`tab-${id}`}
+              iconPosition="start"
+              icon={error ? <WarningIcon /> : Icon && <Icon />}
+              value={value ?? idx}
+              label={label ?? id}
+              data-cy={`tab-${id}`}
+            />
+          )
+        )}
       </MTabs>
     ),
     [tabs, tabSelected]
@@ -133,7 +138,7 @@ const Tabs = ({
     .indexOf('log')
 
   return (
-    <>
+    <Stack height={1} overflow="auto">
       <Fade in timeout={300}>
         {renderTabs}
       </Fade>
@@ -147,7 +152,7 @@ const Tabs = ({
           logTabId={logTabId}
         />
       )}
-    </>
+    </Stack>
   )
 }
 

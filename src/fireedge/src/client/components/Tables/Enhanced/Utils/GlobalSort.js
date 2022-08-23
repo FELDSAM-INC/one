@@ -13,16 +13,12 @@
  * See the License for the specific language governing permissions and       *
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
-import { useEffect, useMemo, ReactElement } from 'react'
+import { ReactElement, useEffect, useMemo, memo } from 'react'
 import PropTypes from 'prop-types'
 
 import { SortDown, ArrowDown, ArrowUp } from 'iconoir-react'
-import { MenuItem, MenuList, Chip, Stack } from '@mui/material'
-import {
-  TableInstance,
-  UseSortByInstanceProps,
-  UseSortByState,
-} from 'react-table'
+import { MenuItem, MenuList, Stack } from '@mui/material'
+import { UseSortByInstanceProps, UseSortByState } from 'react-table'
 
 import HeaderPopover from 'client/components/Header/Popover'
 import { Translate } from 'client/components/HOC'
@@ -31,92 +27,80 @@ import { T } from 'client/constants'
 /**
  * Render all selected sorters.
  *
- * @param {object} props - Props
- * @param {string} [props.className] - Class name for the container
- * @param {TableInstance} props.useTableProps - Table props
  * @returns {ReactElement} Component JSX
  */
-const GlobalSort = ({ className, useTableProps }) => {
-  const { headers, state } = useTableProps
+const GlobalSort = memo(
+  (useTableProps) => {
+    /** @type {UseSortByInstanceProps} */
+    const { headers, state } = useTableProps
 
-  /** @type {UseSortByInstanceProps} */
-  const { setSortBy } = useTableProps
+    /** @type {UseSortByInstanceProps} */
+    const { setSortBy } = useTableProps
 
-  /** @type {UseSortByState} */
-  const { sortBy } = state
+    /** @type {UseSortByState} */
+    const { sortBy } = state
 
-  const headersNotSorted = useMemo(
-    () =>
-      headers.filter(
-        ({ isSorted, canSort, isVisible }) => !isSorted && canSort && isVisible
-      ),
-    [sortBy.length]
-  )
+    const sorters = useMemo(
+      () =>
+        headers
+          .filter((header) => header.canSort && header.isVisible)
+          .map((header) => {
+            const sorter = sortBy.find((s) => s.id === header.id)
 
-  const handleClick = (id, name) => {
-    setSortBy([{ id, desc: false, name }, ...sortBy])
-  }
+            return { ...header, ...sorter }
+          }),
+      [headers.length, sortBy?.[0]?.id, sortBy?.[0]?.desc]
+    )
 
-  const handleDelete = (removeId) => {
-    setSortBy(sortBy.filter(({ id }) => id !== removeId))
-  }
+    const handleClick = (id, name, prevDesc = true) => {
+      setSortBy([{ id, desc: !prevDesc, name }])
+    }
 
-  const handleToggle = (id, desc) => {
-    setSortBy(sortBy.map((sort) => (sort.id === id ? { ...sort, desc } : sort)))
-  }
+    useEffect(() => () => setSortBy([]), [])
 
-  useEffect(() => () => setSortBy([]), [])
+    if (sorters.length === 0) {
+      return null
+    }
 
-  return !headersNotSorted.length && !sortBy.length ? null : (
-    <Stack className={className} direction="row" gap="0.5em" flexWrap="wrap">
-      {useMemo(
-        () => (
-          <HeaderPopover
-            id="sort-by-button"
-            icon={<SortDown />}
-            buttonLabel={T.SortBy}
-            buttonProps={{
-              'data-cy': 'sort-by-button',
-              disabled: headersNotSorted.length === 0,
-              variant: 'outlined',
-              color: 'secondary',
-            }}
-            popperProps={{ placement: 'bottom-end' }}
-          >
-            {() => (
-              <MenuList>
-                {headersNotSorted?.map(({ id, Header: name }) => (
-                  <MenuItem key={id} onClick={() => handleClick(id, name)}>
-                    <Translate word={name} />
-                  </MenuItem>
-                ))}
-              </MenuList>
-            )}
-          </HeaderPopover>
-        ),
-        [headersNotSorted.length]
-      )}
-
-      {useMemo(
-        () =>
-          sortBy?.map(({ name, id, desc }) => (
-            <Chip
-              key={`${id}-${desc ? 'desc' : 'asc'}`}
-              icon={desc ? <ArrowUp /> : <ArrowDown />}
-              label={name ?? id}
-              onClick={() => handleToggle(id, !desc)}
-              onDelete={() => handleDelete(id)}
-            />
-          )),
-        [sortBy.length, handleToggle]
-      )}
-    </Stack>
-  )
-}
+    return (
+      <Stack direction="row" gap="0.5em" flexWrap="wrap">
+        <HeaderPopover
+          id="sort-by-button"
+          icon={<SortDown />}
+          headerTitle={T.SortBy}
+          buttonLabel={T.Sort}
+          buttonProps={{
+            'data-cy': 'sort-by-button',
+            disableElevation: true,
+            variant: sortBy?.length > 0 ? 'contained' : 'outlined',
+            color: 'secondary',
+          }}
+          popperProps={{ placement: 'bottom-end' }}
+        >
+          {() => (
+            <MenuList>
+              {sorters?.map(({ id, Header: name, desc }) => (
+                <MenuItem key={id} onClick={() => handleClick(id, name, desc)}>
+                  {desc !== undefined && (desc ? <ArrowUp /> : <ArrowDown />)}
+                  <Translate word={name} />
+                </MenuItem>
+              ))}
+            </MenuList>
+          )}
+        </HeaderPopover>
+      </Stack>
+    )
+  },
+  (next, prev) =>
+    next.headers?.length === prev.headers?.length &&
+    next.state?.sortBy === prev.state?.sortBy
+)
 
 GlobalSort.propTypes = {
-  className: PropTypes.string,
-  useTableProps: PropTypes.object.isRequired,
+  preFilteredRows: PropTypes.array,
+  state: PropTypes.object,
 }
+
+GlobalSort.displayName = 'GlobalSort'
 
 export default GlobalSort

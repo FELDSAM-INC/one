@@ -13,12 +13,16 @@
  * See the License for the specific language governing permissions and       *
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
-/* eslint-disable jsdoc/require-jsdoc */
+import { ReactElement } from 'react'
 import { useParams, Redirect } from 'react-router-dom'
-import { Container, Box } from '@mui/material'
 
 import VmTabs from 'client/components/Tabs/Vm'
 
+/**
+ * Displays the detail information about a Virtual Machine.
+ *
+ * @returns {ReactElement} Virtual Machine detail component.
+ */
 function VirtualMachineDetail() {
   const { id } = useParams()
 
@@ -26,17 +30,7 @@ function VirtualMachineDetail() {
     return <Redirect to="/" />
   }
 
-  return (
-    <Box
-      py={2}
-      overflow="auto"
-      display="flex"
-      flexDirection="column"
-      component={Container}
-    >
-      <VmTabs id={id} />
-    </Box>
-  )
+  return <VmTabs id={id} />
 }
 
 export default VirtualMachineDetail

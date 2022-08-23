@@ -15,7 +15,6 @@
  * ------------------------------------------------------------------------- */
 import { ReactElement } from 'react'
 import PropTypes from 'prop-types'
-import { Container, Stack } from '@mui/material'
 import { useHistory, generatePath } from 'react-router-dom'
 
 import { PATH } from 'client/apps/sunstone/routesOne'
@@ -32,7 +31,7 @@ import { VmsTable } from 'client/components/Tables'
  * @returns {ReactElement} Information tab
  */
 const VmsInfoTab = ({ id }) => {
-  const { data: host = {} } = useGetHostQuery(id)
+  const { data: host = {} } = useGetHostQuery({ id })
   const path = PATH.INSTANCE.VMS.DETAIL
   const history = useHistory()
 
@@ -41,14 +40,12 @@ const VmsInfoTab = ({ id }) => {
   }
 
   return (
-    <Stack height={1} py={2} overflow="auto" component={Container}>
-      <VmsTable
-        disableRowSelect
-        disableGlobalSort
-        host={host}
-        onRowClick={(row) => handleRowClick(row.ID)}
-      />
-    </Stack>
+    <VmsTable
+      disableRowSelect
+      disableGlobalSort
+      host={host}
+      onRowClick={(row) => handleRowClick(row.ID)}
+    />
   )
 }
 

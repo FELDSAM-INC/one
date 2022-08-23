@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and       *
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
-import { DateTime } from 'luxon'
+import { DateTime, Settings } from 'luxon'
 import {
   parse as ParserToJson,
   X2jOptions,
@@ -21,12 +21,13 @@ import {
   J2xOptions,
 } from 'fast-xml-parser'
 
-import { camelCase } from 'client/utils'
+import { sentenceCase } from 'client/utils'
 import {
   T,
+  Permission,
   UserInputObject,
   USER_INPUT_TYPES,
-  SERVER_CONFIG,
+  CURRENCY,
 } from 'client/constants'
 
 /**
@@ -78,7 +79,7 @@ export const booleanToString = (bool) => (bool ? T.Yes : T.No)
  * in other cases, return false.
  */
 export const stringToBoolean = (str) =>
-  String(str).toLowerCase() === 'yes' || +str === 1
+  ['yes', 'true'].includes(String(str).toLowerCase()) || +str === 1
 
 /**
  * Formats a number into a string according to the currency configuration.
@@ -89,12 +90,9 @@ export const stringToBoolean = (str) =>
  */
 export const formatNumberByCurrency = (number, options) => {
   try {
-    const currency = SERVER_CONFIG?.currency ?? 'EUR'
-    const locale = SERVER_CONFIG?.lang?.replace('_', '-') ?? undefined
-
-    return Intl.NumberFormat(locale, {
+    return Intl.NumberFormat(Settings.defaultLocale, {
       style: 'currency',
-      currency,
+      currency: CURRENCY,
       currencyDisplay: 'narrowSymbol',
       notation: 'compact',
       compactDisplay: 'long',
@@ -103,6 +101,28 @@ export const formatNumberByCurrency = (number, options) => {
     }).format(number)
   } catch {
     return number.toString()
+  }
+}
+
+/**
+ * Function to compare two values.
+ *
+ * @param {Intl.CollatorOptions} options - Options to compare the values
+ * @returns {function(string, string)} - Function to compare two strings
+ * Negative when the referenceStr occurs before compareString
+ * Positive when the referenceStr occurs after compareString
+ * Returns 0 if they are equivalent
+ */
+export const areStringEqual = (options) => (a, b) => {
+  try {
+    const collator = new Intl.Collator(Settings.defaultLocale, {
+      sensitivity: 'base',
+      ...options,
+    })
+
+    return collator.compare(a, b)
+  } catch {
+    return -1
   }
 }
 
@@ -208,9 +228,9 @@ export const levelLockToString = (level) =>
  * Returns the permission numeric code.
  *
  * @param {string[]} category - Array with Use, Manage and Access permissions.
- * @param {('YES'|'NO')} category.0 - `true` if use permission is allowed
- * @param {('YES'|'NO')} category.1 - `true` if manage permission is allowed
- * @param {('YES'|'NO')} category.2 - `true` if access permission is allowed
+ * @param {Permission} category.0 - `true` or `1` if use permission is allowed
+ * @param {Permission} category.1 - `true` or `1` if manage permission is allowed
+ * @param {Permission} category.2 - `true` or `1` if access permission is allowed
  * @returns {number} Permission code number.
  */
 const getCategoryValue = ([u, m, a]) =>
@@ -222,15 +242,15 @@ const getCategoryValue = ([u, m, a]) =>
  * Transform the permission from OpenNebula template to octal format.
  *
  * @param {object} permissions - Permissions object.
- * @param {('YES'|'NO')} permissions.OWNER_U - Owner use permission.
- * @param {('YES'|'NO')} permissions.OWNER_M - Owner manage permission.
- * @param {('YES'|'NO')} permissions.OWNER_A - Owner access permission.
- * @param {('YES'|'NO')} permissions.GROUP_U - Group use permission.
- * @param {('YES'|'NO')} permissions.GROUP_M - Group manage permission.
- * @param {('YES'|'NO')} permissions.GROUP_A - Group access permission.
- * @param {('YES'|'NO')} permissions.OTHER_U - Other use permission.
- * @param {('YES'|'NO')} permissions.OTHER_M - Other manage permission.
- * @param {('YES'|'NO')} permissions.OTHER_A - Other access permission.
+ * @param {Permission} permissions.OWNER_U - Owner use
+ * @param {Permission} permissions.OWNER_M - Owner manage
+ * @param {Permission} permissions.OWNER_A - Owner access
+ * @param {Permission} permissions.GROUP_U - Group use
+ * @param {Permission} permissions.GROUP_M - Group manage
+ * @param {Permission} permissions.GROUP_A - Group access
+ * @param {Permission} permissions.OTHER_U - Other use
+ * @param {Permission} permissions.OTHER_M - Other manage
+ * @param {Permission} permissions.OTHER_A - Other access
  * @returns {string} - Permissions in octal format.
  */
 export const permissionsToOctal = (permissions) => {
@@ -267,9 +287,18 @@ export const getActionsAvailable = (actions = {}, hypervisor = '') =>
     .filter(([_, action]) => {
       if (typeof action === 'boolean') return action
 
-      const { enabled = false, not_on: notOn = [] } = action || {}
+      const {
+        enabled = false,
+        not_on: notOn = [],
+        only_on: onlyOn = [],
+      } = action || {}
 
-      return !!enabled && !notOn?.includes?.(hypervisor)
+      return (
+        !!enabled &&
+        ((!notOn && !onlyOn) ||
+          (notOn && !notOn?.includes?.(hypervisor)) ||
+          onlyOn?.includes?.(hypervisor))
+      )
     })
     .map(([actionName, _]) => actionName)
 
@@ -289,12 +318,11 @@ export const getAvailableInfoTabs = (infoTabs = {}, getTabComponent, id) =>
   Object.entries(infoTabs)
     ?.filter(([_, { enabled } = {}]) => !!enabled)
     ?.map(([tabName, tabProps]) => {
-      const camelName = camelCase(tabName)
-      const TabContent = getTabComponent?.(camelName)
+      const TabContent = getTabComponent?.(tabName)
 
       return (
         TabContent && {
-          name: camelName,
+          label: TabContent?.label ?? sentenceCase(tabName),
           id: tabName,
           renderContent: () => <TabContent tabProps={tabProps} id={id} />,
         }
@@ -530,4 +558,16 @@ export const getColorFromString = (text, options = {}) => {
   const hex = ((base * ensuredText.length) % SEED).toString(16)
 
   return `#${hex.padEnd(6, hex)}`
+}
+
+/**
+ * @param {object} resource - OpenNebula resource
+ * @returns {string} Error message from resource
+ */
+export const getErrorMessage = (resource) => {
+  const { USER_TEMPLATE, TEMPLATE } = resource ?? {}
+  const { ERROR, SCHED_MESSAGE } = USER_TEMPLATE ?? {}
+  const { ERROR: templateError } = TEMPLATE ?? {}
+
+  return [ERROR, SCHED_MESSAGE, templateError].filter(Boolean)[0]
 }

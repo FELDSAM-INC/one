@@ -93,6 +93,7 @@ const FieldComponent = memo(
         variant="outlined"
         onKeyDown={handleKeyDown}
         helperText={<Translate word={T.PressEscapeToCancel} />}
+        inputProps={{ 'data-cy': `settings-ui-text-${name}` }}
         {...register(name, { onBlur: handleBlur, shouldUnregister: true })}
       />
     )
@@ -195,7 +196,10 @@ const Settings = () => {
   }
 
   return (
-    <Paper variant="outlined" sx={{ py: '1.5em' }}>
+    <Paper
+      variant="outlined"
+      sx={{ overflow: 'auto', py: '1.5em', gridColumn: { md: 'span 2' } }}
+    >
       <FormProvider {...methods}>
         <Stack gap="1em">
           {FIELDS.map((field) => (
@@ -203,6 +207,7 @@ const Settings = () => {
               component="fieldset"
               key={'settings-authentication-field-' + field.name}
               sx={{ minInlineSize: 'auto' }}
+              data-cy={`settings-ui-${field.name}`}
             >
               <Legend title={field.label} />
               {isEnabled[field.name] ? (

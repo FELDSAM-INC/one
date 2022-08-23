@@ -158,11 +158,11 @@ module.exports = {
           from: resource,
           default: 0,
         },
-        userId: {
+        user: {
           from: postBody,
           default: -1,
         },
-        groupId: {
+        group: {
           from: postBody,
           default: -1,
         },
@@ -222,7 +222,7 @@ module.exports = {
       params: {
         filter: {
           from: query,
-          default: -1,
+          default: -2,
         },
         start: {
           from: query,

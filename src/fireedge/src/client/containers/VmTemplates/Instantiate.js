@@ -15,7 +15,6 @@
  * ------------------------------------------------------------------------- */
 import { ReactElement } from 'react'
 import { useHistory, useLocation, Redirect } from 'react-router'
-import { Container } from '@mui/material'
 
 import { useGeneralApi } from 'client/features/General'
 import {
@@ -39,30 +38,28 @@ import { PATH } from 'client/apps/sunstone/routesOne'
  */
 function InstantiateVmTemplate() {
   const history = useHistory()
-  const { state: { ID: templateId } = {} } = useLocation()
+  const { state: { ID: templateId, NAME: templateName } = {} } = useLocation()
 
   const { enqueueInfo } = useGeneralApi()
   const [instantiate] = useInstantiateTemplateMutation()
 
+  const { data, isError } = useGetTemplateQuery(
+    { id: templateId, extended: true },
+    { skip: templateId === undefined, refetchOnMountOrArgChange: false }
+  )
+
   useGetUsersQuery(undefined, { refetchOnMountOrArgChange: false })
   useGetGroupsQuery(undefined, { refetchOnMountOrArgChange: false })
 
-  const { data, isError } = useGetTemplateQuery(
-    { id: templateId, extended: true },
-    { refetchOnMountOrArgChange: false }
-  )
-
-  const onSubmit = async ([templateSelected, templates]) => {
+  const onSubmit = async (templates) => {
     try {
-      const { ID, NAME } = templateSelected
-      const templatesWithId = templates.map((t) => ({ id: ID, ...t }))
-
-      await Promise.all(templatesWithId.map(instantiate))
+      await Promise.all(templates.map((t) => instantiate(t).unwrap()))
 
       history.push(PATH.INSTANCE.VMS.LIST)
 
       const total = templates.length
-      enqueueInfo(`VM Template instantiated x${total} - #${ID} ${NAME}`)
+      const templateInfo = `#${templateId} ${templateName}`
+      enqueueInfo(`VM Template instantiated x${total} - ${templateInfo}`)
     } catch {}
   }
 
@@ -70,21 +67,17 @@ function InstantiateVmTemplate() {
     return <Redirect to={PATH.TEMPLATE.VMS.LIST} />
   }
 
-  return (
-    <Container sx={{ display: 'flex', flexFlow: 'column' }} disableGutters>
-      {!data ? (
-        <SkeletonStepsForm />
-      ) : (
-        <InstantiateForm
-          initialValues={data}
-          stepProps={data}
-          onSubmit={onSubmit}
-          fallback={<SkeletonStepsForm />}
-        >
-          {(config) => <DefaultFormStepper {...config} />}
-        </InstantiateForm>
-      )}
-    </Container>
+  return !data ? (
+    <SkeletonStepsForm />
+  ) : (
+    <InstantiateForm
+      initialValues={data}
+      stepProps={data}
+      onSubmit={onSubmit}
+      fallback={<SkeletonStepsForm />}
+    >
+      {(config) => <DefaultFormStepper {...config} />}
+    </InstantiateForm>
   )
 }
 

@@ -60,7 +60,7 @@ const {
  * @returns {ReactElement} Storage tab
  */
 const VmStorageTab = ({ tabProps: { actions } = {}, id }) => {
-  const { data: vm = {} } = useGetVmQuery(id)
+  const { data: vm = {} } = useGetVmQuery({ id })
 
   const [disks, hypervisor, actionsAvailable] = useMemo(() => {
     const hyperV = getHypervisor(vm)
@@ -78,7 +78,7 @@ const VmStorageTab = ({ tabProps: { actions } = {}, id }) => {
         <AttachAction vmId={id} hypervisor={hypervisor} />
       )}
 
-      <Stack direction="column" gap="1em" py="0.8em">
+      <Stack gap="1em" py="0.8em">
         {disks.map((disk) => {
           const isImage = disk.IMAGE_ID !== undefined
           const imageName = getDiskName(disk)

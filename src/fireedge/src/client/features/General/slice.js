@@ -15,14 +15,13 @@
  * ------------------------------------------------------------------------- */
 import { createSlice } from '@reduxjs/toolkit'
 
-import { actions as authActions } from 'client/features/Auth/slice'
+import { logout } from 'client/features/Auth/slice'
 import * as actions from 'client/features/General/actions'
 import { generateKey } from 'client/utils'
 import { APPS_IN_BETA, APPS_WITH_SWITCHER } from 'client/constants'
 
 const initial = {
   zone: 0,
-  title: null,
   appTitle: null,
   isBeta: false,
   withGroupSwitcher: false,
@@ -31,13 +30,13 @@ const initial = {
   notifications: [],
 }
 
-const { name, reducer } = createSlice({
+const slice = createSlice({
   name: 'general',
   initialState: initial,
   extraReducers: (builder) => {
     builder
       /* LOGOUT ACTION */
-      .addCase(authActions.logout, (state) => ({
+      .addCase(logout, (state) => ({
         ...initial,
         // persistent app state
         appTitle: state.appTitle,
@@ -53,10 +52,6 @@ const { name, reducer } = createSlice({
       .addCase(actions.changeLoading, (state, { payload }) => ({
         ...state,
         isLoading: !!payload,
-      }))
-      .addCase(actions.changeTitle, (state, { payload }) => ({
-        ...state,
-        title: payload,
       }))
       .addCase(actions.changeAppTitle, (state, { payload: appTitle }) => {
         const lowerAppTitle = String(appTitle).toLowerCase()
@@ -132,4 +127,4 @@ const { name, reducer } = createSlice({
   },
 })
 
-export { name, reducer }
+export const { name, reducer } = slice

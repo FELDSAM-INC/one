@@ -170,7 +170,7 @@ const downloadApp = (
           )
           const execChild = exec(
             downloadCmd,
-            { maxBuffer: 1024 ** 3 },
+            { maxBuffer: 1024 ** 3, encoding: '' },
             (error) => {
               error &&
                 writeInLogger(error) &&
@@ -206,7 +206,7 @@ const importMarket = (res = {}, next = defaultEmptyFunction, params = {}) => {
   let rtn = httpBadRequest
   const { resource, id, marketId, associated, vmname } = params
 
-  if (id && ['vm', 'vm-template'].includes(params.resource)) {
+  if (id && ['vm', 'vm-template'].includes(resource)) {
     let message = ''
     const paramsCommand = [resource, 'import', `${id}`]
 

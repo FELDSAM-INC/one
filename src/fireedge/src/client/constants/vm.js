@@ -713,7 +713,6 @@ export const VM_LCM_STATES = [
 
 /** @enum {string} Virtual machine actions */
 export const VM_ACTIONS = {
-  REFRESH: ACTIONS.REFRESH,
   CREATE_DIALOG: 'create_dialog',
   CREATE_APP_DIALOG: 'create_app_dialog',
   DEPLOY: 'deploy',
@@ -1151,3 +1150,22 @@ export const EXTERNAL_IP_ATTRS = [
   'AZ_IPADDRESS',
   'SL_PRIMARYIPADDRESS',
 ]
+
+/** @enum {string[]} Supported configuration attributes in the VM */
+export const ATTR_CONF_CAN_BE_UPDATED = {
+  OS: [
+    'ARCH',
+    'MACHINE',
+    'KERNEL',
+    'INITRD',
+    'BOOTLOADER',
+    'BOOT',
+    'SD_DISK_BUS',
+    'UUID',
+  ],
+  FEATURES: ['ACPI', 'PAE', 'APIC', 'LOCALTIME', 'HYPERV', 'GUEST_AGENT'],
+  INPUT: ['TYPE', 'BUS'],
+  GRAPHICS: ['TYPE', 'LISTEN', 'PASSWD', 'KEYMAP'],
+  RAW: ['DATA', 'DATA_VMX', 'TYPE'],
+  CONTEXT: '*',
+}

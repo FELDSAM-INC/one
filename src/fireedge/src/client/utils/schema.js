@@ -17,6 +17,7 @@
 
 // eslint-disable-next-line no-unused-vars
 import { ReactElement, SetStateAction } from 'react'
+
 import {
   // eslint-disable-next-line no-unused-vars
   GridProps,
@@ -174,6 +175,7 @@ import { stringToBoolean } from 'client/models/Helper'
  * @typedef {object} ExtraParams
  * @property {function(object):object} [transformBeforeSubmit] - Transform validated form data after submit
  * @property {function(object, BaseSchema):object} [transformInitialValue] - Transform initial value after load form
+ * @property {ReactElement} [ContentForm] - Render content of form
  */
 
 /**
@@ -222,7 +224,7 @@ const getValuesFromArray = (options, separator = SEMICOLON_CHAR) =>
   options?.split(separator)
 
 const getOptionsFromList = (options = []) =>
-  arrayToOptions([...new Set(options)])
+  arrayToOptions([...new Set(options)], { addEmpty: false })
 
 const parseUserInputValue = (value) => {
   if (value === true) {
@@ -475,6 +477,7 @@ export const createSteps =
       steps: performedSteps,
       defaultValues,
       resolver: generateSchema,
+      initialValues,
       ...extraParams,
     }
   }
@@ -499,6 +502,7 @@ export const createForm =
     const {
       transformBeforeSubmit,
       transformInitialValue = defaultTransformInitialValue,
+      ContentForm,
       ...restOfParams
     } = extraParams
 
@@ -518,6 +522,7 @@ export const createForm =
       fields: () => fieldsCallback,
       defaultValues,
       transformBeforeSubmit,
+      ContentForm: ContentForm && (() => <ContentForm {...props} />),
       ...ensuredExtraParams,
     }
   }

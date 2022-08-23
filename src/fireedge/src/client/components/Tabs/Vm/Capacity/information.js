@@ -13,29 +13,53 @@
  * See the License for the specific language governing permissions and       *
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
-/* eslint-disable jsdoc/require-jsdoc */
+import { useMemo, ReactElement } from 'react'
 import PropTypes from 'prop-types'
-import { Paper, Typography } from '@mui/material'
+import { Typography } from '@mui/material'
 
 import ButtonToTriggerForm from 'client/components/Forms/ButtonToTriggerForm'
 import { ResizeCapacityForm } from 'client/components/Forms/Vm'
-import { Tr } from 'client/components/HOC'
+import { Tr, Translate } from 'client/components/HOC'
 import useCapacityTabStyles from 'client/components/Tabs/Vm/Capacity/styles'
 
-import * as VirtualMachine from 'client/models/VirtualMachine'
+import { isVCenter } from 'client/models/VirtualMachine'
+import { formatNumberByCurrency } from 'client/models/Helper'
 import { prettyBytes } from 'client/utils'
-import { T, VM_ACTIONS } from 'client/constants'
+import { T, VM_ACTIONS, VM } from 'client/constants'
 
+/**
+ * Renders capacity information.
+ *
+ * @param {object} props - Props
+ * @param {string[]} props.actions - Actions tab
+ * @param {VM} props.vm - Virtual Machine id
+ * @param {string} props.handleResizeCapacity - Resize capacity
+ * @returns {ReactElement} Capacity information
+ */
 const InformationPanel = ({ actions, vm = {}, handleResizeCapacity }) => {
   const classes = useCapacityTabStyles()
   const { TEMPLATE } = vm
 
-  const isVCenter = VirtualMachine.isVCenter(vm)
+  const memory = TEMPLATE?.MEMORY
+  const memoryCost = useMemo(() => {
+    const cost = TEMPLATE?.MEMORY_COST || 0
+    const monthCost = formatNumberByCurrency(memory * cost * 24 * 30)
+
+    return <Translate word={T.CostEachMonth} values={[monthCost]} />
+  }, [memory, TEMPLATE?.MEMORY_COST])
+
+  const cpu = TEMPLATE?.CPU
+  const cpuCost = useMemo(() => {
+    const cost = TEMPLATE?.CPU_COST || 0
+    const monthCost = formatNumberByCurrency(cpu * cost * 24 * 30)
+
+    return <Translate word={T.CostEachMonth} values={[monthCost]} />
+  }, [cpu, TEMPLATE?.CPU_COST])
 
   const capacity = [
     {
       name: T.PhysicalCpu,
-      value: TEMPLATE?.CPU,
+      value: cpu,
       dataCy: 'cpu',
     },
     {
@@ -43,7 +67,7 @@ const InformationPanel = ({ actions, vm = {}, handleResizeCapacity }) => {
       value: TEMPLATE?.VCPU ?? '-',
       dataCy: 'virtualcpu',
     },
-    isVCenter && {
+    isVCenter(vm) && {
       name: T.VirtualCores,
       value: (
         <>
@@ -55,23 +79,23 @@ const InformationPanel = ({ actions, vm = {}, handleResizeCapacity }) => {
     },
     {
       name: T.Memory,
-      value: prettyBytes(+TEMPLATE?.MEMORY, 'MB'),
+      value: prettyBytes(+memory, 'MB'),
       dataCy: 'memory',
     },
     {
       name: T.CostCpu,
-      value: TEMPLATE?.CPU_COST || 0,
+      value: cpuCost,
       dataCy: 'cpucost',
     },
     {
-      name: T.CostMByte,
-      value: TEMPLATE?.MEMORY_COST || 0,
+      name: T.CostMemory,
+      value: memoryCost,
       dataCy: 'memorycost',
     },
   ].filter(Boolean)
 
   return (
-    <Paper variant="outlined" className={classes.root}>
+    <div className={classes.root}>
       <div className={classes.actions}>
         {actions?.includes?.(VM_ACTIONS.RESIZE_CAPACITY) && (
           <ButtonToTriggerForm
@@ -83,7 +107,10 @@ const InformationPanel = ({ actions, vm = {}, handleResizeCapacity }) => {
             }}
             options={[
               {
-                dialogProps: { title: T.ResizeCapacity },
+                dialogProps: {
+                  title: T.ResizeCapacity,
+                  dataCy: 'modal-resize-capacity',
+                },
                 form: () => ResizeCapacityForm({ initialValues: vm.TEMPLATE }),
                 onSubmit: handleResizeCapacity,
               },
@@ -93,7 +120,7 @@ const InformationPanel = ({ actions, vm = {}, handleResizeCapacity }) => {
       </div>
       {capacity.map(({ name, value, dataCy }) => (
         <div key={name} className={classes.item}>
-          <Typography className={classes.title} noWrap title={name}>
+          <Typography fontWeight="medium" noWrap title={name}>
             {name}
           </Typography>
           <Typography variant="body2" noWrap title={value} data-cy={dataCy}>
@@ -101,7 +128,7 @@ const InformationPanel = ({ actions, vm = {}, handleResizeCapacity }) => {
           </Typography>
         </div>
       ))}
-    </Paper>
+    </div>
   )
 }
 
