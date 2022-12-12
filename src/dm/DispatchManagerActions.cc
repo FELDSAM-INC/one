@@ -1456,6 +1456,8 @@ int DispatchManager::detach(int vid, int disk_id, const RequestAttributes& ra,
 
     vm->set_resched(false);
 
+    vm->set_vm_info();
+
     close_cp_history(vmpool, vm.get(), VMActions::DISK_DETACH_ACTION, ra);
 
     if ( vm->get_state() == VirtualMachine::ACTIVE &&
@@ -1797,6 +1799,8 @@ int DispatchManager::attach_nic(int vid, VirtualMachineTemplate* tmpl,
         action = VMActions::ALIAS_ATTACH_ACTION;
     }
 
+    vm->set_vm_info();
+
     close_cp_history(vmpool, vm.get(), action, ra);
 
     if (vm->get_state() == VirtualMachine::ACTIVE)
@@ -1884,6 +1888,8 @@ int DispatchManager::detach_nic(int vid, int nic_id, const RequestAttributes& ra
     {
         action = VMActions::ALIAS_DETACH_ACTION;
     }
+
+    vm->set_vm_info();
 
     close_cp_history(vmpool, vm.get(), action, ra);
 
@@ -2069,6 +2075,8 @@ int DispatchManager::disk_snapshot_revert(int vid, int did, int snap_id,
         NebulaLog::log("DiM", Log::ERROR, error_str);
         return -1;
     }
+
+    vm->set_vm_info();
 
     close_cp_history(vmpool, vm.get(), VMActions::DISK_SNAPSHOT_REVERT_ACTION, ra);
 
