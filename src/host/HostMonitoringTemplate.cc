@@ -29,7 +29,7 @@ using namespace std;
 
 int CapacityMonitoring::from_template(const Template &tmpl)
 {
-    int value;
+    unsigned long value;
     if (tmpl.get("FREECPU", value))
     {
         add("FREE_CPU", value);
@@ -54,7 +54,7 @@ int CapacityMonitoring::from_template(const Template &tmpl)
 
 int SystemMonitoring::from_template(const Template &tmpl)
 {
-    int value;
+    unsigned long value;
     if (tmpl.get("CPUSPEED", value))
     {
         add("CPU_SPEED", value);
