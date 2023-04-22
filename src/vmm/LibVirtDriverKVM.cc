@@ -167,7 +167,9 @@ static void pin_cpu(ofstream& file, const VectorAttribute * topology,
         std::vector<const VectorAttribute *> &nodes)
 {
     HostShare::PinPolicy pp = HostShare::PP_NONE;
+
     unsigned int vcpu_id = 0;
+    int affinity = -1;
 
     std::ostringstream oss;
 
@@ -177,9 +179,11 @@ static void pin_cpu(ofstream& file, const VectorAttribute * topology,
 
         pp_s = topology->vector_value("PIN_POLICY");
         pp   = HostShare::str_to_pin_policy(pp_s);
+
+        topology->vector_value("NODE_AFFINITY", affinity);
     }
 
-    if ( pp == HostShare::PP_NONE )
+    if ( pp == HostShare::PP_NONE && affinity == -1)
     {
         return;
     }
@@ -204,7 +208,8 @@ static void pin_cpu(ofstream& file, const VectorAttribute * topology,
         {
             file << "\t\t<vcpupin vcpu='" << vcpu_id << "' cpuset='";
 
-            if ( pp == HostShare::PP_SHARED )
+            //PP_NONE is used when NUMA affinity is configured
+            if ( pp == HostShare::PP_SHARED || pp == HostShare::PP_NONE )
             {
                 file << cpus << "'/>\n";
             }
@@ -250,7 +255,7 @@ static void vtopol(ofstream& file, const VectorAttribute * topology,
 
         ma = topology->vector_value("MEMORY_ACCESS");
 
-        if (!ma.empty() &&  hpsz_kb != 0)
+        if (!ma.empty() && hpsz_kb != 0)
         {
             one_util::tolower(ma);
 
@@ -321,10 +326,11 @@ static void vtopol(ofstream& file, const VectorAttribute * topology,
     if (!mnodes.str().empty())
     {
         oss << "\t\t<memory mode='strict' nodeset='" << mnodes.str() << "'/>\n";
-        oss << "\t</numatune>\n";
-
-        numatune = oss.str();
     }
+
+    oss << "\t</numatune>\n";
+
+    numatune = oss.str();
 
     if ( hpsz_kb != 0 )
     {
