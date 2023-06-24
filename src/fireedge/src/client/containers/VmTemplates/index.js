@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------------- *
- * Copyright 2002-2022, OpenNebula Project, OpenNebula Systems               *
+ * Copyright 2002-2023, OpenNebula Project, OpenNebula Systems               *
  *                                                                           *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may   *
  * not use this file except in compliance with the License. You may obtain   *
@@ -19,7 +19,10 @@ import { Pin as GotoIcon, RefreshDouble, Cancel } from 'iconoir-react'
 import { Typography, Box, Stack, Chip } from '@mui/material'
 import { Row } from 'react-table'
 
-import { useLazyGetTemplateQuery } from 'client/features/OneApi/vmTemplate'
+import {
+  useLazyGetTemplateQuery,
+  useUpdateTemplateMutation,
+} from 'client/features/OneApi/vmTemplate'
 import { VmTemplatesTable } from 'client/components/Tables'
 import VmTemplateActions from 'client/components/Tables/VmTemplates/actions'
 import VmTemplateTabs from 'client/components/Tabs/VmTemplate'
@@ -44,10 +47,11 @@ function VmTemplates() {
   return (
     <SplitPane gridTemplateRows="1fr auto 1fr">
       {({ getGridProps, GutterComponent }) => (
-        <Box {...(hasSelectedRows && getGridProps())}>
+        <Box height={1} {...(hasSelectedRows && getGridProps())}>
           <VmTemplatesTable
             onSelectedRowsChange={onSelectedRowsChange}
             globalActions={actions}
+            useUpdateMutation={useUpdateTemplateMutation}
           />
 
           {hasSelectedRows && (
@@ -79,17 +83,24 @@ function VmTemplates() {
  * @returns {ReactElement} VM Template details
  */
 const InfoTabs = memo(({ template, gotoPage, unselect }) => {
-  const [getTemplate, { isFetching }] = useLazyGetTemplateQuery()
+  const [getTemplate, { data, isFetching }] = useLazyGetTemplateQuery()
+  const id = data?.ID ?? template.ID
+  const name = data?.NAME ?? template.NAME
 
   return (
     <Stack overflow="auto">
-      <Stack direction="row" alignItems="center" gap={1} mb={1}>
+      <Stack direction="row" alignItems="center" gap={1} mx={1} mb={1}>
+        <Typography color="text.primary" noWrap flexGrow={1}>
+          {`#${id} | ${name}`}
+        </Typography>
+
+        {/* -- ACTIONS -- */}
         <SubmitButton
           data-cy="detail-refresh"
           icon={<RefreshDouble />}
           tooltip={Tr(T.Refresh)}
           isSubmitting={isFetching}
-          onClick={() => getTemplate({ id: template?.ID })}
+          onClick={() => getTemplate({ id })}
         />
         {typeof gotoPage === 'function' && (
           <SubmitButton
@@ -107,11 +118,9 @@ const InfoTabs = memo(({ template, gotoPage, unselect }) => {
             onClick={() => unselect()}
           />
         )}
-        <Typography color="text.primary" noWrap>
-          {`#${template?.ID || ''} | ${template?.NAME || ''}`}
-        </Typography>
+        {/* -- END ACTIONS -- */}
       </Stack>
-      <VmTemplateTabs id={template?.ID} />
+      <VmTemplateTabs id={id} />
     </Stack>
   )
 })

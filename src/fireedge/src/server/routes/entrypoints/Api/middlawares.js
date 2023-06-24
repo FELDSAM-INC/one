@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------------- *
- * Copyright 2002-2022, OpenNebula Project, OpenNebula Systems               *
+ * Copyright 2002-2023, OpenNebula Project, OpenNebula Systems               *
  *                                                                           *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may   *
  * not use this file except in compliance with the License. You may obtain   *
@@ -14,10 +14,15 @@
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
 const { env } = require('process')
+const { DateTime } = require('luxon')
 const { httpCodes, defaults } = require('server/utils/constants')
 const { getFireedgeConfig } = require('server/utils/yml')
-const { defaultWebpackMode, defaultEmptyFunction, defaultOpennebulaZones } =
-  defaults
+const {
+  defaultWebpackMode,
+  defaultEmptyFunction,
+  defaultOpennebulaZones,
+  defaultSessionExpiration,
+} = defaults
 const { validateAuth } = require('server/utils/jwt')
 const { getDataZone } = require('server/utils/server')
 
@@ -33,21 +38,20 @@ let passOpennebula = ''
  * @returns {boolean} user valid data
  */
 const userValidation = (user = '', token = '') => {
-  let rtn = false
+  const nowUnix = DateTime.local().toSeconds()
   if (
     user &&
     token &&
-    global &&
-    global.users &&
-    global.users[user] &&
-    global.users[user].tokens &&
-    Array.isArray(global.users[user].tokens) &&
-    global.users[user].tokens.some((x) => x && x.token === token)
+    Array.isArray(global?.users?.[user]?.tokens) &&
+    global?.users?.[user]?.tokens?.some?.(
+      ({ token: internalToken, time }) =>
+        time > nowUnix && internalToken === token
+    )
   ) {
-    rtn = true
+    return true
   }
 
-  return rtn
+  return false
 }
 
 /**
@@ -90,40 +94,39 @@ const validateSession = ({
   let status = badRequest
   if (auth) {
     const session = validateAuth(req)
+    status = unauthorized
+
     if (session) {
-      const { iss, aud, jti, exp } = session
+      const { iss, aud, jti } = session
       idUserOpennebula = iss
       userOpennebula = aud
       passOpennebula = jti
-      if (env && (!env.NODE_ENV || env.NODE_ENV !== defaultWebpackMode)) {
-        /** Validate User in production */
-        if (userValidation(userOpennebula, passOpennebula)) {
-          next()
+      if (env?.NODE_ENV === defaultWebpackMode) {
+        const appConfig = getFireedgeConfig()
+        const expirationSession =
+          appConfig.session_expiration || defaultSessionExpiration
+        const now = DateTime.local()
 
-          return
-        } else {
-          status = unauthorized
-        }
-      } else {
-        /** Validate user in development mode */
+        /** Create global state for user when the enviroment is development */
         if (global && !global.users) {
           global.users = {}
         }
         if (!global.users[userOpennebula]) {
           global.users[userOpennebula] = {
-            tokens: [{ token: passOpennebula, time: exp }],
+            tokens: [
+              {
+                token: passOpennebula,
+                time: now.plus({ minutes: expirationSession }).toSeconds(),
+              },
+            ],
           }
         }
-        if (userValidation(userOpennebula, passOpennebula)) {
-          next()
-
-          return
-        } else {
-          status = unauthorized
-        }
       }
-    } else {
-      status = unauthorized
+      if (userValidation(userOpennebula, passOpennebula)) {
+        next()
+
+        return
+      }
     }
   } else {
     next()
@@ -135,19 +138,26 @@ const validateSession = ({
 /**
  * Get Zone.
  *
- * @param {string} zone - zone id
+ * @param {string} selectedZone - zone id
  * @returns {object} data zone
  */
-const getZone = (zone = '0') => {
+const getZone = (selectedZone) => {
   // get fireedge config
   const appConfig = getFireedgeConfig()
+  const zone = selectedZone || appConfig?.default_zone?.id || '0'
   // set first zone
   if (
     appConfig.one_xmlrpc &&
     Array.isArray(defaultOpennebulaZones) &&
-    defaultOpennebulaZones[0] &&
-    defaultOpennebulaZones[0].rpc
+    defaultOpennebulaZones[0]?.rpc
   ) {
+    if (
+      appConfig.default_zone?.id &&
+      appConfig.default_zone?.name &&
+      appConfig.default_zone?.endpoint
+    ) {
+      defaultOpennebulaZones[0] = appConfig.default_zone
+    }
     defaultOpennebulaZones[0].rpc = appConfig.one_xmlrpc
     if (appConfig.subscriber_endpoint) {
       defaultOpennebulaZones[0].zeromq = appConfig.subscriber_endpoint

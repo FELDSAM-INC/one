@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------------- *
- * Copyright 2002-2022, OpenNebula Project, OpenNebula Systems               *
+ * Copyright 2002-2023, OpenNebula Project, OpenNebula Systems               *
  *                                                                           *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may   *
  * not use this file except in compliance with the License. You may obtain   *
@@ -19,6 +19,7 @@ import {
   CONFIGURATION_SCHEMA,
   FILES_SCHEMA,
 } from 'client/components/Forms/VmTemplate/CreateForm/Steps/ExtraConfiguration/context/schema'
+import { HYPERVISORS } from 'client/constants'
 
 /**
  * @param {object} [formProps] - Form props

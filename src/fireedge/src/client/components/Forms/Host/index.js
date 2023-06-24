@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------------- *
- * Copyright 2002-2022, OpenNebula Project, OpenNebula Systems               *
+ * Copyright 2002-2023, OpenNebula Project, OpenNebula Systems               *
  *                                                                           *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may   *
  * not use this file except in compliance with the License. You may obtain   *
@@ -15,14 +15,7 @@
  * ------------------------------------------------------------------------- */
 import { ReactElement } from 'react'
 import { AsyncLoadForm, ConfigurationProps } from 'client/components/HOC'
-import { CreateFormCallback, CreateStepsCallback } from 'client/utils/schema'
-
-/**
- * @param {ConfigurationProps} configProps - Configuration
- * @returns {ReactElement|CreateFormCallback} Asynchronous loaded form
- */
-const ChangeClusterForm = (configProps) =>
-  AsyncLoadForm({ formPath: 'Host/ChangeClusterForm' }, configProps)
+import { CreateStepsCallback } from 'client/utils/schema'
 
 /**
  * @param {ConfigurationProps} configProps - Configuration
@@ -31,4 +24,4 @@ const ChangeClusterForm = (configProps) =>
 const CreateForm = (configProps) =>
   AsyncLoadForm({ formPath: 'Host/CreateForm' }, configProps)
 
-export { ChangeClusterForm, CreateForm }
+export { CreateForm }

@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------------- *
- * Copyright 2002-2022, OpenNebula Project, OpenNebula Systems               *
+ * Copyright 2002-2023, OpenNebula Project, OpenNebula Systems               *
  *                                                                           *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may   *
  * not use this file except in compliance with the License. You may obtain   *
@@ -38,9 +38,9 @@ import { SubmitButton } from 'client/components/FormControl'
 import { Translate } from 'client/components/HOC'
 import { T } from 'client/constants'
 
-const Hosts = memo(({ id }) => {
+const Hosts = memo(({ id, setTab, logTabId }) => {
   const [amount, setAmount] = useState(() => 1)
-  const { enqueueSuccess, enqueueInfo } = useGeneralApi()
+  const { enqueueInfo } = useGeneralApi()
 
   const [addHost, { isLoading: loadingAddHost }] =
     useAddHostToProvisionMutation()
@@ -77,7 +77,7 @@ const Hosts = memo(({ id }) => {
             isSubmitting={loadingAddHost}
             onClick={async () => {
               addHost({ id, amount })
-              enqueueSuccess(`Host added ${amount}x`)
+              enqueueInfo(`Adding ${amount} Host${amount > 1 ? 's' : ''}`)
             }}
           />
         </Stack>
@@ -113,6 +113,7 @@ const Hosts = memo(({ id }) => {
                   onClick={async () => {
                     configureHost({ provision: id, id: host.ID })
                     enqueueInfo(`Configuring host - ID: ${host.ID}`)
+                    setTab(logTabId)
                   }}
                 />
                 <SubmitButton
@@ -125,7 +126,7 @@ const Hosts = memo(({ id }) => {
                       id: host.ID,
                       resource: 'host',
                     })
-                    enqueueSuccess(`Host deleted - ID: ${host.ID}`)
+                    enqueueInfo(`Deleting Host - ID:${host.ID}`)
                   }}
                 />
               </>
@@ -137,7 +138,11 @@ const Hosts = memo(({ id }) => {
   )
 })
 
-Hosts.propTypes = { id: PropTypes.string.isRequired }
+Hosts.propTypes = {
+  id: PropTypes.string.isRequired,
+  setTab: PropTypes.func,
+  logTabId: PropTypes.number,
+}
 Hosts.displayName = 'Hosts'
 
 export default Hosts

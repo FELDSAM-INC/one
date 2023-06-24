@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------------- *
- * Copyright 2002-2022, OpenNebula Project, OpenNebula Systems               *
+ * Copyright 2002-2023, OpenNebula Project, OpenNebula Systems               *
  *                                                                           *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may   *
  * not use this file except in compliance with the License. You may obtain   *
@@ -13,35 +13,33 @@
  * See the License for the specific language governing permissions and       *
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
-import { ReactElement, useMemo, useCallback } from 'react'
+import { Stack } from '@mui/material'
 import PropTypes from 'prop-types'
-import { Stack, Alert, Fade } from '@mui/material'
-import { Cancel as CloseIcon } from 'iconoir-react'
+import { ReactElement, useCallback, useMemo } from 'react'
 
 import {
-  useGetVmQuery,
+  AttributePanel,
+  Ownership,
+  Permissions,
+} from 'client/components/Tabs/Common'
+import Graphs from 'client/components/Tabs/Vm/Info/Graphs'
+import Capacity from 'client/components/Tabs/Vm/Info/capacity'
+import Information from 'client/components/Tabs/Vm/Info/information'
+import {
   useChangeVmOwnershipMutation,
   useChangeVmPermissionsMutation,
+  useGetVmQuery,
   useUpdateUserTemplateMutation,
 } from 'client/features/OneApi/vm'
-import {
-  Permissions,
-  Ownership,
-  AttributePanel,
-} from 'client/components/Tabs/Common'
-import Information from 'client/components/Tabs/Vm/Info/information'
-import Capacity from 'client/components/Tabs/Vm/Info/capacity'
-import { SubmitButton } from 'client/components/FormControl'
 
-import { Tr, Translate } from 'client/components/HOC'
+import { Tr } from 'client/components/HOC'
 import { T } from 'client/constants'
-import { getHypervisor } from 'client/models/VirtualMachine'
 import {
-  getActionsAvailable,
   filterAttributes,
+  getActionsAvailable,
   jsonToXml,
-  getErrorMessage,
 } from 'client/models/Helper'
+import { getHypervisor } from 'client/models/VirtualMachine'
 import { cloneObject, set } from 'client/utils'
 
 const LXC_ATTRIBUTES_REG = /^LXC_/
@@ -74,11 +72,9 @@ const VmInfoTab = ({ tabProps = {}, id }) => {
   const [changeVmOwnership] = useChangeVmOwnershipMutation()
   const [changeVmPermissions] = useChangeVmPermissionsMutation()
   const [updateUserTemplate] = useUpdateUserTemplateMutation()
-  const [dismissError] = useUpdateUserTemplateMutation()
 
   const { UNAME, UID, GNAME, GID, PERMISSIONS, USER_TEMPLATE, MONITORING } = vm
 
-  const error = useMemo(() => getErrorMessage(vm), [vm])
   const hypervisor = useMemo(() => getHypervisor(vm), [vm])
 
   const {
@@ -113,13 +109,6 @@ const VmInfoTab = ({ tabProps = {}, id }) => {
     await updateUserTemplate({ id, template: xml, replace: 0 })
   }
 
-  const handleDismissError = async () => {
-    const { ERROR, SCHED_MESSAGE, ...templateWithoutError } = USER_TEMPLATE
-    const xml = jsonToXml({ ...templateWithoutError })
-
-    await dismissError({ id, template: xml, replace: 0 })
-  }
-
   const getActions = useCallback(
     (actions) => getActionsAvailable(actions, hypervisor),
     [hypervisor]
@@ -138,22 +127,6 @@ const VmInfoTab = ({ tabProps = {}, id }) => {
       gridTemplateColumns="repeat(auto-fit, minmax(49%, 1fr))"
       padding={{ sm: '0.8em' }}
     >
-      <Fade in={!!error} unmountOnExit>
-        <Alert
-          variant="outlined"
-          severity="error"
-          sx={{ gridColumn: 'span 2' }}
-          action={
-            <SubmitButton
-              onClick={handleDismissError}
-              icon={<CloseIcon />}
-              tooltip={<Translate word={T.Dismiss} />}
-            />
-          }
-        >
-          {error}
-        </Alert>
-      </Fade>
       {informationPanel?.enabled && (
         <Information actions={getActions(informationPanel?.actions)} vm={vm} />
       )}
@@ -183,7 +156,10 @@ const VmInfoTab = ({ tabProps = {}, id }) => {
         />
       )}
       {capacityPanel?.enabled && (
-        <Capacity actions={getActions(capacityPanel?.actions)} vm={vm} />
+        <>
+          <Capacity actions={getActions(capacityPanel?.actions)} vm={vm} />
+          <Graphs id={id} />
+        </>
       )}
       {attributesPanel?.enabled && attributes && (
         <AttributePanel

@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------------- *
- * Copyright 2002-2022, OpenNebula Project, OpenNebula Systems               *
+ * Copyright 2002-2023, OpenNebula Project, OpenNebula Systems               *
  *                                                                           *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may   *
  * not use this file except in compliance with the License. You may obtain   *
@@ -63,6 +63,7 @@ export const IMAGE_TYPES_STR = {
   KERNEL: 'KERNEL',
   RAMDISK: 'RAMDISK',
   CONTEXT: 'CONTEXT',
+  BACKUP: 'BACKUP',
 }
 
 /** @type {IMAGE_TYPES_STR[]} Return the string representation of an Image type */
@@ -73,7 +74,25 @@ export const IMAGE_TYPES = [
   IMAGE_TYPES_STR.KERNEL,
   IMAGE_TYPES_STR.RAMDISK,
   IMAGE_TYPES_STR.CONTEXT,
+  IMAGE_TYPES_STR.BACKUP,
 ]
+
+/** @type {IMAGE_TYPES_STR[]} Return the string representation of an Image type for tab files */
+export const IMAGE_TYPES_FOR_FILES = [
+  IMAGE_TYPES_STR.KERNEL,
+  IMAGE_TYPES_STR.RAMDISK,
+  IMAGE_TYPES_STR.CONTEXT,
+]
+
+/** @type {IMAGE_TYPES_STR[]} Return the string representation of an Image type for tab images */
+export const IMAGE_TYPES_FOR_IMAGES = [
+  IMAGE_TYPES_STR.OS,
+  IMAGE_TYPES_STR.CDROM,
+  IMAGE_TYPES_STR.DATABLOCK,
+]
+
+/** @type {IMAGE_TYPES_STR[]} Return the string representation of an Image type for tab files */
+export const IMAGE_TYPES_FOR_BACKUPS = [IMAGE_TYPES_STR.BACKUP]
 
 /** @enum {string} Disk type */
 export const DISK_TYPES_STR = {
@@ -165,12 +184,22 @@ export const IMAGE_STATES = [
 export const IMAGE_ACTIONS = {
   CREATE_DIALOG: 'create_dialog',
   DELETE: 'delete',
+  LOCK: 'lock',
+  UNLOCK: 'unlock',
+  CLONE: 'clone',
+  ENABLE: 'enable',
+  DISABLE: 'disable',
+  PERSISTENT: 'persistent',
+  NON_PERSISTENT: 'nonpersistent',
+  RESTORE: 'restore',
 
   // INFORMATION
   RENAME: ACTIONS.RENAME,
-  CHANGE_MODE: ACTIONS.CHANGE_MODE,
   CHANGE_OWNER: ACTIONS.CHANGE_OWNER,
   CHANGE_GROUP: ACTIONS.CHANGE_GROUP,
   CHANGE_TYPE: 'chtype',
   CHANGE_PERS: 'persistent',
+  SNAPSHOT_FLATTEN: 'flatten',
+  SNAPSHOT_REVERT: 'revert',
+  SNAPSHOT_DELETE: 'delete',
 }

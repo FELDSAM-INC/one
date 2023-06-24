@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------------- *
- * Copyright 2002-2022, OpenNebula Project, OpenNebula Systems               *
+ * Copyright 2002-2023, OpenNebula Project, OpenNebula Systems               *
  *                                                                           *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may   *
  * not use this file except in compliance with the License. You may obtain   *
@@ -65,6 +65,7 @@ const PciDevicesSection = ({ stepId, hypervisor }) => {
   })
 
   const onSubmit = (newInput) => {
+    delete newInput.DEVICE_NAME
     append(newInput)
     methods.reset()
   }
@@ -101,34 +102,44 @@ const PciDevicesSection = ({ stepId, hypervisor }) => {
       </FormProvider>
       <Divider />
       <List>
-        {pciDevices?.map(({ id, DEVICE, VENDOR, CLASS }, index) => {
-          const { DEVICE_NAME, VENDOR_NAME } =
-            pciDevicesAvailable.find(
-              (pciDevice) => pciDevice?.DEVICE === DEVICE
-            ) ?? {}
+        {pciDevices?.map(
+          ({ id, DEVICE, VENDOR, CLASS, PROFILE = '-', ...rest }, index) => {
+            if (rest?.TYPE === 'NIC') return null
 
-          return (
-            <ListItem
-              key={id}
-              secondaryAction={
-                <IconButton onClick={() => remove(index)}>
-                  <DeleteCircledOutline />
-                </IconButton>
-              }
-              sx={{ '&:hover': { bgcolor: 'action.hover' } }}
-            >
-              <ListItemText
-                primary={DEVICE_NAME}
-                primaryTypographyProps={{ variant: 'body1' }}
-                secondary={[
-                  `#${DEVICE}`,
-                  `Vendor: ${VENDOR_NAME}(${VENDOR})`,
-                  `Class: ${CLASS}`,
-                ].join(' | ')}
-              />
-            </ListItem>
-          )
-        })}
+            const { DEVICE_NAME, VENDOR_NAME } =
+              pciDevicesAvailable.find(
+                (pciDevice) => pciDevice?.DEVICE === DEVICE
+              ) ?? {}
+
+            const secondaryFields = [
+              `#${DEVICE}`,
+              `${T.Vendor}: ${VENDOR_NAME}(${VENDOR})`,
+              `${T.Class}: ${CLASS}`,
+            ]
+
+            if (PROFILE !== '' && PROFILE !== '-') {
+              secondaryFields.push(`${T.Profile}: ${PROFILE}`)
+            }
+
+            return (
+              <ListItem
+                key={id}
+                secondaryAction={
+                  <IconButton onClick={() => remove(index)}>
+                    <DeleteCircledOutline />
+                  </IconButton>
+                }
+                sx={{ '&:hover': { bgcolor: 'action.hover' } }}
+              >
+                <ListItemText
+                  primary={DEVICE_NAME}
+                  primaryTypographyProps={{ variant: 'body1' }}
+                  secondary={secondaryFields.join(' | ')}
+                />
+              </ListItem>
+            )
+          }
+        )}
       </List>
     </FormControl>
   )

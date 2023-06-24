@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------------- *
- * Copyright 2002-2022, OpenNebula Project, OpenNebula Systems               *
+ * Copyright 2002-2023, OpenNebula Project, OpenNebula Systems               *
  *                                                                           *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may   *
  * not use this file except in compliance with the License. You may obtain   *
@@ -13,12 +13,12 @@
  * See the License for the specific language governing permissions and       *
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
-import { v4 as uuidv4 } from 'uuid'
-import DOMPurify from 'dompurify'
-import { object, reach, ObjectSchema, BaseSchema } from 'yup'
+import { HYPERVISORS, UNITS, VN_DRIVERS } from 'client/constants'
 import { isMergeableObject } from 'client/utils/merge'
 import { Field } from 'client/utils/schema'
-import { HYPERVISORS, VN_DRIVERS } from 'client/constants'
+import DOMPurify from 'dompurify'
+import { v4 as uuidv4 } from 'uuid'
+import { BaseSchema, ObjectSchema, object, reach } from 'yup'
 
 /**
  * Simulate a delay in a function.
@@ -125,20 +125,20 @@ export const downloadFile = (file) => {
  * - Number of digits after the decimal point. Must be in the range 0 - 20, inclusive
  * @returns {string} Returns an string displaying sizes for humans.
  */
-export const prettyBytes = (value, unit = 'KB', fractionDigits = 0) => {
-  const UNITS = ['KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB']
+export const prettyBytes = (value, unit = UNITS.KB, fractionDigits = 0) => {
+  const units = Object.values(UNITS)
   let ensuredValue = +value
 
-  if (Math.abs(ensuredValue) === 0) return `${value} ${UNITS[0]}`
+  if (Math.abs(ensuredValue) === 0) return `${value} ${units[0]}`
 
-  let idxUnit = UNITS.indexOf(unit)
+  let idxUnit = units.indexOf(unit)
 
   while (ensuredValue > 1024) {
     ensuredValue /= 1024
     idxUnit += 1
   }
 
-  return `${ensuredValue.toFixed(fractionDigits)} ${UNITS[idxUnit]}`
+  return `${ensuredValue.toFixed(fractionDigits)} ${units[idxUnit]}`
 }
 
 /**
@@ -236,7 +236,10 @@ export const filterFieldsByHypervisor = (
   fields
     .map((field) => (typeof field === 'function' ? field(hypervisor) : field))
     .filter(
-      ({ notOnHypervisors } = {}) => !notOnHypervisors?.includes?.(hypervisor)
+      ({ notOnHypervisors, onlyOnHypervisors } = {}) =>
+        (!notOnHypervisors && !onlyOnHypervisors) ||
+        (notOnHypervisors && !notOnHypervisors.includes?.(hypervisor)) ||
+        onlyOnHypervisors?.includes?.(hypervisor)
     )
 
 /**
@@ -299,6 +302,28 @@ export const get = (obj, path, defaultValue = undefined) => {
 }
 
 /**
+ * Deletes a given key from an object.
+ *
+ * @param {string[]} attr - Array with the path to be deleted
+ * @param {object} originalTemplate - Template to be modified
+ */
+export const deleteObjectKeys = (attr, originalTemplate = {}) => {
+  const keyToDelete = attr.pop()
+  let template = originalTemplate || {}
+  // TODO: Consider the case when restricted attributes is inside an array and goes deeper
+  attr.forEach((key) => {
+    if (Array.isArray(template?.[key])) {
+      template?.[key].forEach((element) => {
+        element && delete element[keyToDelete]
+      })
+    } else {
+      template = template[key]
+    }
+  })
+  template && delete template[keyToDelete]
+}
+
+/**
  * Set a value of property in object by his path.
  *
  * @param {object} obj - Object
@@ -350,11 +375,16 @@ export const groupBy = (list, key) =>
 
 /**
  * Clone an object.
+ * If the object is null or undefined, returns an empty object.
  *
  * @param {object} obj - Object
  * @returns {object} Object cloned
  */
-export const cloneObject = (obj) => JSON.parse(JSON.stringify(obj))
+export const cloneObject = (obj) => {
+  if (!obj) return {}
+
+  return JSON.parse(JSON.stringify(obj))
+}
 
 /**
  * Removes undefined and null values from object.

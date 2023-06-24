@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------------- *
- * Copyright 2002-2022, OpenNebula Project, OpenNebula Systems               *
+ * Copyright 2002-2023, OpenNebula Project, OpenNebula Systems               *
  *                                                                           *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may   *
  * not use this file except in compliance with the License. You may obtain   *
@@ -34,6 +34,17 @@ export const SERVER_CONFIG = (() => {
 
   return config
 })()
+
+export const UNITS = {
+  KB: 'KB',
+  MB: 'MB',
+  GB: 'GB',
+  TB: 'TB',
+  PB: 'PB',
+  EB: 'EB',
+  ZB: 'ZB',
+  YB: 'YB',
+}
 
 // should be equal to the apps in src/server/utils/constants/defaults.js
 export const _APPS = { sunstone: 'sunstone', provision: 'provision' }
@@ -128,6 +139,7 @@ export const INPUT_TYPES = {
   TEXT: 'text',
   TABLE: 'table',
   TOGGLE: 'toggle',
+  DOCKERFILE: 'dockerfile',
 }
 
 export const DEBUG_LEVEL = {
@@ -149,15 +161,17 @@ export const SOCKETS = {
 /** @enum {string} Names of resource */
 export const RESOURCE_NAMES = {
   APP: 'marketplace-app',
+  BACKUP: 'backup',
   CLUSTER: 'cluster',
   DATASTORE: 'datastore',
   GROUP: 'group',
   HOST: 'host',
   IMAGE: 'image',
+  FILE: 'file',
   MARKETPLACE: 'marketplace',
   SEC_GROUP: 'security-group',
   USER: 'user',
-  V_ROUTER: 'virtual-router',
+  VROUTER: 'virtual-router',
   VM_TEMPLATE: 'vm-template',
   VM: 'vm',
   VN_TEMPLATE: 'network-template',

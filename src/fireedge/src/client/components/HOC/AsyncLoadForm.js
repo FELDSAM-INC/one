@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------------- *
- * Copyright 2002-2022, OpenNebula Project, OpenNebula Systems               *
+ * Copyright 2002-2023, OpenNebula Project, OpenNebula Systems               *
  *                                                                           *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may   *
  * not use this file except in compliance with the License. You may obtain   *
@@ -17,7 +17,7 @@ import { useMemo, useCallback, ReactElement } from 'react'
 import PropTypes from 'prop-types'
 import loadable, { LoadableLibrary } from '@loadable/component'
 import { Backdrop, CircularProgress } from '@mui/material'
-
+import { useSystemData } from 'client/features/Auth'
 import { CreateFormCallback, CreateStepsCallback } from 'client/utils/schema'
 
 /**
@@ -97,9 +97,19 @@ const MemoizedForm = ({
     []
   )
 
+  const { oneConfig, adminGroup } = useSystemData()
+
   const handleTriggerSubmit = useCallback(
     (data) =>
-      onSubmit(transformBeforeSubmit?.(data, initialValues, stepProps) ?? data),
+      onSubmit(
+        transformBeforeSubmit?.(
+          data,
+          initialValues,
+          stepProps,
+          adminGroup,
+          oneConfig
+        ) ?? data
+      ),
     [transformBeforeSubmit]
   )
 

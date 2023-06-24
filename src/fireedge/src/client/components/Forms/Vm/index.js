@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------------- *
- * Copyright 2002-2022, OpenNebula Project, OpenNebula Systems               *
+ * Copyright 2002-2023, OpenNebula Project, OpenNebula Systems               *
  *                                                                           *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may   *
  * not use this file except in compliance with the License. You may obtain   *
@@ -37,6 +37,13 @@ const VolatileSteps = (configProps) =>
  */
 const AttachNicForm = (configProps) =>
   AsyncLoadForm({ formPath: 'Vm/AttachNicForm' }, configProps)
+
+/**
+ * @param {ConfigurationProps} configProps - Configuration
+ * @returns {ReactElement|CreateStepsCallback} Asynchronous loaded form
+ */
+const UpdateNicForm = (configProps) =>
+  AsyncLoadForm({ formPath: 'Vm/UpdateNicForm' }, configProps)
 
 /**
  * @param {ConfigurationProps} configProps - Configuration
@@ -156,9 +163,17 @@ const CreateRelativeCharterForm = (configProps) =>
 const UpdateConfigurationForm = (configProps) =>
   AsyncLoadForm({ formPath: 'Vm/UpdateConfigurationForm' }, configProps)
 
+/**
+ * @param {ConfigurationProps} configProps - Configuration
+ * @returns {ReactElement|CreateFormCallback} Asynchronous loaded form
+ */
+const BackupForm = (configProps) =>
+  AsyncLoadForm({ formPath: 'Vm/BackupForm' }, configProps)
+
 export {
   AttachNicForm,
   AttachSecGroupForm,
+  BackupForm,
   ChangeGroupForm,
   ChangeUserForm,
   CreateCharterForm,
@@ -175,5 +190,6 @@ export {
   SaveAsDiskForm,
   SaveAsTemplateForm,
   UpdateConfigurationForm,
+  UpdateNicForm,
   VolatileSteps,
 }

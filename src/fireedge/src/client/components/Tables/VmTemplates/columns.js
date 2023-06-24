@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------------- *
- * Copyright 2002-2022, OpenNebula Project, OpenNebula Systems               *
+ * Copyright 2002-2023, OpenNebula Project, OpenNebula Systems               *
  *                                                                           *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may   *
  * not use this file except in compliance with the License. You may obtain   *
@@ -25,16 +25,8 @@ const COLUMNS = [
   { Header: T.Group, id: 'group', accessor: 'GNAME' },
   { Header: T.RegistrationTime, id: 'time', accessor: 'REGTIME' },
   { Header: T.Locked, id: 'locked', accessor: 'LOCK' },
-  {
-    Header: T.Logo,
-    id: 'logo',
-    accessor: 'TEMPLATE.LOGO',
-  },
-  {
-    Header: T.VirtualRouter,
-    id: 'vrouter',
-    accessor: 'TEMPLATE.VROUTER',
-  },
+  { Header: T.Logo, id: 'logo', accessor: 'TEMPLATE.LOGO' },
+  { Header: T.VirtualRouter, id: 'vrouter', accessor: 'TEMPLATE.VROUTER' },
 ]
 
 COLUMNS.noFilterIds = ['id', 'name', 'time', 'logo']

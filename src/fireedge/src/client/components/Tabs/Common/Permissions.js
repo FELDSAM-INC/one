@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------------- *
- * Copyright 2002-2022, OpenNebula Project, OpenNebula Systems               *
+ * Copyright 2002-2023, OpenNebula Project, OpenNebula Systems               *
  *                                                                           *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may   *
  * not use this file except in compliance with the License. You may obtain   *
@@ -58,7 +58,7 @@ const Permissions = memo(({ handleEdit, actions, ...permissions }) => {
   const getIcon = (checked) => (+checked ? <CheckIcon /> : <BlankSquareIcon />)
 
   return (
-    <Paper variant="outlined">
+    <Paper variant="outlined" sx={{ height: 'fit-content' }}>
       <List className={classes.list}>
         <ListItem className={classes.title}>
           <Typography noWrap>{Tr(T.Permissions)}</Typography>

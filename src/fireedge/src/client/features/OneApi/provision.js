@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------------- *
- * Copyright 2002-2022, OpenNebula Project, OpenNebula Systems               *
+ * Copyright 2002-2023, OpenNebula Project, OpenNebula Systems               *
  *                                                                           *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may   *
  * not use this file except in compliance with the License. You may obtain   *
@@ -173,6 +173,7 @@ const provisionApi = oneApi.injectEndpoints({
        *
        * @param {object} params - Request parameters
        * @param {string} params.id - Provision id
+       * @param {boolean} params.force - Force configure to execute
        * @returns {object} Object of document updated
        * @throws Fails when response isn't code 200
        */
@@ -220,7 +221,7 @@ const provisionApi = oneApi.injectEndpoints({
        * @returns {object} Object of document deleted
        * @throws Fails when response isn't code 200
        */
-      query: ({ provision: _, ...params }) => {
+      query: (params) => {
         const name = Actions.PROVISION_DELETE_RESOURCE
         const command = { name, ...Commands[name] }
 

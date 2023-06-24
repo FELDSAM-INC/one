@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------------- *
- * Copyright 2002-2022, OpenNebula Project, OpenNebula Systems               *
+ * Copyright 2002-2023, OpenNebula Project, OpenNebula Systems               *
  *                                                                           *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may   *
  * not use this file except in compliance with the License. You may obtain   *
@@ -16,8 +16,8 @@
 import { Column } from 'react-table'
 
 import {
-  GlobalAction,
   CategoryFilter,
+  GlobalAction,
   TimeFilter,
 } from 'client/components/Tables/Enhanced/Utils'
 
@@ -33,11 +33,11 @@ export const createColumns = ({ filters = {}, columns = [] }) => {
   if (Object.keys(filters).length === 0) return columns
 
   return columns.map((column) => {
-    const { id = '', accessor, noFilterIds = [] } = column
+    const { id = '', accessor } = column
 
     // noFilterIds is a list of column ids that should not have a filter
     // it's defined in the resource columns definition
-    if (noFilterIds.includes(id)) return column
+    if (columns.noFilterIds?.includes(id)) return column
 
     const filterById = !!filters[String(id.toLowerCase())]
 
@@ -49,8 +49,7 @@ export const createColumns = ({ filters = {}, columns = [] }) => {
       ...((filterById || filterByAccessor) &&
         (
           {
-            // TODO: Add label to filters
-            // label: createLabelFilter,
+            // TODO: Implements time filter component
             time: createTimeFilter,
           }[`${id}`.toLowerCase()] ?? createCategoryFilter
         )(column)),

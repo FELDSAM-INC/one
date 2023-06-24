@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------------- *
- * Copyright 2002-2022, OpenNebula Project, OpenNebula Systems               *
+ * Copyright 2002-2023, OpenNebula Project, OpenNebula Systems               *
  *                                                                           *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may   *
  * not use this file except in compliance with the License. You may obtain   *
@@ -16,14 +16,12 @@
 import { memo } from 'react'
 import PropTypes from 'prop-types'
 
-import {
-  Trash,
-  Edit,
-  UndoAction,
-  SaveActionFloppy,
-  Camera,
-  Expand,
-} from 'iconoir-react'
+import Trash from 'iconoir-react/dist/Trash'
+import Edit from 'iconoir-react/dist/Edit'
+import UndoAction from 'iconoir-react/dist/UndoAction'
+import SaveActionFloppy from 'iconoir-react/dist/SaveActionFloppy'
+import Camera from 'iconoir-react/dist/Camera'
+import Expand from 'iconoir-react/dist/ExpandLines'
 
 import {
   useAttachDiskMutation,

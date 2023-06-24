@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------------- *
- * Copyright 2002-2022, OpenNebula Project, OpenNebula Systems               *
+ * Copyright 2002-2023, OpenNebula Project, OpenNebula Systems               *
  *                                                                           *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may   *
  * not use this file except in compliance with the License. You may obtain   *
@@ -81,6 +81,22 @@ const systemApi = oneApi.injectEndpoints({
       providesTags: [{ type: SYSTEM, id: 'sunstone-views' }],
       keepUnusedDataFor: 600,
     }),
+    getSunstoneConfig: builder.query({
+      /**
+       * Returns the Sunstone configuration for resource tabs.
+       *
+       * @returns {object} The loaded sunstone view files
+       * @throws Fails when response isn't code 200
+       */
+      query: () => {
+        const name = SunstoneActions.SUNSTONE_CONFIG
+        const command = { name, ...SunstoneCommands[name] }
+
+        return { command }
+      },
+      providesTags: [{ type: SYSTEM, id: 'sunstone-config' }],
+      keepUnusedDataFor: 600,
+    }),
   }),
 })
 
@@ -90,6 +106,8 @@ export const {
   useLazyGetOneVersionQuery,
   useGetOneConfigQuery,
   useLazyGetOneConfigQuery,
+  useGetSunstoneConfigQuery,
+  useLazyGetSunstoneConfigQuery,
   useGetSunstoneViewsQuery,
   useLazyGetSunstoneViewsQuery,
 } = systemApi

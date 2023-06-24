@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------------- *
- * Copyright 2002-2022, OpenNebula Project, OpenNebula Systems               *
+ * Copyright 2002-2023, OpenNebula Project, OpenNebula Systems               *
  *                                                                           *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may   *
  * not use this file except in compliance with the License. You may obtain   *
@@ -19,6 +19,7 @@ import { HYPERVISORS } from 'client/constants'
 import { SCHEMA as OS_SCHEMA } from './booting/schema'
 import { SCHEMA as IO_SCHEMA } from './inputOutput/schema'
 import { SCHEMA as CONTEXT_SCHEMA } from './context/schema'
+import { SCHEMA as BACKUP_SCHEMA } from './backup/schema'
 
 /**
  * @param {object} [formProps] - Form props
@@ -30,5 +31,6 @@ export const SCHEMA = ({ hypervisor }) =>
     .concat(IO_SCHEMA({ hypervisor }))
     .concat(OS_SCHEMA({ hypervisor }))
     .concat(CONTEXT_SCHEMA({ hypervisor }))
+    .concat(BACKUP_SCHEMA())
 
-export { IO_SCHEMA, OS_SCHEMA, CONTEXT_SCHEMA }
+export { IO_SCHEMA, OS_SCHEMA, CONTEXT_SCHEMA, BACKUP_SCHEMA }

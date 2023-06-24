@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------------- *
- * Copyright 2002-2022, OpenNebula Project, OpenNebula Systems               *
+ * Copyright 2002-2023, OpenNebula Project, OpenNebula Systems               *
  *                                                                           *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may   *
  * not use this file except in compliance with the License. You may obtain   *
@@ -285,6 +285,22 @@ const createAppTheme = (appTheme, mode = SCHEMES.DARK) => {
           },
           fieldset: { border: 'none' },
         },
+      },
+      MuiTypography: {
+        variants: [
+          {
+            props: { variant: 'underline' },
+            style: {
+              padding: '0 1em 0.2em 0.5em',
+              borderBottom: `2px solid ${secondary.main}`,
+              // subtitle1 variant is used for the underline
+              fontSize: defaultTheme.typography.pxToRem(18),
+              lineHeight: 24 / 18,
+              letterSpacing: 0,
+              fontWeight: 500,
+            },
+          },
+        ],
       },
       MuiPaper: {
         defaultProps: {

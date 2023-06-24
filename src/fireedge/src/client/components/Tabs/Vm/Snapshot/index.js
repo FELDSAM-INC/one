@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------------- *
- * Copyright 2002-2022, OpenNebula Project, OpenNebula Systems               *
+ * Copyright 2002-2023, OpenNebula Project, OpenNebula Systems               *
  *                                                                           *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may   *
  * not use this file except in compliance with the License. You may obtain   *
@@ -15,7 +15,8 @@
  * ------------------------------------------------------------------------- */
 import { ReactElement, useMemo } from 'react'
 import PropTypes from 'prop-types'
-import { Stack } from '@mui/material'
+import HintIcon from 'iconoir-react/dist/QuestionMarkCircle'
+import { Stack, Tooltip } from '@mui/material'
 
 import { useGetVmQuery } from 'client/features/OneApi/vm'
 import {
@@ -24,6 +25,7 @@ import {
   DeleteAction,
 } from 'client/components/Tabs/Vm/Snapshot/Actions'
 import SnapshotCard from 'client/components/Cards/SnapshotCard'
+import { Tr } from 'client/components/HOC'
 
 import {
   getSnapshotList,
@@ -31,7 +33,7 @@ import {
   isAvailableAction,
 } from 'client/models/VirtualMachine'
 import { getActionsAvailable } from 'client/models/Helper'
-import { VM_ACTIONS } from 'client/constants'
+import { T, VM_ACTIONS } from 'client/constants'
 
 const { SNAPSHOT_CREATE, SNAPSHOT_REVERT, SNAPSHOT_DELETE } = VM_ACTIONS
 
@@ -59,9 +61,14 @@ const VmSnapshotTab = ({ tabProps: { actions } = {}, id }) => {
 
   return (
     <div>
-      {actionsAvailable?.includes(SNAPSHOT_CREATE) && (
-        <CreateAction vmId={id} />
-      )}
+      <Stack direction="row" gap="1em" alignItems="center">
+        {actionsAvailable?.includes(SNAPSHOT_CREATE) && (
+          <CreateAction vmId={id} />
+        )}
+        <Tooltip arrow title={Tr(T.VmSnapshotHint)}>
+          <HintIcon />
+        </Tooltip>
+      </Stack>
 
       <Stack gap="1em" py="0.8em" data-cy="snapshots">
         {snapshots.map((snapshot) => (

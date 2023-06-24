@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------------- *
- * Copyright 2002-2022, OpenNebula Project, OpenNebula Systems               *
+ * Copyright 2002-2023, OpenNebula Project, OpenNebula Systems               *
  *                                                                           *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may   *
  * not use this file except in compliance with the License. You may obtain   *
@@ -49,8 +49,14 @@ function Providers() {
 
   const { enqueueSuccess } = useGeneralApi()
   const { data: providerConfig } = useGetProviderConfigQuery()
-  const [deleteProvider, { isLoading: isDeleting }] =
-    useDeleteProviderMutation()
+  const [
+    deleteProvider,
+    {
+      isLoading: isDeleting,
+      isSuccess: successDelete,
+      originalArgs: { id: deletedProviderId } = {},
+    },
+  ] = useDeleteProviderMutation()
 
   const {
     refetch,
@@ -68,9 +74,13 @@ function Providers() {
     try {
       hide()
       await deleteProvider({ id })
-      enqueueSuccess(`Provider deleted - ID: ${id}`)
     } catch {}
   }
+
+  useEffect(() => {
+    successDelete &&
+      enqueueSuccess(`Provider deleted - ID: ${deletedProviderId}`)
+  }, [successDelete])
 
   return (
     <>
@@ -110,6 +120,7 @@ function Providers() {
                   handleClick: () =>
                     show({
                       id: ID,
+                      delete: true,
                       title: (
                         <Translate
                           word={T.DeleteSomething}
@@ -128,13 +139,21 @@ function Providers() {
           />
         )}
       </Box>
-      {display && dialogProps?.id && (
-        <DialogProvider
-          hide={hide}
-          id={dialogProps.id}
-          dialogProps={dialogProps}
-        />
-      )}
+      {display &&
+        dialogProps?.id &&
+        (!dialogProps?.delete ? (
+          <DialogProvider
+            hide={hide}
+            id={dialogProps.id}
+            dialogProps={dialogProps}
+          />
+        ) : (
+          <DialogConfirmation handleCancel={hide} {...dialogProps}>
+            <p>
+              <Translate word={T.DoYouWantProceed} />
+            </p>
+          </DialogConfirmation>
+        ))}
     </>
   )
 }

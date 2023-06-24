@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------------- *
- * Copyright 2002-2022, OpenNebula Project, OpenNebula Systems               *
+ * Copyright 2002-2023, OpenNebula Project, OpenNebula Systems               *
  *                                                                           *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may   *
  * not use this file except in compliance with the License. You may obtain   *
@@ -17,7 +17,8 @@ import AttributePanel from 'client/components/Tabs/Common/AttributePanel'
 import List from 'client/components/Tabs/Common/List'
 import Ownership from 'client/components/Tabs/Common/Ownership'
 import Permissions from 'client/components/Tabs/Common/Permissions'
+import RulesSecGroupsTable from 'client/components/Tabs/Common/RulesSecGroups'
 
 export * from 'client/components/Tabs/Common/Attribute'
 
-export { AttributePanel, List, Ownership, Permissions }
+export { AttributePanel, List, Ownership, Permissions, RulesSecGroupsTable }

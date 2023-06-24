@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------------- *
- * Copyright 2002-2022, OpenNebula Project, OpenNebula Systems               *
+ * Copyright 2002-2023, OpenNebula Project, OpenNebula Systems               *
  *                                                                           *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may   *
  * not use this file except in compliance with the License. You may obtain   *
@@ -45,11 +45,10 @@ const {
 
 const { ok, unauthorized, accepted, internalServerError } = httpCodes
 
-const appConfig = getFireedgeConfig()
-
-const namespace = appConfig.namespace || defaultNamespace
-
 const { GET } = httpMethod
+
+const { USER_INFO, USER_POOL_INFO } = ActionUsers
+const { ZONE_POOL_INFO } = ActionZones
 
 let user = ''
 let pass = ''
@@ -60,12 +59,6 @@ let next = defaultEmptyFunction
 let req = {}
 let res = {}
 let nodeConnect = defaultEmptyFunction
-let now = ''
-let nowUnix = ''
-let expireTime = ''
-let relativeTime = ''
-let limitToken = defaultSessionExpiration
-let limitExpirationReuseToken = defaultSessionLimitExpiration
 
 /**
  * Get user opennebula.
@@ -80,13 +73,6 @@ const getUser = () => user
  * @returns {string} get password user opennebula
  */
 const getPass = () => pass
-
-/**
- * Get relative time.
- *
- * @returns {string} date
- */
-const getRelativeTime = () => relativeTime
 
 /**
  * Username opennebula.
@@ -198,19 +184,29 @@ const setRes = (newRes = {}) => {
 
 /**
  * Set dates.
+ *
+ * @returns {object} times
  */
 const setDates = () => {
-  limitToken = remember
+  const appConfig = getFireedgeConfig()
+  const limitToken = remember
     ? appConfig.session_remember_expiration || defaultRememberSessionExpiration
     : appConfig.session_expiration || defaultSessionExpiration
-  limitExpirationReuseToken =
-    parseInt(appConfig.session_reuse_token_time, 10) ||
+  const limitExpirationReuseToken =
+    parseInt(appConfig.minimun_opennebula_expiration, 10) ||
     defaultSessionLimitExpiration
-  now = DateTime.local()
-  nowUnix = now.toSeconds()
-  expireTime = now.plus({ minutes: limitToken })
+  const now = DateTime.local()
+  const expireTime = now.plus({ minutes: limitToken })
   const diff = expireTime.diff(now, 'seconds')
-  relativeTime = diff.seconds
+
+  return {
+    now,
+    nowUnix: now.toSeconds(),
+    limitToken,
+    limitExpirationReuseToken,
+    expireTime: expireTime.toSeconds(),
+    relativeTime: diff.seconds,
+  }
 }
 
 /**
@@ -233,13 +229,7 @@ const connectOpennebula = (usr = '', pss = '') => {
  * @param {string} code - http code
  */
 const updaterResponse = (code) => {
-  if (
-    'id' in code &&
-    'message' in code &&
-    res &&
-    res.locals &&
-    res.locals.httpCode
-  ) {
+  if ('id' in code && 'message' in code && res?.locals?.httpCode) {
     res.locals.httpCode = code
   }
 }
@@ -252,17 +242,13 @@ const updaterResponse = (code) => {
  */
 const validate2faAuthentication = (informationUser) => {
   let rtn = false
-  if (
-    informationUser.TEMPLATE &&
-    informationUser.TEMPLATE.SUNSTONE &&
-    informationUser.TEMPLATE.SUNSTONE[default2FAOpennebulaVar]
-  ) {
+  if (informationUser?.TEMPLATE?.SUNSTONE?.[default2FAOpennebulaVar]) {
     /*********************************************************
      * Validate 2FA
      *********************************************************/
 
     if (tfatoken.length <= 0) {
-      updaterResponse(httpResponse(accepted))
+      updaterResponse(httpResponse(accepted, { id: informationUser?.ID }))
     } else {
       const secret = informationUser.TEMPLATE.SUNSTONE[default2FAOpennebulaVar]
       if (!check2Fa(secret, tfatoken)) {
@@ -290,20 +276,17 @@ const validate2faAuthentication = (informationUser) => {
  */
 const genJWT = (token, informationUser) => {
   if (
-    token &&
-    token.token &&
-    token.time &&
-    informationUser &&
-    informationUser.ID &&
-    informationUser.NAME
+    token?.time &&
+    token?.token &&
+    informationUser?.ID &&
+    informationUser?.NAME
   ) {
     const { ID: id, TEMPLATE: userTemplate, NAME: username } = informationUser
-    const dataJWT = { id, user: username, token: token.token }
-    const expire = token.time || expireTime.toSeconds()
-    const jwt = createJWT(dataJWT, nowUnix, expire)
+    const jwt = createJWT({ id, user: username, token: token.token })
+
     if (jwt) {
       const rtn = { token: jwt, id }
-      if (userTemplate && userTemplate.SUNSTONE && userTemplate.SUNSTONE.LANG) {
+      if (userTemplate?.SUNSTONE?.LANG) {
         rtn.language = userTemplate.SUNSTONE.LANG
       }
       updaterResponse(httpResponse(ok, rtn))
@@ -318,33 +301,27 @@ const genJWT = (token, informationUser) => {
  * @returns {object} - user token
  */
 const getCreatedTokenOpennebula = (username = '') => {
-  if (
-    global &&
-    global.users &&
-    username &&
-    global.users[username] &&
-    global.users[username].tokens
-  ) {
+  const { now, nowUnix, limitExpirationReuseToken } = setDates()
+  if (username && global?.users?.[username]?.tokens) {
     let acc = { token: '', time: 0 }
     global.users[username].tokens.forEach((curr = {}, index = 0) => {
-      const currentTime = parseInt(curr.time, 10)
+      const tokenExpirationTime = parseInt(curr.time, 10)
 
       // this delete expired tokens of global.users[username]
-      if (currentTime < nowUnix) {
+      if (tokenExpirationTime < nowUnix) {
         delete global.users[username].tokens[index]
       }
 
       // this select a valid token
       if (
-        DateTime.fromSeconds(currentTime).minus({
+        DateTime.fromSeconds(tokenExpirationTime).minus({
           minutes: limitExpirationReuseToken,
         }) >= now &&
-        currentTime >= acc.time
+        tokenExpirationTime >= acc.time
       ) {
         acc = { token: curr.token, time: curr.time }
       }
     })
-
     if (acc.token && acc.time) {
       return acc
     }
@@ -358,11 +335,8 @@ const setZones = () => {
   if (global && !global.zones) {
     const oneConnect = connectOpennebula()
     oneConnect({
-      action: ActionZones.ZONE_POOL_INFO,
-      parameters: getDefaultParamsOfOpennebulaCommand(
-        ActionZones.ZONE_POOL_INFO,
-        GET
-      ),
+      action: ZONE_POOL_INFO,
+      parameters: getDefaultParamsOfOpennebulaCommand(ZONE_POOL_INFO, GET),
       callback: (err, value) => {
         // res, err, value, response, next
         responseOpennebula(
@@ -379,9 +353,7 @@ const setZones = () => {
                 ? [zonesOpennebula.ZONE_POOL.ZONE]
                 : zonesOpennebula.ZONE_POOL.ZONE
               global.zones = oneZones.map((oneZone) => {
-                const rpc =
-                  (oneZone && oneZone.TEMPLATE && oneZone.TEMPLATE.ENDPOINT) ||
-                  ''
+                const rpc = oneZone?.TEMPLATE?.ENDPOINT || ''
                 const parsedURL = rpc && parse(rpc)
                 const parsedHost = parsedURL.hostname || ''
 
@@ -419,8 +391,8 @@ const createTokenServerAdmin = ({
   serverAdmin = username,
 }) => {
   if (username && key && iv) {
-    !(expireTime && typeof expireTime.toSeconds === 'function') && setDates()
-    const expire = parseInt(expireTime.toSeconds(), 10)
+    const { expireTime } = setDates()
+    const expire = parseInt(expireTime, 10)
 
     return {
       token: encrypt(`${serverAdmin}:${username}:${expire}`, key, iv),
@@ -439,11 +411,11 @@ const wrapUserWithServerAdmin = (serverAdminData = {}, userData = {}) => {
   let serverAdminName = ''
   let serverAdminPassword = ''
   let userName = ''
+  const { relativeTime, expireTime } = setDates()
 
   if (
-    getRelativeTime() &&
-    serverAdminData &&
-    serverAdminData.USER &&
+    relativeTime &&
+    serverAdminData?.USER &&
     (serverAdminName = serverAdminData.USER.NAME) &&
     (serverAdminPassword = serverAdminData.USER.PASSWORD) &&
     userData &&
@@ -489,7 +461,7 @@ const wrapUserWithServerAdmin = (serverAdminData = {}, userData = {}) => {
         }
         global.users[JWTusername].tokens.push({
           token: tokenWithServerAdmin.token,
-          time: parseInt(expireTime.toSeconds(), 10),
+          time: parseInt(expireTime, 10),
         })
       }
       next()
@@ -501,48 +473,86 @@ const wrapUserWithServerAdmin = (serverAdminData = {}, userData = {}) => {
 }
 
 /**
+ * Get server admin.
+ *
+ * @returns {object|undefined} data serveradmin
+ */
+const getServerAdmin = () => {
+  const serverAdminData = getSunstoneAuth()
+  const { username, key, iv } = serverAdminData
+  if (username && key && iv) {
+    return {
+      ...serverAdminData,
+      token: createTokenServerAdmin({
+        serverAdmin: username,
+        username,
+        key,
+        iv,
+      }),
+    }
+  }
+}
+
+/**
  * Get server admin and wrap user.
  *
  * @param {object} userData - opennebula user data
  */
 const getServerAdminAndWrapUser = (userData = {}) => {
-  const serverAdminData = getSunstoneAuth()
-  if (
-    serverAdminData &&
-    serverAdminData.username &&
-    serverAdminData.key &&
-    serverAdminData.iv
-  ) {
-    const tokenWithServerAdmin = createTokenServerAdmin({
-      serverAdmin: serverAdminData.username,
-      username: serverAdminData.username,
-      key: serverAdminData.key,
-      iv: serverAdminData.iv,
+  const serverAdminData = getServerAdmin()
+  const { username, token } = serverAdminData
+  if (username && token) {
+    const oneConnect = connectOpennebula(`${username}:${username}`, token.token)
+    oneConnect({
+      action: USER_INFO,
+      parameters: getDefaultParamsOfOpennebulaCommand(USER_INFO, GET),
+      callback: (err, value) => {
+        responseOpennebula(
+          updaterResponse,
+          err,
+          value,
+          (serverAdmin = {}) => wrapUserWithServerAdmin(serverAdmin, userData),
+          next
+        )
+      },
+      fillHookResource: false,
     })
-    if (tokenWithServerAdmin.token) {
-      const oneConnect = connectOpennebula(
-        `${serverAdminData.username}:${serverAdminData.username}`,
-        tokenWithServerAdmin.token
-      )
-      oneConnect({
-        action: ActionUsers.USER_INFO,
-        parameters: getDefaultParamsOfOpennebulaCommand(
-          ActionUsers.USER_INFO,
-          GET
-        ),
-        callback: (err, value) => {
-          responseOpennebula(
-            updaterResponse,
-            err,
-            value,
-            (serverAdmin = {}) =>
-              wrapUserWithServerAdmin(serverAdmin, userData),
-            next
+  }
+}
+
+/**
+ * Remote login route function.
+ *
+ * @param {string} userData - user remote data user:password
+ */
+const remoteLogin = (userData = '') => {
+  const serverAdminData = getServerAdmin()
+  const { username, token } = serverAdminData
+  const [usr, pss = usr] = userData.split(':')
+  if (username && token && usr && pss) {
+    const oneConnect = connectOpennebula(`${username}:${username}`, token.token)
+    oneConnect({
+      action: USER_POOL_INFO,
+      parameters: getDefaultParamsOfOpennebulaCommand(USER_POOL_INFO, GET),
+      callback: (_, value) => {
+        const users = value?.USER_POOL?.USER || []
+        if (users.length) {
+          const userFound = users.find(
+            (data) =>
+              data.NAME === usr &&
+              data.PASSWORD === pss &&
+              data.AUTH_DRIVER === 'public'
           )
-        },
-        fillHookResource: false,
-      })
-    }
+          if (userFound) {
+            setZones()
+            getServerAdminAndWrapUser(userFound)
+          } else {
+            next()
+          }
+        }
+      },
+      fillHookResource: false,
+    })
   }
 }
 
@@ -554,7 +564,9 @@ const getServerAdminAndWrapUser = (userData = {}) => {
 const login = (userData) => {
   let rtn = false
   if (userData) {
-    const findTextError = `[${namespace}.${ActionUsers.USER_INFO}]`
+    const appConfig = getFireedgeConfig()
+    const namespace = appConfig.namespace || defaultNamespace
+    const findTextError = `[${namespace}.${USER_INFO}]`
     if (userData.indexOf && userData.indexOf(findTextError) >= 0) {
       updaterResponse(httpResponse(unauthorized))
     } else {
@@ -564,7 +576,6 @@ const login = (userData) => {
       setZones()
       if (validate2faAuthentication(userData.USER)) {
         rtn = false
-        setDates()
         getServerAdminAndWrapUser(userData.USER)
       }
     }
@@ -574,7 +585,7 @@ const login = (userData) => {
   }
 }
 
-const functionRoutes = {
+module.exports = {
   login,
   getUser,
   getPass,
@@ -591,6 +602,6 @@ const functionRoutes = {
   connectOpennebula,
   getCreatedTokenOpennebula,
   createTokenServerAdmin,
+  remoteLogin,
+  getServerAdmin,
 }
-
-module.exports = functionRoutes

@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------------- *
- * Copyright 2002-2022, OpenNebula Project, OpenNebula Systems               *
+ * Copyright 2002-2023, OpenNebula Project, OpenNebula Systems               *
  *                                                                           *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may   *
  * not use this file except in compliance with the License. You may obtain   *
@@ -48,6 +48,7 @@ const ToggleController = memo(
     values = [],
     tooltip,
     fieldProps = {},
+    notNull = false,
     readOnly = false,
   }) => {
     const {
@@ -65,7 +66,7 @@ const ToggleController = memo(
     return (
       <FormControl fullWidth margin="dense">
         {label && (
-          <Label htmlFor={cy} error={Boolean(message)}>
+          <Label htmlFor={cy} error={message}>
             {labelCanBeTranslated(label) ? Tr(label) : label}
             {tooltip && <Tooltip title={tooltip} />}
           </Label>
@@ -74,7 +75,9 @@ const ToggleController = memo(
           fullWidth
           ref={ref}
           id={cy}
-          onChange={(_, newValues) => !readOnly && onChange(newValues)}
+          onChange={(_, newValues) =>
+            !readOnly && (!notNull || newValues) && onChange(newValues)
+          }
           value={optionSelected}
           exclusive={!multiple}
           data-cy={cy}
@@ -110,6 +113,7 @@ ToggleController.propTypes = {
   values: PropTypes.arrayOf(PropTypes.object).isRequired,
   renderValue: PropTypes.func,
   fieldProps: PropTypes.object,
+  notNull: PropTypes.bool,
   readOnly: PropTypes.bool,
 }
 

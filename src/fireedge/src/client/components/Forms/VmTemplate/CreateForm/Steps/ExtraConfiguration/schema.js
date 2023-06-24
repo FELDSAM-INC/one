@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------------- *
- * Copyright 2002-2022, OpenNebula Project, OpenNebula Systems               *
+ * Copyright 2002-2023, OpenNebula Project, OpenNebula Systems               *
  *                                                                           *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may   *
  * not use this file except in compliance with the License. You may obtain   *
@@ -18,6 +18,7 @@ import { array, object, ObjectSchema } from 'yup'
 import { HYPERVISORS } from 'client/constants'
 import { getObjectSchemaFromFields } from 'client/utils'
 import { FIELDS as PLACEMENT_FIELDS } from './placement/schema'
+import { FIELDS as BACKUP_FIELDS } from './backup/schema'
 import { FIELDS as OS_FIELDS, BOOT_ORDER_FIELD } from './booting/schema'
 import { SCHEMA as NUMA_SCHEMA, FIELDS as NUMA_FIELDS } from './numa/schema'
 import { SCHEMA as IO_SCHEMA } from './inputOutput/schema'
@@ -59,6 +60,7 @@ export const SCHEMA = (hypervisor) =>
     .concat(
       getObjectSchemaFromFields([...PLACEMENT_FIELDS, ...OS_FIELDS(hypervisor)])
     )
+    .concat(getObjectSchemaFromFields([...BACKUP_FIELDS]))
     .concat(NUMA_SCHEMA(hypervisor))
 
 export {

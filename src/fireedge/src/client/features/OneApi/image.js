@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------------- *
- * Copyright 2002-2022, OpenNebula Project, OpenNebula Systems               *
+ * Copyright 2002-2023, OpenNebula Project, OpenNebula Systems               *
  *                                                                           *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may   *
  * not use this file except in compliance with the License. You may obtain   *
@@ -20,18 +20,57 @@ import {
   ONE_RESOURCES_POOL,
 } from 'client/features/OneApi'
 import { UpdateFromSocket } from 'client/features/OneApi/socket'
+import http from 'client/utils/rest'
 import {
   FilterFlag,
   Image,
   Permission,
   IMAGE_TYPES_STR,
+  IMAGE_TYPES_FOR_FILES,
+  IMAGE_TYPES_FOR_IMAGES,
+  IMAGE_TYPES_FOR_BACKUPS,
 } from 'client/constants'
+import { getType } from 'client/models/Image'
 
 const { IMAGE } = ONE_RESOURCES
 const { IMAGE_POOL } = ONE_RESOURCES_POOL
 
 const imageApi = oneApi.injectEndpoints({
   endpoints: (builder) => ({
+    getAllImages: builder.query({
+      /**
+       * Retrieves information for all or part of the images in the pool.
+       *
+       * @param {object} params - Request params
+       * @param {FilterFlag} [params.filter] - Filter flag
+       * @param {number} [params.start] - Range start ID
+       * @param {number} [params.end] - Range end ID
+       * @returns {Image[]} List of images
+       * @throws Fails when response isn't code 200
+       */
+      query: (params) => {
+        const name = Actions.IMAGE_POOL_INFO
+        const command = { name, ...Commands[name] }
+
+        return { params, command }
+      },
+      transformResponse: (data) => {
+        const imagesPool = data?.IMAGE_POOL?.IMAGE
+          ? Array.isArray(data.IMAGE_POOL.IMAGE)
+            ? data.IMAGE_POOL.IMAGE
+            : [data.IMAGE_POOL.IMAGE]
+          : []
+
+        return imagesPool
+      },
+      providesTags: (images) =>
+        images
+          ? [
+              ...images.map(({ ID }) => ({ type: IMAGE_POOL, id: `${ID}` })),
+              IMAGE_POOL,
+            ]
+          : [IMAGE_POOL],
+    }),
     getImages: builder.query({
       /**
        * Retrieves information for all or part of the images in the pool.
@@ -49,7 +88,101 @@ const imageApi = oneApi.injectEndpoints({
 
         return { params, command }
       },
-      transformResponse: (data) => [data?.IMAGE_POOL?.IMAGE ?? []].flat(),
+      transformResponse: (data) => {
+        const imagesPool = data?.IMAGE_POOL?.IMAGE
+          ? Array.isArray(data.IMAGE_POOL.IMAGE)
+            ? data.IMAGE_POOL.IMAGE
+            : [data.IMAGE_POOL.IMAGE]
+          : []
+
+        const images = imagesPool.filter((image) =>
+          IMAGE_TYPES_FOR_IMAGES.some(
+            (imageType) => imageType === getType(image)
+          )
+        )
+
+        return images
+      },
+      providesTags: (images) =>
+        images
+          ? [
+              ...images.map(({ ID }) => ({ type: IMAGE_POOL, id: `${ID}` })),
+              IMAGE_POOL,
+            ]
+          : [IMAGE_POOL],
+    }),
+    getFiles: builder.query({
+      /**
+       * Retrieves information for all or part of the images in the pool.
+       *
+       * @param {object} params - Request params
+       * @param {FilterFlag} [params.filter] - Filter flag
+       * @param {number} [params.start] - Range start ID
+       * @param {number} [params.end] - Range end ID
+       * @returns {Image[]} List of images
+       * @throws Fails when response isn't code 200
+       */
+      query: (params) => {
+        const name = Actions.IMAGE_POOL_INFO
+        const command = { name, ...Commands[name] }
+
+        return { params, command }
+      },
+      transformResponse: (data) => {
+        const imagesPool = data?.IMAGE_POOL?.IMAGE
+          ? Array.isArray(data.IMAGE_POOL.IMAGE)
+            ? data.IMAGE_POOL.IMAGE
+            : [data.IMAGE_POOL.IMAGE]
+          : []
+
+        const files = imagesPool.filter((image) =>
+          IMAGE_TYPES_FOR_FILES.some(
+            (imageType) => imageType === getType(image)
+          )
+        )
+
+        return files
+      },
+      providesTags: (images) =>
+        images
+          ? [
+              ...images.map(({ ID }) => ({ type: IMAGE_POOL, id: `${ID}` })),
+              IMAGE_POOL,
+            ]
+          : [IMAGE_POOL],
+    }),
+    getBackups: builder.query({
+      /**
+       * Retrieves information for all or part of the images in the pool.
+       *
+       * @param {object} params - Request params
+       * @param {FilterFlag} [params.filter] - Filter flag
+       * @param {number} [params.start] - Range start ID
+       * @param {number} [params.end] - Range end ID
+       * @returns {Image[]} List of images
+       * @throws Fails when response isn't code 200
+       */
+      query: (params) => {
+        const name = Actions.IMAGE_POOL_INFO
+        const command = { name, ...Commands[name] }
+
+        return { params, command }
+      },
+      transformResponse: (data) => {
+        const imagesPool = data?.IMAGE_POOL?.IMAGE
+          ? Array.isArray(data.IMAGE_POOL.IMAGE)
+            ? data.IMAGE_POOL.IMAGE
+            : [data.IMAGE_POOL.IMAGE]
+          : []
+
+        const backups = imagesPool.filter((image) =>
+          IMAGE_TYPES_FOR_BACKUPS.some(
+            (imageType) => imageType === getType(image)
+          )
+        )
+
+        return backups
+      },
       providesTags: (images) =>
         images
           ? [
@@ -88,7 +221,7 @@ const imageApi = oneApi.injectEndpoints({
        *
        * @param {object} params - Request params
        * @param {string} params.template - A string containing the template of the image on syntax XML
-       * @param {string} params.id - The datastore ID
+       * @param {string} params.datastore - The datastore ID
        * @param {boolean} [params.capacity] - `true` to avoid checking datastore capacity
        * @returns {number} Image id
        * @throws Fails when response isn't code 200
@@ -100,6 +233,35 @@ const imageApi = oneApi.injectEndpoints({
         return { params, command }
       },
       invalidatesTags: [IMAGE_POOL],
+    }),
+    uploadImage: builder.mutation({
+      /**
+       * Upload image.
+       *
+       * @param {object} params - request params
+       * @param {object} params.file - image file
+       * @param {Function} params.uploadProcess - upload process function
+       * @returns {number} Virtual machine id
+       * @throws Fails when response isn't code 200
+       */
+      queryFn: async ({ file, uploadProcess }) => {
+        try {
+          const data = new FormData()
+          data.append('files', file)
+          const response = await http.request({
+            url: '/api/image/upload',
+            method: 'POST',
+            data,
+            onUploadProgress: uploadProcess,
+          })
+
+          return { data: response.data }
+        } catch (axiosError) {
+          const { response } = axiosError
+
+          return { error: { status: response?.status, data: response?.data } }
+        }
+      },
     }),
     cloneImage: builder.mutation({
       /**
@@ -381,15 +543,40 @@ const imageApi = oneApi.injectEndpoints({
       },
       invalidatesTags: (_, __, { id }) => [{ type: IMAGE, id }, IMAGE_POOL],
     }),
+    restoreBackup: builder.mutation({
+      /**
+       * Restores an image.
+       *
+       * @param {number|string} params - Request params
+       * @param {string} params.id - Image id
+       * @param {number} params.datastore - New type for the Image
+       * @param {string} params.options - New type for the Image
+       * @returns {number} Image id
+       * @throws Fails when response isn't code 200
+       */
+      query: (params) => {
+        const name = Actions.IMAGE_RESTORE
+        const command = { name, ...Commands[name] }
+
+        return { params, command }
+      },
+      invalidatesTags: (_, __, id) => [{ type: IMAGE, id }],
+    }),
   }),
 })
 
 export const {
   // Queries
+  useGetAllImagesQuery,
+  useLazyGetAllImagesQuery,
   useGetImageQuery,
   useLazyGetImageQuery,
   useGetImagesQuery,
   useLazyGetImagesQuery,
+  useGetFilesQuery,
+  useLazyGetFilesQuery,
+  useGetBackupsQuery,
+  useLazyGetBackupsQuery,
 
   // Mutations
   useAllocateImageMutation,
@@ -408,4 +595,6 @@ export const {
   useFlattenImageSnapshotMutation,
   useLockImageMutation,
   useUnlockImageMutation,
+  useUploadImageMutation,
+  useRestoreBackupMutation,
 } = imageApi

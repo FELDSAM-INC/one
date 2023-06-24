@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------------- *
- * Copyright 2002-2022, OpenNebula Project, OpenNebula Systems               *
+ * Copyright 2002-2023, OpenNebula Project, OpenNebula Systems               *
  *                                                                           *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may   *
  * not use this file except in compliance with the License. You may obtain   *
@@ -13,16 +13,16 @@
  * See the License for the specific language governing permissions and       *
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
-import { useState, useMemo, ReactElement } from 'react'
 import PropTypes from 'prop-types'
+import { ReactElement, useMemo, useState } from 'react'
 
 import {
-  styled,
-  Tabs as MTabs,
-  TabsProps,
-  Tab as MTab,
   Fade,
+  Tab as MTab,
+  Tabs as MTabs,
   Stack,
+  TabsProps,
+  styled,
 } from '@mui/material'
 import { WarningCircledOutline } from 'iconoir-react'
 
@@ -49,6 +49,8 @@ const Content = ({
   renderContent: RenderContent,
   hidden,
   addBorder = false,
+  setTab,
+  logTabId,
 }) => (
   <TabContent
     key={`tab-${id ?? name}`}
@@ -59,7 +61,7 @@ const Content = ({
     <Fade in timeout={400}>
       <TabContent sx={{ p: '1em .5em' }}>
         {typeof RenderContent === 'function' ? (
-          <RenderContent />
+          <RenderContent setTab={setTab} logTabId={logTabId} />
         ) : (
           RenderContent
         )}
@@ -129,6 +131,12 @@ const Tabs = ({
     [tabSelected]
   )
 
+  const logTabId = tabs
+    .map(function (tabProps) {
+      return tabProps.name
+    })
+    .indexOf('log')
+
   return (
     <Stack height={1} overflow="auto">
       <Fade in timeout={300}>
@@ -139,7 +147,9 @@ const Tabs = ({
       ) : (
         <Content
           addBorder={addBorder}
+          setTab={setTab}
           {...tabs.find(({ value }, idx) => (value ?? idx) === tabSelected)}
+          logTabId={logTabId}
         />
       )}
     </Stack>
@@ -162,6 +172,8 @@ Content.propTypes = {
   renderContent: PropTypes.oneOfType([PropTypes.object, PropTypes.func]),
   hidden: PropTypes.bool,
   addBorder: PropTypes.bool,
+  setTab: PropTypes.func,
+  logTabId: PropTypes.number,
 }
 
 export default Tabs

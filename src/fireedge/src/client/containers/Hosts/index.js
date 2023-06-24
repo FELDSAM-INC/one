@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------------- *
- * Copyright 2002-2022, OpenNebula Project, OpenNebula Systems               *
+ * Copyright 2002-2023, OpenNebula Project, OpenNebula Systems               *
  *                                                                           *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may   *
  * not use this file except in compliance with the License. You may obtain   *
@@ -13,20 +13,26 @@
  * See the License for the specific language governing permissions and       *
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
-import { ReactElement, useState, memo } from 'react'
+import { Box, Chip, Stack, Typography } from '@mui/material'
+import Cancel from 'iconoir-react/dist/Cancel'
+import GotoIcon from 'iconoir-react/dist/Pin'
+import RefreshDouble from 'iconoir-react/dist/RefreshDouble'
 import PropTypes from 'prop-types'
-import { BookmarkEmpty } from 'iconoir-react'
-import { Typography, Box, Stack, Chip, IconButton } from '@mui/material'
+import { ReactElement, memo, useState } from 'react'
 import { Row } from 'react-table'
 
-import hostApi from 'client/features/OneApi/host'
-import { HostsTable } from 'client/components/Tables'
-import HostTabs from 'client/components/Tabs/Host'
-import HostActions from 'client/components/Tables/Hosts/actions'
-import SplitPane from 'client/components/SplitPane'
-import MultipleTags from 'client/components/MultipleTags'
+import { SubmitButton } from 'client/components/FormControl'
 import { Tr } from 'client/components/HOC'
-import { T } from 'client/constants'
+import MultipleTags from 'client/components/MultipleTags'
+import SplitPane from 'client/components/SplitPane'
+import { HostsTable } from 'client/components/Tables'
+import HostActions from 'client/components/Tables/Hosts/actions'
+import HostTabs from 'client/components/Tabs/Host'
+import { Host, T } from 'client/constants'
+import {
+  useLazyGetHostQuery,
+  useUpdateHostMutation,
+} from 'client/features/OneApi/host'
 
 /**
  * Displays a list of Hosts with a split pane between the list and selected row(s).
@@ -43,10 +49,11 @@ function Hosts() {
   return (
     <SplitPane gridTemplateRows="1fr auto 1fr">
       {({ getGridProps, GutterComponent }) => (
-        <Box {...(hasSelectedRows && getGridProps())}>
+        <Box height={1} {...(hasSelectedRows && getGridProps())}>
           <HostsTable
             onSelectedRowsChange={onSelectedRowsChange}
             globalActions={actions}
+            useUpdateMutation={useUpdateHostMutation}
           />
 
           {hasSelectedRows && (
@@ -56,8 +63,9 @@ function Hosts() {
                 <GroupedTags tags={selectedRows} />
               ) : (
                 <InfoTabs
-                  id={selectedRows[0]?.original?.ID}
+                  host={selectedRows[0]?.original}
                   gotoPage={selectedRows[0]?.gotoPage}
+                  unselect={() => selectedRows[0]?.toggleRowSelected(false)}
                 />
               )}
             </>
@@ -71,26 +79,48 @@ function Hosts() {
 /**
  * Displays details of a Host.
  *
- * @param {string} id - Host id to display
+ * @param {Host} host - Host to display
  * @param {Function} [gotoPage] - Function to navigate to a page of a Host
+ * @param {Function} [unselect] - Function to unselect a Host
  * @returns {ReactElement} Host details
  */
-const InfoTabs = memo(({ id, gotoPage }) => {
-  const host = hostApi.endpoints.getHosts.useQueryState(undefined, {
-    selectFromResult: ({ data = [] }) => data.find((item) => +item.ID === +id),
-  })
+const InfoTabs = memo(({ host, gotoPage, unselect }) => {
+  const [getVm, { data: lazyData, isFetching }] = useLazyGetHostQuery()
+  const id = lazyData?.ID ?? host.ID
+  const name = lazyData?.NAME ?? host.NAME
 
   return (
     <Stack overflow="auto">
-      <Stack direction="row" alignItems="center" gap={1} mb={1}>
-        <Typography color="text.primary" noWrap>
-          {`#${id} | ${host.NAME}`}
+      <Stack direction="row" alignItems="center" gap={1} mx={1} mb={1}>
+        <Typography color="text.primary" noWrap flexGrow={1}>
+          {`#${id} | ${name}`}
         </Typography>
-        {gotoPage && (
-          <IconButton title={Tr(T.LocateOnTable)} onClick={gotoPage}>
-            <BookmarkEmpty />
-          </IconButton>
+
+        {/* -- ACTIONS -- */}
+        <SubmitButton
+          data-cy="detail-refresh"
+          icon={<RefreshDouble />}
+          tooltip={Tr(T.Refresh)}
+          isSubmitting={isFetching}
+          onClick={() => getVm({ id })}
+        />
+        {typeof gotoPage === 'function' && (
+          <SubmitButton
+            data-cy="locate-on-table"
+            icon={<GotoIcon />}
+            tooltip={Tr(T.LocateOnTable)}
+            onClick={() => gotoPage()}
+          />
         )}
+        {typeof unselect === 'function' && (
+          <SubmitButton
+            data-cy="unselect"
+            icon={<Cancel />}
+            tooltip={Tr(T.Close)}
+            onClick={() => unselect()}
+          />
+        )}
+        {/* -- END ACTIONS -- */}
       </Stack>
       <HostTabs id={id} />
     </Stack>
@@ -98,8 +128,9 @@ const InfoTabs = memo(({ id, gotoPage }) => {
 })
 
 InfoTabs.propTypes = {
-  id: PropTypes.string.isRequired,
+  host: PropTypes.object,
   gotoPage: PropTypes.func,
+  unselect: PropTypes.func,
 }
 
 InfoTabs.displayName = 'InfoTabs'

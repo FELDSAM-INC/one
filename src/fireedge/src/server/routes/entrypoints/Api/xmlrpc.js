@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------------- *
- * Copyright 2002-2022, OpenNebula Project, OpenNebula Systems               *
+ * Copyright 2002-2023, OpenNebula Project, OpenNebula Systems               *
  *                                                                           *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may   *
  * not use this file except in compliance with the License. You may obtain   *
@@ -28,7 +28,10 @@ const {
 const { fillResourceforHookConnection } = require('server/utils/opennebula')
 const { httpResponse, validateHttpMethod } = require('server/utils/server')
 const { useWorker, parseReturnWorker } = require('server/utils/worker')
-const { writeInLogger } = require('server/utils/logger')
+const {
+  writeInLogger,
+  writeInLoggerInvalidRPC,
+} = require('server/utils/logger')
 
 const {
   defaultEmptyFunction,
@@ -59,35 +62,37 @@ const executeWorker = ({
   next,
   res,
 }) => {
-  if (user && password && rpc && command && paramsCommand) {
-    const worker = useWorker()
-    worker.onmessage = function (result) {
-      worker.terminate()
-      const err = result && result.data && result.data.err
-      const value = result && result.data && result.data.value
-      writeInLogger([command, paramsCommand, JSON.stringify(value)], {
-        format: 'worker: %s, [%s]: %s',
-        level: 2,
-      })
-      if (!err) {
-        fillResourceforHookConnection(user, command, paramsCommand)
-        res.locals.httpCode = parseReturnWorker(value)
-      }
-      next()
-    }
-
-    worker.postMessage({
-      type: 'xmlrpc',
-      config: {
-        globalState: (global && global.paths) || {},
-        user,
-        password,
-        rpc,
-        command,
-        paramsCommand,
-      },
-    })
+  writeInLoggerInvalidRPC(rpc)
+  if (!(user && password && rpc && command && paramsCommand)) {
+    return
   }
+  const worker = useWorker()
+  worker.onmessage = function (result) {
+    worker.terminate()
+    const err = result && result.data && result.data.err
+    const value = result && result.data && result.data.value
+    writeInLogger([command, paramsCommand, JSON.stringify(value)], {
+      format: 'worker: %s, [%s]: %s',
+      level: 2,
+    })
+    if (!err) {
+      fillResourceforHookConnection(user, command, paramsCommand)
+      res.locals.httpCode = parseReturnWorker(value)
+    }
+    next()
+  }
+
+  worker.postMessage({
+    type: 'xmlrpc',
+    config: {
+      globalState: (global && global.paths) || {},
+      user,
+      password,
+      rpc,
+      command,
+      paramsCommand,
+    },
+  })
 }
 
 /**
@@ -100,22 +105,33 @@ const executeWorker = ({
  */
 const getCommandParams = (config) => {
   const { params, serverDataSource } = config
-  if (params && serverDataSource) {
-    return Object.entries(params).map(([key, value]) => {
-      if (key && value && value.from && typeof value.default !== 'undefined') {
-        // `value == null` checks against undefined and null
-        return serverDataSource[value.from] &&
-          serverDataSource[value.from][key] != null
-          ? upcast.to(
-              serverDataSource[value.from][key],
-              upcast.type(value.default)
-            )
-          : value.default
-      }
-
-      return ''
-    })
+  if (!(params && serverDataSource)) {
+    return
   }
+
+  return Object.entries(params).map(([key, value]) => {
+    if (!(key && value && value.from && typeof value.default !== 'undefined')) {
+      return ''
+    }
+    // `value == null` checks against undefined and null
+    if (
+      serverDataSource[value.from] &&
+      serverDataSource[value.from][key] != null
+    ) {
+      const upcastedData = upcast.to(
+        serverDataSource[value.from][key],
+        upcast.type(value.default)
+      )
+
+      return value.arrayDefault !== undefined && Array.isArray(upcastedData)
+        ? upcastedData.map((internalValue) =>
+            upcast.to(internalValue, upcast.type(value.arrayDefault))
+          )
+        : upcastedData
+    } else {
+      return value.default
+    }
+  })
 }
 
 /**

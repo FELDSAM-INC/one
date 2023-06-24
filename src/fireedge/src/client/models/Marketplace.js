@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------------- *
- * Copyright 2002-2022, OpenNebula Project, OpenNebula Systems               *
+ * Copyright 2002-2023, OpenNebula Project, OpenNebula Systems               *
  *                                                                           *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may   *
  * not use this file except in compliance with the License. You may obtain   *
@@ -58,7 +58,7 @@ export const onedConfIncludesAction = (
   onedConf = {},
   action = 'monitor'
 ) => {
-  const isInZone = onedConf.FEDERATION?.ZONE_ID === marketplace.ZONE_ID
+  const isInZone = (onedConf.FEDERATION?.ZONE_ID ?? '0') === marketplace.ZONE_ID
   const includesAction = onedConf.MARKET_MAD_CONF?.some(
     ({ APP_ACTIONS, NAME }) =>
       APP_ACTIONS?.includes(action) &&

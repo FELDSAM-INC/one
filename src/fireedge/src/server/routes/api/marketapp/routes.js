@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------------- *
- * Copyright 2002-2022, OpenNebula Project, OpenNebula Systems               *
+ * Copyright 2002-2023, OpenNebula Project, OpenNebula Systems               *
  *                                                                           *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may   *
  * not use this file except in compliance with the License. You may obtain   *
@@ -25,13 +25,13 @@ const { query, resource, postBody } = fromData
 const basepath = '/marketapp'
 const MARKETAPP_EXPORT = 'marketapp.export'
 const MARKETAPP_DOWNLOAD = 'marketapp.download'
-const MARKETAPP_VMIMPORT = 'marketapp.vmimport'
+const MARKETAPP_IMPORT = 'marketapp.import'
 const MARKETAPP_DOCKERTAGS = 'marketapp.dockertags'
 
 const Actions = {
   MARKETAPP_EXPORT,
   MARKETAPP_DOWNLOAD,
-  MARKETAPP_VMIMPORT,
+  MARKETAPP_IMPORT,
   MARKETAPP_DOCKERTAGS,
 }
 
@@ -82,8 +82,8 @@ module.exports = {
         },
       },
     },
-    [MARKETAPP_VMIMPORT]: {
-      path: `${basepath}/vmimport/:vmId`,
+    [MARKETAPP_IMPORT]: {
+      path: `${basepath}/vmimport/:id`,
       httpMethod: POST,
       auth: true,
       params: {
@@ -91,7 +91,7 @@ module.exports = {
           from: resource,
         },
         resource: {
-          from: resource,
+          from: postBody,
         },
         associated: {
           from: postBody,

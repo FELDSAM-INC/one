@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------------- *
- * Copyright 2002-2022, OpenNebula Project, OpenNebula Systems               *
+ * Copyright 2002-2023, OpenNebula Project, OpenNebula Systems               *
  *                                                                           *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may   *
  * not use this file except in compliance with the License. You may obtain   *
@@ -13,46 +13,55 @@
  * See the License for the specific language governing permissions and       *
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
-import { ReactElement, memo, useMemo } from 'react'
 import PropTypes from 'prop-types'
+import { ReactElement, memo, useMemo } from 'react'
 
+import { Box, Stack, Tooltip, Typography } from '@mui/material'
 import {
-  Lock,
-  HardDrive,
   Cpu,
+  HardDrive,
+  Lock,
   Network,
   WarningCircledOutline as WarningIcon,
 } from 'iconoir-react'
-import { Box, Stack, Typography, Tooltip } from '@mui/material'
 
-import { useViews } from 'client/features/Auth'
-import MultipleTags from 'client/components/MultipleTags'
-import Timer from 'client/components/Timer'
-import { MemoryIcon } from 'client/components/Icons'
-import { StatusCircle, StatusChip } from 'client/components/Status'
 import { Tr } from 'client/components/HOC'
+import { MemoryIcon } from 'client/components/Icons'
+import MultipleTags from 'client/components/MultipleTags'
+import { StatusChip, StatusCircle } from 'client/components/Status'
 import { rowStyles } from 'client/components/Tables/styles'
+import Timer from 'client/components/Timer'
+import { useViews } from 'client/features/Auth'
 
-import { getState, getLastHistory, getIps } from 'client/models/VirtualMachine'
+import { ACTIONS, RESOURCE_NAMES, T, VM } from 'client/constants'
 import {
-  timeFromMilliseconds,
-  getUniqueLabels,
-  getErrorMessage,
   getColorFromString,
+  getErrorMessage,
+  getUniqueLabels,
+  timeFromMilliseconds,
 } from 'client/models/Helper'
+import { getIps, getLastHistory, getState } from 'client/models/VirtualMachine'
 import { prettyBytes } from 'client/utils'
-import { T, VM, ACTIONS, RESOURCE_NAMES } from 'client/constants'
 
 const VirtualMachineCard = memo(
   /**
    * @param {object} props - Props
    * @param {VM} props.vm - Virtual machine resource
    * @param {object} props.rootProps - Props to root component
+   * @param {function(string):Promise} [props.onClickLabel] - Callback to click label
    * @param {function(string):Promise} [props.onDeleteLabel] - Callback to delete label
    * @param {ReactElement} [props.actions] - Actions
+   * @param {object[]} [props.globalErrors] - Errors globals
    * @returns {ReactElement} - Card
    */
-  ({ vm, rootProps, actions, onDeleteLabel }) => {
+  ({
+    vm,
+    rootProps,
+    actions,
+    onClickLabel,
+    onDeleteLabel,
+    globalErrors = [],
+  }) => {
     const classes = rowStyles()
     const { [RESOURCE_NAMES.VM]: vmView } = useViews()
 
@@ -80,7 +89,36 @@ const VirtualMachineCard = memo(
       return [fromMill, fromMill.toFormat('ff')]
     }, [ETIME, STIME])
 
-    const { color: stateColor, name: stateName } = getState(vm)
+    const {
+      color: stateColor,
+      name: stateName,
+      displayName: stateDisplayName,
+    } = getState(vm)
+
+    const errorRows = globalErrors.filter(
+      (errorRow) => errorRow?.rows?.length && errorRow?.rows?.includes(ID)
+    )
+    const IconsError = () => (
+      <>
+        {errorRows.map((value, index) => (
+          <Tooltip
+            arrow
+            placement="bottom"
+            key={`icon-${ID}-${index}`}
+            title={
+              <Typography variant="subtitle2">
+                {value?.message || ''}
+              </Typography>
+            }
+          >
+            <Box color={`${value?.type || 'error'}.main`} component="span">
+              {value?.icon || ''}
+            </Box>
+          </Tooltip>
+        ))}
+      </>
+    )
+
     const error = useMemo(() => getErrorMessage(vm), [vm])
     const ips = useMemo(() => getIps(vm), [vm])
     const memValue = useMemo(() => prettyBytes(+MEMORY, 'MB'), [MEMORY])
@@ -90,19 +128,24 @@ const VirtualMachineCard = memo(
         getUniqueLabels(LABELS).map((label) => ({
           text: label,
           stateColor: getColorFromString(label),
+          onClick: onClickLabel,
           onDelete: enableEditLabels && onDeleteLabel,
         })),
-      [LABELS, enableEditLabels, onDeleteLabel]
+      [LABELS, enableEditLabels, onClickLabel, onDeleteLabel]
     )
 
     return (
       <div {...rootProps} data-cy={`vm-${ID}`}>
         <div className={classes.main}>
           <div className={classes.title}>
-            <StatusCircle color={stateColor} tooltip={stateName} />
+            <StatusCircle
+              color={stateColor}
+              tooltip={stateDisplayName ?? stateName}
+            />
             <Typography noWrap component="span">
               {NAME}
             </Typography>
+            <IconsError />
             {error && (
               <Tooltip
                 arrow
@@ -159,8 +202,10 @@ VirtualMachineCard.propTypes = {
   rootProps: PropTypes.shape({
     className: PropTypes.string,
   }),
+  onClickLabel: PropTypes.func,
   onDeleteLabel: PropTypes.func,
   actions: PropTypes.any,
+  globalErrors: PropTypes.array,
 }
 
 VirtualMachineCard.displayName = 'VirtualMachineCard'

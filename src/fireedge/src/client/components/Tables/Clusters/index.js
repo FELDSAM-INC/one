@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------------- *
- * Copyright 2002-2022, OpenNebula Project, OpenNebula Systems               *
+ * Copyright 2002-2023, OpenNebula Project, OpenNebula Systems               *
  *                                                                           *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may   *
  * not use this file except in compliance with the License. You may obtain   *
@@ -30,12 +30,33 @@ const DEFAULT_DATA_CY = 'clusters'
  * @returns {ReactElement} Clusters table
  */
 const ClustersTable = (props) => {
-  const { rootProps = {}, searchProps = {}, ...rest } = props ?? {}
+  const {
+    rootProps = {},
+    searchProps = {},
+    useQuery = useGetClustersQuery,
+    datastoreId,
+    ...rest
+  } = props ?? {}
   rootProps['data-cy'] ??= DEFAULT_DATA_CY
   searchProps['data-cy'] ??= `search-${DEFAULT_DATA_CY}`
 
   const { view, getResourceView } = useViews()
-  const { data = [], isFetching, refetch } = useGetClustersQuery()
+  const {
+    data = [],
+    isFetching,
+    refetch,
+  } = useQuery(undefined, {
+    selectFromResult: (result) => ({
+      ...result,
+      data: result?.data?.filter((cluster) => {
+        if (datastoreId) {
+          return cluster?.DATASTORES?.ID?.includes(datastoreId)
+        }
+
+        return true
+      }),
+    }),
+  })
 
   const columns = useMemo(
     () =>

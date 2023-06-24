@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------------- *
- * Copyright 2002-2022, OpenNebula Project, OpenNebula Systems               *
+ * Copyright 2002-2023, OpenNebula Project, OpenNebula Systems               *
  *                                                                           *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may   *
  * not use this file except in compliance with the License. You may obtain   *
@@ -49,7 +49,10 @@ function ProviderCreateForm() {
   const { enqueueSuccess, enqueueError } = useGeneralApi()
 
   const [createProvider] = useCreateProviderMutation()
-  const [updateProvider] = useUpdateProviderMutation()
+  const [
+    updateProvider,
+    { isSuccess: successUpdate, originalArgs: { id: updatedProviderId } = {} },
+  ] = useUpdateProviderMutation()
 
   const { data: providerConfig, error: errorConfig } =
     useGetProviderConfigQuery(undefined, { refetchOnMountOrArgChange: false })
@@ -71,7 +74,6 @@ function ProviderCreateForm() {
 
       if (id !== undefined) {
         await updateProvider({ id, data: submitData })
-        enqueueSuccess(`Provider updated - ID: ${id}`)
       } else {
         if (!isValidProviderTemplate(submitData, providerConfig)) {
           enqueueError(
@@ -81,7 +83,7 @@ function ProviderCreateForm() {
         }
 
         const responseId = await createProvider({ data: submitData }).unwrap()
-        enqueueSuccess(`Provider created - ID: ${responseId}`)
+        responseId && enqueueSuccess(`Provider created - ID: ${responseId}`)
       }
 
       history.push(PATH.PROVIDERS.LIST)
@@ -92,6 +94,11 @@ function ProviderCreateForm() {
     id && getProvider(id)
     id && getConnection(id)
   }, [])
+
+  useEffect(() => {
+    successUpdate &&
+      enqueueSuccess(`Provider updated - ID: ${updatedProviderId}`)
+  }, [successUpdate])
 
   if (errorConfig || errorConnection || errorProvider) {
     return <Redirect to={PATH.PROVIDERS.LIST} />

@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------------- *
- * Copyright 2002-2022, OpenNebula Project, OpenNebula Systems               *
+ * Copyright 2002-2023, OpenNebula Project, OpenNebula Systems               *
  *                                                                           *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may   *
  * not use this file except in compliance with the License. You may obtain   *
@@ -13,29 +13,30 @@
  * See the License for the specific language governing permissions and       *
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
-import { ReactElement, memo, useMemo } from 'react'
 import PropTypes from 'prop-types'
+import { ReactElement, memo, useMemo } from 'react'
 
-import { Network } from 'iconoir-react'
 import {
-  useMediaQuery,
-  Typography,
+  Accordion,
+  AccordionDetails,
+  AccordionSummary,
   Box,
   Paper,
   Stack,
-  Accordion,
-  AccordionSummary,
-  AccordionDetails,
+  Typography,
+  useMediaQuery,
 } from '@mui/material'
+import { Network } from 'iconoir-react'
 
-import { rowStyles } from 'client/components/Tables/styles'
-import { StatusChip } from 'client/components/Status'
 import MultipleTags from 'client/components/MultipleTags'
+import { StatusChip } from 'client/components/Status'
+import { rowStyles } from 'client/components/Tables/styles'
 
 import { Translate } from 'client/components/HOC'
+import { SecurityGroupRules } from 'client/components/Tabs/Common/RulesSecGroups'
+import { Nic, NicAlias, T } from 'client/constants'
 import { stringToBoolean } from 'client/models/Helper'
 import { groupBy } from 'client/utils'
-import { T, Nic, NicAlias, PrettySecurityGroupRule } from 'client/constants'
 
 const NicCard = memo(
   /**
@@ -63,6 +64,9 @@ const NicCard = memo(
       NIC_ID,
       NETWORK = '-',
       IP,
+      IP6,
+      IP6_GLOBAL,
+      IP6_ULA,
       MAC,
       PCI_ID,
       RDP,
@@ -71,10 +75,11 @@ const NicCard = memo(
       ADDRESS,
       ALIAS,
       SECURITY_GROUPS,
+      TYPE,
     } = nic
 
     const isAlias = !!PARENT?.length
-    const isPciDevice = PCI_ID !== undefined
+    const isPciDevice = PCI_ID !== undefined || TYPE === 'NIC'
     const isAdditionalIp = NIC_ID === undefined || NETWORK === 'Additional IP'
 
     const dataCy = isAlias ? 'alias' : 'nic'
@@ -96,10 +101,13 @@ const NicCard = memo(
       () =>
         [
           { text: IP, dataCy: `${dataCy}-ip` },
+          { text: IP6, dataCy: `${dataCy}-ip6` },
+          { text: IP6_GLOBAL, dataCy: `${dataCy}-ip6-global` },
+          { text: IP6_ULA, dataCy: `${dataCy}-ip6-ula` },
           { text: MAC, dataCy: `${dataCy}-mac` },
           { text: ADDRESS, dataCy: `${dataCy}-address` },
         ].filter(({ text } = {}) => Boolean(text)),
-      [IP, MAC, ADDRESS]
+      [IP, IP6, IP6_GLOBAL, IP6_ULA, MAC, ADDRESS]
     )
 
     return (
@@ -119,6 +127,7 @@ const NicCard = memo(
             </Typography>
             <span className={classes.labels}>
               {isAlias && <StatusChip stateColor="info" text={'ALIAS'} />}
+              {isPciDevice && <StatusChip stateColor="info" text={'PCI'} />}
               {noClipboardTags.map((tag) => (
                 <StatusChip
                   key={`${dataCy}-${NIC_ID}-${tag.dataCy}`}
@@ -147,9 +156,7 @@ const NicCard = memo(
             </span>
           </div>
         </Box>
-        {!isPciDevice && !isAdditionalIp && (
-          <div className={classes.actions}>{actions}</div>
-        )}
+        {!isAdditionalIp && <div className={classes.actions}>{actions}</div>}
         {!!ALIAS?.length && (
           <Stack gap="1em" flexBasis="100%" my="0.5em">
             {ALIAS?.map((alias, aliasIdx) => (
@@ -170,7 +177,7 @@ const NicCard = memo(
           const rulesById = Object.entries(groupBy(SECURITY_GROUPS, 'ID'))
 
           return (
-            <Accordion variant="outlined">
+            <Accordion variant="outlined" data-cy="security-groups">
               <AccordionSummary>
                 <Typography variant="body1">
                   <Translate word={T.SecurityGroups} />
@@ -209,93 +216,5 @@ NicCard.propTypes = {
 }
 
 NicCard.displayName = 'NicCard'
-
-const SecurityGroupRules = memo(({ parentKey, id, actions, rules }) => {
-  const classes = rowStyles()
-
-  const COLUMNS = useMemo(
-    () => [T.Protocol, T.Type, T.Range, T.Network, T.IcmpType],
-    []
-  )
-
-  const name = rules?.[0]?.NAME ?? 'default'
-
-  return (
-    <>
-      <Stack direction="row" spacing={1} alignItems="center">
-        <Typography
-          noWrap
-          component="span"
-          variant="subtitle1"
-          data-cy={`${parentKey}-rule-name`}
-        >
-          {`#${id} ${name}`}
-        </Typography>
-        {!!actions && <div className={classes.actions}>{actions}</div>}
-      </Stack>
-      <Box display="grid" gridTemplateColumns="repeat(5, 1fr)" gap="0.5em">
-        {COLUMNS.map((col) => (
-          <Typography
-            key={`${parentKey}-${col}`}
-            noWrap
-            component="span"
-            variant="subtitle2"
-          >
-            <Translate word={col} />
-          </Typography>
-        ))}
-        {rules.map((rule) => (
-          <SecurityGroupRule
-            key={`${parentKey}-rule-${rule.RULE_TYPE}`}
-            data-cy={`${parentKey}-rule-${rule.RULE_TYPE}`}
-            rule={rule}
-          />
-        ))}
-      </Box>
-    </>
-  )
-})
-
-SecurityGroupRules.propTypes = {
-  parentKey: PropTypes.string,
-  id: PropTypes.string,
-  rules: PropTypes.array,
-  actions: PropTypes.node,
-}
-
-SecurityGroupRules.displayName = 'SecurityGroupRule'
-
-const SecurityGroupRule = memo(({ rule, 'data-cy': parentCy }) => {
-  /** @type {PrettySecurityGroupRule} */
-  const { PROTOCOL, RULE_TYPE, ICMP_TYPE, RANGE, NETWORK_ID } = rule
-
-  return (
-    <>
-      {[
-        { text: PROTOCOL, dataCy: 'protocol' },
-        { text: RULE_TYPE, dataCy: 'ruletype' },
-        { text: RANGE, dataCy: 'range' },
-        { text: NETWORK_ID, dataCy: 'networkid' },
-        { text: ICMP_TYPE, dataCy: 'icmp-type' },
-      ].map(({ text, dataCy }) => (
-        <Typography
-          noWrap
-          key={`${parentCy}-${dataCy}`}
-          data-cy={`${parentCy}-${dataCy}`.toLowerCase()}
-          variant="subtitle2"
-        >
-          {text}
-        </Typography>
-      ))}
-    </>
-  )
-})
-
-SecurityGroupRule.propTypes = {
-  rule: PropTypes.object,
-  'data-cy': PropTypes.string,
-}
-
-SecurityGroupRule.displayName = 'SecurityGroupRule'
 
 export default NicCard

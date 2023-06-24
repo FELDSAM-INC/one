@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------------- *
- * Copyright 2002-2022, OpenNebula Project, OpenNebula Systems               *
+ * Copyright 2002-2023, OpenNebula Project, OpenNebula Systems               *
  *                                                                           *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may   *
  * not use this file except in compliance with the License. You may obtain   *
@@ -13,9 +13,9 @@
  * See the License for the specific language governing permissions and       *
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
-import { boolean, number, object } from 'yup'
+import { INPUT_TYPES, T } from 'client/constants'
 import { getValidationFromFields } from 'client/utils'
-import { T, INPUT_TYPES } from 'client/constants'
+import { boolean, number, object } from 'yup'
 
 const ENFORCE = {
   name: 'enforce',
@@ -28,10 +28,10 @@ const ENFORCE = {
 
 const MEMORY = {
   name: 'MEMORY',
-  label: T.Memory,
+  label: [T.MemoryWithUnit, '(MB)'],
+  tooltip: T.MemoryConcept,
   type: INPUT_TYPES.TEXT,
   htmlType: 'number',
-  tooltip: T.MemoryConcept,
   validation: number()
     .required()
     .positive()
@@ -40,10 +40,10 @@ const MEMORY = {
 
 const PHYSICAL_CPU = {
   name: 'CPU',
-  label: T.PhysicalCpu,
+  label: T.PhysicalCpuWithPercent,
+  tooltip: T.CpuConcept,
   type: INPUT_TYPES.TEXT,
   htmlType: 'number',
-  tooltip: T.CpuConcept,
   validation: number()
     .required()
     .positive()
@@ -52,10 +52,10 @@ const PHYSICAL_CPU = {
 
 const VIRTUAL_CPU = {
   name: 'VCPU',
-  label: T.VirtualCpu,
+  label: T.VirtualCpuWithDecimal,
+  tooltip: T.VirtualCpuConcept,
   type: INPUT_TYPES.TEXT,
   htmlType: 'number',
-  tooltip: T.VirtualCpuConcept,
   validation: number().default(() => undefined),
 }
 

@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------------- *
- * Copyright 2002-2022, OpenNebula Project, OpenNebula Systems               *
+ * Copyright 2002-2023, OpenNebula Project, OpenNebula Systems               *
  *                                                                           *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may   *
  * not use this file except in compliance with the License. You may obtain   *
@@ -14,32 +14,35 @@
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
 /* eslint-disable jsdoc/require-jsdoc */
-import { useMemo } from 'react'
 import PropTypes from 'prop-types'
+import { useMemo } from 'react'
 
+import { Alert, Box, Chip, Grid } from '@mui/material'
 import clsx from 'clsx'
-import { InfoEmpty } from 'iconoir-react'
-import { Box } from '@mui/material'
+import InfoEmpty from 'iconoir-react/dist/InfoEmpty'
+import RemoveIcon from 'iconoir-react/dist/RemoveSquare'
+
 import {
-  useGlobalFilter,
+  UseRowSelectRowProps,
   useFilters,
+  useGlobalFilter,
+  useMountedLayoutEffect,
   usePagination,
   useRowSelect,
   useSortBy,
   useTable,
-  useMountedLayoutEffect,
-  // types
-  UseRowSelectRowProps,
 } from 'react-table'
 
-import Pagination from 'client/components/Tables/Enhanced/pagination'
 import {
   GlobalActions,
-  GlobalSearch,
   GlobalFilter,
-  GlobalSort,
+  GlobalLabel,
+  GlobalSearch,
   GlobalSelectedRows,
+  GlobalSort,
+  LABEL_COLUMN_ID,
 } from 'client/components/Tables/Enhanced/Utils'
+import Pagination from 'client/components/Tables/Enhanced/pagination'
 import EnhancedTableStyles from 'client/components/Tables/Enhanced/styles'
 
 import { Translate } from 'client/components/HOC'
@@ -55,8 +58,10 @@ const EnhancedTable = ({
   initialState,
   refetch,
   isLoading,
+  useUpdateMutation,
   displaySelectedRows,
   disableRowSelect,
+  disableGlobalLabel,
   disableGlobalSort,
   onSelectedRowsChange,
   pageSize = 10,
@@ -68,6 +73,7 @@ const EnhancedTable = ({
   rootProps = {},
   searchProps = {},
   noDataMessage,
+  messages = [],
 }) => {
   const styles = EnhancedTableStyles()
 
@@ -106,6 +112,7 @@ const EnhancedTable = ({
       autoResetSelectedRows: false,
       autoResetSortBy: false,
       autoResetPage: false,
+      autoResetGlobalFilter: false,
       // -------------------------------------
       initialState: { pageSize, ...initialState },
     },
@@ -120,16 +127,20 @@ const EnhancedTable = ({
     getTableProps,
     prepareRow,
     toggleAllRowsSelected,
-    preFilteredRows,
+    preGlobalFilteredRowsById,
     rows,
     page,
     gotoPage,
     pageCount,
-    state: { pageIndex, selectedRowIds, ...state },
+    setFilter,
+    setAllFilters,
+    setSortBy,
+    setGlobalFilter,
+    state,
   } = useTableProps
 
   const gotoRowPage = async (row) => {
-    const pageIdx = Math.floor(row.index / state.pageSize)
+    const pageIdx = Math.floor(row.index / pageSize)
 
     await gotoPage(pageIdx)
 
@@ -139,13 +150,19 @@ const EnhancedTable = ({
       ?.scrollIntoView({ behavior: 'smooth', block: 'center' })
   }
 
-  useMountedLayoutEffect(() => {
-    const selectedRows = preFilteredRows
-      .filter((row) => !!selectedRowIds[row.id])
-      .map((row) => ({ ...row, gotoPage: () => gotoRowPage(row) }))
+  const selectedRows = useMemo(() => {
+    const selectedIds = Object.keys(state.selectedRowIds ?? {})
 
-    onSelectedRowsChange?.(selectedRows)
-  }, [selectedRowIds])
+    return selectedIds
+      .map((id) => preGlobalFilteredRowsById[id])
+      .filter(Boolean)
+  }, [state.selectedRowIds])
+
+  useMountedLayoutEffect(() => {
+    onSelectedRowsChange?.(
+      selectedRows.map((row) => ({ ...row, gotoPage: () => gotoRowPage(row) }))
+    )
+  }, [state.selectedRowIds])
 
   const handleChangePage = (newPage) => {
     gotoPage(newPage)
@@ -153,7 +170,41 @@ const EnhancedTable = ({
     const canNextPage =
       pageCount === -1 ? page.length >= pageSize : newPage < pageCount - 1
 
-    newPage > pageIndex && !canNextPage && fetchMore?.()
+    newPage > state.pageIndex && !canNextPage && fetchMore?.()
+  }
+
+  const handleResetFilters = () => {
+    setGlobalFilter()
+    setAllFilters([])
+    setSortBy([])
+  }
+
+  const cannotFilterByLabel = useMemo(
+    () =>
+      disableGlobalLabel || !columns.some((col) => col.id === LABEL_COLUMN_ID),
+    [disableGlobalLabel]
+  )
+
+  const canResetFilter = state.filters?.length > 0 || state.sortBy?.length > 0
+
+  const messageValues = messages.filter(
+    (messageValue) => messageValue?.rows?.length
+  )
+  const MessagesRowsAlerts = () => {
+    let grid = 12
+    messageValues.length && (grid = grid / messageValues.length)
+
+    return (
+      <Grid container spacing={2}>
+        {messageValues.map((value, index) => (
+          <Grid item xs={grid} key={`messageAlert-${index}`}>
+            <Alert icon={value?.icon || ''} severity={value?.type || 'info'}>
+              {value?.message || ''}
+            </Alert>
+          </Grid>
+        ))}
+      </Grid>
+    )
   }
 
   return (
@@ -171,6 +222,7 @@ const EnhancedTable = ({
           singleSelect={singleSelect}
           disableRowSelect={disableRowSelect}
           globalActions={globalActions}
+          selectedRows={selectedRows}
           useTableProps={useTableProps}
         />
 
@@ -192,10 +244,16 @@ const EnhancedTable = ({
 
         {/* FILTERS */}
         <div className={styles.filters}>
-          <GlobalFilter useTableProps={useTableProps} />
-          {!disableGlobalSort && <GlobalSort useTableProps={useTableProps} />}
+          {!cannotFilterByLabel && (
+            <GlobalLabel
+              {...useTableProps}
+              selectedRows={selectedRows}
+              useUpdateMutation={useUpdateMutation}
+            />
+          )}
+          <GlobalFilter {...useTableProps} />
+          {!disableGlobalSort && <GlobalSort {...useTableProps} />}
         </div>
-
         {/* SELECTED ROWS */}
         {displaySelectedRows && (
           <div>
@@ -207,7 +265,21 @@ const EnhancedTable = ({
         )}
       </div>
 
+      {/* RESET FILTERS */}
+      <Chip
+        label={<Translate word={T.ResetFilters} />}
+        onClick={canResetFilter ? handleResetFilters : undefined}
+        icon={<RemoveIcon />}
+        sx={{
+          visibility: canResetFilter ? 'visible' : 'hidden',
+          width: 'fit-content',
+          padding: '0.75em',
+          marginBottom: '0.5em',
+        }}
+      />
+
       <div className={clsx(styles.body, classes.body)}>
+        {!!messages.length && <MessagesRowsAlerts />}
         {/* NO DATA MESSAGE */}
         {!isLoading &&
           !isUninitialized &&
@@ -239,12 +311,33 @@ const EnhancedTable = ({
               key={key}
               original={original}
               value={values}
+              {...(messageValues.length && {
+                globalErrors: messageValues,
+              })}
               className={isSelected ? 'selected' : ''}
-              onClick={() => {
+              {...(!cannotFilterByLabel && {
+                onClickLabel: (label) => {
+                  const currentFilter =
+                    state.filters
+                      ?.filter(({ id }) => id === LABEL_COLUMN_ID)
+                      ?.map(({ value }) => value)
+                      ?.flat() || []
+
+                  const nextFilter = [...new Set([...currentFilter, label])]
+                  setFilter(LABEL_COLUMN_ID, nextFilter)
+                },
+              })}
+              onClick={(e) => {
                 typeof onRowClick === 'function' && onRowClick(original)
 
                 if (!disableRowSelect) {
-                  singleSelect && toggleAllRowsSelected?.(false)
+                  if (
+                    singleSelect ||
+                    (!singleSelect && !(e.ctrlKey || e.metaKey))
+                  ) {
+                    toggleAllRowsSelected?.(false)
+                  }
+
                   toggleRowSelected?.(!isSelected)
                 }
               }}
@@ -277,9 +370,11 @@ EnhancedTable.propTypes = {
   }),
   refetch: PropTypes.func,
   isLoading: PropTypes.bool,
+  disableGlobalLabel: PropTypes.bool,
   disableGlobalSort: PropTypes.bool,
   disableRowSelect: PropTypes.bool,
   displaySelectedRows: PropTypes.bool,
+  useUpdateMutation: PropTypes.func,
   onSelectedRowsChange: PropTypes.func,
   onRowClick: PropTypes.func,
   pageSize: PropTypes.number,
@@ -291,6 +386,7 @@ EnhancedTable.propTypes = {
     PropTypes.node,
     PropTypes.bool,
   ]),
+  messages: PropTypes.array,
 }
 
 export * from 'client/components/Tables/Enhanced/Utils'

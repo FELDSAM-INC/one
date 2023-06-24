@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------------- *
- * Copyright 2002-2022, OpenNebula Project, OpenNebula Systems               *
+ * Copyright 2002-2023, OpenNebula Project, OpenNebula Systems               *
  *                                                                           *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may   *
  * not use this file except in compliance with the License. You may obtain   *
@@ -15,18 +15,24 @@
  * ------------------------------------------------------------------------- */
 import { ReactElement, useState, memo } from 'react'
 import PropTypes from 'prop-types'
-import { BookmarkEmpty } from 'iconoir-react'
-import { Typography, Box, Stack, Chip, IconButton } from '@mui/material'
+import GotoIcon from 'iconoir-react/dist/Pin'
+import RefreshDouble from 'iconoir-react/dist/RefreshDouble'
+import Cancel from 'iconoir-react/dist/Cancel'
+import { Typography, Box, Stack, Chip } from '@mui/material'
 import { Row } from 'react-table'
 
-import marketAppApi from 'client/features/OneApi/marketplaceApp'
+import {
+  useUpdateAppMutation,
+  useLazyGetMarketplaceAppQuery,
+} from 'client/features/OneApi/marketplaceApp'
 import { MarketplaceAppsTable } from 'client/components/Tables'
 import MarketplaceAppActions from 'client/components/Tables/MarketplaceApps/actions'
 import MarketplaceAppsTabs from 'client/components/Tabs/MarketplaceApp'
 import SplitPane from 'client/components/SplitPane'
 import MultipleTags from 'client/components/MultipleTags'
+import { SubmitButton } from 'client/components/FormControl'
 import { Tr } from 'client/components/HOC'
-import { T } from 'client/constants'
+import { T, MarketplaceApp } from 'client/constants'
 
 /**
  * Displays a list of Marketplace Apps with a split pane between the list and selected row(s).
@@ -43,10 +49,11 @@ function MarketplaceApps() {
   return (
     <SplitPane gridTemplateRows="1fr auto 1fr">
       {({ getGridProps, GutterComponent }) => (
-        <Box {...(hasSelectedRows && getGridProps())}>
+        <Box height={1} {...(hasSelectedRows && getGridProps())}>
           <MarketplaceAppsTable
             onSelectedRowsChange={onSelectedRowsChange}
             globalActions={actions}
+            useUpdateMutation={useUpdateAppMutation}
           />
 
           {hasSelectedRows && (
@@ -56,8 +63,9 @@ function MarketplaceApps() {
                 <GroupedTags tags={selectedRows} />
               ) : (
                 <InfoTabs
-                  id={selectedRows[0]?.original?.ID}
+                  app={selectedRows[0]?.original}
                   gotoPage={selectedRows[0]?.gotoPage}
+                  unselect={() => selectedRows[0]?.toggleRowSelected(false)}
                 />
               )}
             </>
@@ -71,30 +79,50 @@ function MarketplaceApps() {
 /**
  * Displays details of a Marketplace App.
  *
- * @param {string} id - Marketplace App id to display
+ * @param {MarketplaceApp} app - Marketplace App to display
  * @param {Function} [gotoPage] - Function to navigate to a page of a Marketplace App
+ * @param {Function} [unselect] - Function to unselect a Marketplace App
  * @returns {ReactElement} Marketplace App details
  */
-const InfoTabs = memo(({ id, gotoPage }) => {
-  const app = marketAppApi.endpoints.getMarketplaceApps.useQueryState(
-    undefined,
-    {
-      selectFromResult: ({ data = [] }) =>
-        data.find((item) => +item.ID === +id),
-    }
-  )
+const InfoTabs = memo(({ app, gotoPage, unselect }) => {
+  const [get, queryState] = useLazyGetMarketplaceAppQuery()
+  const { data: lazyData, isFetching } = queryState
+
+  const id = lazyData?.ID ?? app.ID
+  const name = lazyData?.NAME ?? app.NAME
 
   return (
     <Stack overflow="auto">
-      <Stack direction="row" alignItems="center" gap={1} mb={1}>
-        <Typography color="text.primary" noWrap>
-          {`#${id} | ${app.NAME}`}
+      <Stack direction="row" alignItems="center" gap={1} mx={1} mb={1}>
+        <Typography color="text.primary" noWrap flexGrow={1}>
+          {`#${id} | ${name}`}
         </Typography>
-        {gotoPage && (
-          <IconButton title={Tr(T.LocateOnTable)} onClick={gotoPage}>
-            <BookmarkEmpty />
-          </IconButton>
+
+        {/* -- ACTIONS -- */}
+        <SubmitButton
+          data-cy="detail-refresh"
+          icon={<RefreshDouble />}
+          tooltip={Tr(T.Refresh)}
+          isSubmitting={isFetching}
+          onClick={() => get({ id })}
+        />
+        {typeof gotoPage === 'function' && (
+          <SubmitButton
+            data-cy="locate-on-table"
+            icon={<GotoIcon />}
+            tooltip={Tr(T.LocateOnTable)}
+            onClick={() => gotoPage()}
+          />
         )}
+        {typeof unselect === 'function' && (
+          <SubmitButton
+            data-cy="unselect"
+            icon={<Cancel />}
+            tooltip={Tr(T.Close)}
+            onClick={() => unselect()}
+          />
+        )}
+        {/* -- END ACTIONS -- */}
       </Stack>
       <MarketplaceAppsTabs id={id} />
     </Stack>
@@ -102,8 +130,9 @@ const InfoTabs = memo(({ id, gotoPage }) => {
 })
 
 InfoTabs.propTypes = {
-  id: PropTypes.string.isRequired,
+  app: PropTypes.object,
   gotoPage: PropTypes.func,
+  unselect: PropTypes.func,
 }
 
 InfoTabs.displayName = 'InfoTabs'

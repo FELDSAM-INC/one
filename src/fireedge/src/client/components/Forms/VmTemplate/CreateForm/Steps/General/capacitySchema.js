@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------------- *
- * Copyright 2002-2022, OpenNebula Project, OpenNebula Systems               *
+ * Copyright 2002-2023, OpenNebula Project, OpenNebula Systems               *
  *                                                                           *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may   *
  * not use this file except in compliance with the License. You may obtain   *
@@ -13,22 +13,30 @@
  * See the License for the specific language governing permissions and       *
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
-import { number } from 'yup'
+import { number, string } from 'yup'
 
 import {
-  generateModificationInputs,
-  generateHotResizeInputs,
   generateCapacityInput,
   generateCostCapacityInput,
+  generateHotResizeInputs,
+  generateModificationInputs,
 } from 'client/components/Forms/VmTemplate/CreateForm/Steps/General/capacityUtils'
 import { Translate } from 'client/components/HOC'
+import {
+  HYPERVISORS,
+  INPUT_TYPES,
+  MEMORY_RESIZE_OPTIONS,
+  T,
+  VmTemplateFeatures,
+} from 'client/constants'
 import { formatNumberByCurrency } from 'client/models/Helper'
-import { Field } from 'client/utils'
-import { T, HYPERVISORS, VmTemplateFeatures } from 'client/constants'
+import { Field, arrayToOptions } from 'client/utils'
 
 const commonValidation = number()
   .positive()
   .default(() => undefined)
+
+const { vcenter, lxc, firecracker } = HYPERVISORS
 
 // --------------------------------------------------------
 // MEMORY fields
@@ -37,13 +45,13 @@ const commonValidation = number()
 /** @type {Field} Memory field */
 export const MEMORY = generateCapacityInput({
   name: 'MEMORY',
-  label: T.Memory,
+  label: [T.MemoryWithUnit, '(MB)'],
   tooltip: T.MemoryConcept,
   validation: commonValidation
     .integer()
     .required()
     .when('HYPERVISOR', (hypervisor, schema) =>
-      hypervisor === HYPERVISORS.vcenter ? schema.isDivisibleBy(4) : schema
+      hypervisor === vcenter ? schema.isDivisibleBy(4) : schema
     ),
 })
 
@@ -70,7 +78,7 @@ export const MEMORY_FIELDS = [MEMORY, ...HR_MEMORY_FIELDS, ...MOD_MEMORY_FIELDS]
 /** @type {Field} Physical CPU field */
 export const PHYSICAL_CPU = generateCapacityInput({
   name: 'CPU',
-  label: T.PhysicalCpu,
+  label: T.PhysicalCpuWithPercent,
   tooltip: T.CpuConcept,
   validation: commonValidation.required(),
 })
@@ -88,7 +96,7 @@ export const CPU_FIELDS = [PHYSICAL_CPU, ...MOD_CPU_FIELDS]
 /** @type {Field} Virtual CPU field */
 export const VIRTUAL_CPU = generateCapacityInput({
   name: 'VCPU',
-  label: T.VirtualCpu,
+  label: T.VirtualCpuWithDecimal,
   tooltip: T.VirtualCpuConcept,
   validation: commonValidation,
 })
@@ -192,3 +200,42 @@ export const DISK_COST = generateCostCapacityInput({
  */
 export const SHOWBACK_FIELDS = (features) =>
   [MEMORY_COST, !features?.hide_cpu && CPU_COST, DISK_COST].filter(Boolean)
+
+/** @type {Field} Memory resize mode field */
+export const MEMORY_RESIZE_MODE_FIELD = {
+  name: 'MEMORY_RESIZE_MODE',
+  label: T.MemoryResizeMode,
+  type: INPUT_TYPES.SELECT,
+  notOnHypervisors: [lxc, firecracker, vcenter],
+  dependOf: ['HYPERVISOR', '$general.HYPERVISOR'],
+  values: arrayToOptions(Object.keys(MEMORY_RESIZE_OPTIONS), {
+    addEmpty: false,
+    getText: (option) => option,
+    getValue: (option) => MEMORY_RESIZE_OPTIONS[option],
+  }),
+  validation: string().default(() => MEMORY_RESIZE_OPTIONS[T.Ballooning]),
+  grid: { md: 6 },
+}
+
+/** @type {Field} Memory slots field */
+export const MEMORY_SLOTS_FIELD = {
+  name: 'MEMORY_SLOTS',
+  label: T.MemorySlots,
+  type: INPUT_TYPES.TEXT,
+  notOnHypervisors: [lxc, firecracker, vcenter],
+  dependOf: MEMORY_RESIZE_MODE_FIELD.name,
+  htmlType: (resizeMode) =>
+    resizeMode === MEMORY_RESIZE_OPTIONS[T.Hotplug]
+      ? 'number'
+      : INPUT_TYPES.HIDDEN,
+  validation: number().default(() => undefined),
+  grid: { md: 6 },
+}
+
+/**
+ * @returns {Field[]} List of memory resize fields
+ */
+export const MEMORY_RESIZE_FIELDS = [
+  MEMORY_RESIZE_MODE_FIELD,
+  MEMORY_SLOTS_FIELD,
+].filter(Boolean)

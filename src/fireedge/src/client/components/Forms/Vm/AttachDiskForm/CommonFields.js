@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------------- *
- * Copyright 2002-2022, OpenNebula Project, OpenNebula Systems               *
+ * Copyright 2002-2023, OpenNebula Project, OpenNebula Systems               *
  *                                                                           *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may   *
  * not use this file except in compliance with the License. You may obtain   *
@@ -15,8 +15,9 @@
  * ------------------------------------------------------------------------- */
 import { string, number } from 'yup'
 import { INPUT_TYPES, T, HYPERVISORS, Field } from 'client/constants'
+import { useDisableInputByUserAndConfig } from 'client/features/Auth'
 
-const { kvm, vcenter, firecracker, lxc } = HYPERVISORS
+const { vcenter, firecracker, lxc } = HYPERVISORS
 
 /** @type {Field[]} List of general fields */
 export const GENERAL_FIELDS = [
@@ -126,7 +127,7 @@ export const VCENTER_FIELDS = [
   {
     name: 'VCENTER_ADAPTER_TYPE',
     label: T.BusAdapterController,
-    notOnHypervisors: [kvm, firecracker],
+    onlyOnHypervisors: [vcenter],
     type: INPUT_TYPES.SELECT,
     values: [
       { text: '', value: '' },
@@ -140,7 +141,7 @@ export const VCENTER_FIELDS = [
   {
     name: 'VCENTER_DISK_TYPE',
     label: T.DiskProvisioningType,
-    notOnHypervisors: [kvm, firecracker],
+    onlyOnHypervisors: [vcenter],
     type: INPUT_TYPES.SELECT,
     values: [
       { text: '', value: '' },
@@ -216,6 +217,8 @@ export const THROTTLING_BYTES_FIELDS = [
     type: INPUT_TYPES.TEXT,
     htmlType: 'number',
     notOnHypervisors: [lxc, firecracker, vcenter],
+    fieldProps: () =>
+      useDisableInputByUserAndConfig('DISK/READ_BYTES_SEC_MAX_LENGTH'),
     validation: number()
       .min(0)
       .notRequired()
@@ -227,6 +230,7 @@ export const THROTTLING_BYTES_FIELDS = [
     type: INPUT_TYPES.TEXT,
     htmlType: 'number',
     notOnHypervisors: [lxc, firecracker, vcenter],
+    fieldProps: () => useDisableInputByUserAndConfig('DISK/WRITE_BYTES_SEC'),
     validation: number()
       .min(0)
       .notRequired()
@@ -238,6 +242,8 @@ export const THROTTLING_BYTES_FIELDS = [
     type: INPUT_TYPES.TEXT,
     htmlType: 'number',
     notOnHypervisors: [lxc, firecracker, vcenter],
+    fieldProps: () =>
+      useDisableInputByUserAndConfig('DISK/WRITE_BYTES_SEC_MAX'),
     validation: number()
       .min(0)
       .notRequired()
@@ -249,6 +255,8 @@ export const THROTTLING_BYTES_FIELDS = [
     type: INPUT_TYPES.TEXT,
     htmlType: 'number',
     notOnHypervisors: [lxc, firecracker, vcenter],
+    fieldProps: () =>
+      useDisableInputByUserAndConfig('DISK/WRITE_BYTES_SEC_MAX_LENGTH'),
     validation: number()
       .min(0)
       .notRequired()
@@ -264,6 +272,7 @@ export const THROTTLING_IOPS_FIELDS = [
     type: INPUT_TYPES.TEXT,
     htmlType: 'number',
     notOnHypervisors: [lxc, firecracker, vcenter],
+    fieldProps: () => useDisableInputByUserAndConfig('DISK/TOTAL_IOPS_SEC'),
     validation: number()
       .min(0)
       .notRequired()
@@ -275,6 +284,7 @@ export const THROTTLING_IOPS_FIELDS = [
     type: INPUT_TYPES.TEXT,
     htmlType: 'number',
     notOnHypervisors: [lxc, firecracker, vcenter],
+    fieldProps: () => useDisableInputByUserAndConfig('DISK/TOTAL_IOPS_SEC_MAX'),
     validation: number()
       .min(0)
       .notRequired()
@@ -286,6 +296,8 @@ export const THROTTLING_IOPS_FIELDS = [
     type: INPUT_TYPES.TEXT,
     htmlType: 'number',
     notOnHypervisors: [lxc, firecracker, vcenter],
+    fieldProps: () =>
+      useDisableInputByUserAndConfig('DISK/TOTAL_IOPS_SEC_MAX_LENGTH'),
     validation: number()
       .min(0)
       .notRequired()
@@ -297,6 +309,7 @@ export const THROTTLING_IOPS_FIELDS = [
     type: INPUT_TYPES.TEXT,
     htmlType: 'number',
     notOnHypervisors: [lxc, firecracker, vcenter],
+    fieldProps: () => useDisableInputByUserAndConfig('DISK/READ_IOPS_SEC'),
     validation: number()
       .min(0)
       .notRequired()
@@ -308,6 +321,7 @@ export const THROTTLING_IOPS_FIELDS = [
     type: INPUT_TYPES.TEXT,
     htmlType: 'number',
     notOnHypervisors: [lxc, firecracker, vcenter],
+    fieldProps: () => useDisableInputByUserAndConfig('DISK/READ_IOPS_SEC_MAX'),
     validation: number()
       .min(0)
       .notRequired()
@@ -319,6 +333,8 @@ export const THROTTLING_IOPS_FIELDS = [
     type: INPUT_TYPES.TEXT,
     htmlType: 'number',
     notOnHypervisors: [lxc, firecracker, vcenter],
+    fieldProps: () =>
+      useDisableInputByUserAndConfig('DISK/READ_IOPS_SEC_MAX_LENGTH'),
     validation: number()
       .min(0)
       .notRequired()
@@ -330,6 +346,7 @@ export const THROTTLING_IOPS_FIELDS = [
     type: INPUT_TYPES.TEXT,
     htmlType: 'number',
     notOnHypervisors: [lxc, firecracker, vcenter],
+    fieldProps: () => useDisableInputByUserAndConfig('DISK/WRITE_IOPS_SEC'),
     validation: number()
       .min(0)
       .notRequired()
@@ -341,6 +358,7 @@ export const THROTTLING_IOPS_FIELDS = [
     type: INPUT_TYPES.TEXT,
     htmlType: 'number',
     notOnHypervisors: [lxc, firecracker, vcenter],
+    fieldProps: () => useDisableInputByUserAndConfig('DISK/WRITE_IOPS_SEC_MAX'),
     validation: number()
       .min(0)
       .notRequired()
@@ -352,6 +370,8 @@ export const THROTTLING_IOPS_FIELDS = [
     type: INPUT_TYPES.TEXT,
     htmlType: 'number',
     notOnHypervisors: [lxc, firecracker, vcenter],
+    fieldProps: () =>
+      useDisableInputByUserAndConfig('DISK/WRITE_IOPS_SEC_MAX_LENGTH'),
     validation: number()
       .min(0)
       .notRequired()

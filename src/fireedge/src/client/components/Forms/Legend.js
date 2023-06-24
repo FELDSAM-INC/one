@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------------- *
- * Copyright 2002-2022, OpenNebula Project, OpenNebula Systems               *
+ * Copyright 2002-2023, OpenNebula Project, OpenNebula Systems               *
  *                                                                           *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may   *
  * not use this file except in compliance with the License. You may obtain   *
@@ -21,22 +21,16 @@ import AdornmentWithTooltip from 'client/components/FormControl/Tooltip'
 import { Translate } from 'client/components/HOC'
 
 const StyledLegend = styled((props) => (
-  <Typography variant="subtitle1" component="legend" {...props} />
-))(
-  ({ theme }) => ({
-    padding: '0em 1em 0.2em 0.5em',
-    borderBottom: `2px solid ${theme.palette.secondary.main}`,
+  <Typography variant="underline" component="legend" {...props} />
+))(({ ownerState }) => ({
+  ...(ownerState.tooltip && {
+    display: 'inline-flex',
+    alignItems: 'center',
   }),
-  ({ ownerState }) => ({
-    ...(ownerState.tooltip && {
-      display: 'inline-flex',
-      alignItems: 'center',
-    }),
-    ...(!ownerState.disableGutters && {
-      marginBottom: '1em',
-    }),
-  })
-)
+  ...(!ownerState.disableGutters && {
+    marginBottom: '1em',
+  }),
+}))
 
 const Legend = memo(
   ({ 'data-cy': dataCy, title, tooltip, disableGutters }) => (

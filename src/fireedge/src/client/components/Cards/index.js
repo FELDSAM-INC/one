@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------------- *
- * Copyright 2002-2022, OpenNebula Project, OpenNebula Systems               *
+ * Copyright 2002-2023, OpenNebula Project, OpenNebula Systems               *
  *                                                                           *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may   *
  * not use this file except in compliance with the License. You may obtain   *
@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and       *
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
+import AddressRangeCard from 'client/components/Cards/AddressRangeCard'
 import ApplicationCard from 'client/components/Cards/ApplicationCard'
 import ApplicationNetworkCard from 'client/components/Cards/ApplicationNetworkCard'
 import ApplicationTemplateCard from 'client/components/Cards/ApplicationTemplateCard'
@@ -22,6 +23,8 @@ import DiskCard from 'client/components/Cards/DiskCard'
 import DiskSnapshotCard from 'client/components/Cards/DiskSnapshotCard'
 import EmptyCard from 'client/components/Cards/EmptyCard'
 import HostCard from 'client/components/Cards/HostCard'
+import ImageCreateCard from 'client/components/Cards/ImageCreateCard'
+import ImageSnapshotCard from 'client/components/Cards/ImageSnapshotCard'
 import MarketplaceAppCard from 'client/components/Cards/MarketplaceAppCard'
 import MarketplaceCard from 'client/components/Cards/MarketplaceCard'
 import NetworkCard from 'client/components/Cards/NetworkCard'
@@ -41,6 +44,7 @@ import VmTemplateCard from 'client/components/Cards/VmTemplateCard'
 import WavesCard from 'client/components/Cards/WavesCard'
 
 export {
+  AddressRangeCard,
   ApplicationCard,
   ApplicationNetworkCard,
   ApplicationTemplateCard,
@@ -50,6 +54,8 @@ export {
   DiskSnapshotCard,
   EmptyCard,
   HostCard,
+  ImageCreateCard,
+  ImageSnapshotCard,
   MarketplaceAppCard,
   MarketplaceCard,
   NetworkCard,

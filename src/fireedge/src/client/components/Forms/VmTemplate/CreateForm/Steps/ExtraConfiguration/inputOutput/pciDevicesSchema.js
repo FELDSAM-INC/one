@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------------- *
- * Copyright 2002-2022, OpenNebula Project, OpenNebula Systems               *
+ * Copyright 2002-2023, OpenNebula Project, OpenNebula Systems               *
  *                                                                           *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may   *
  * not use this file except in compliance with the License. You may obtain   *
@@ -27,16 +27,28 @@ import { T, INPUT_TYPES, HYPERVISORS } from 'client/constants'
 
 const { vcenter, lxc, firecracker } = HYPERVISORS
 
-const transformPciToString = (pciDevice = {}) => {
-  const { DEVICE = '', VENDOR = '', CLASS = '' } = pciDevice
+/**
+ * Transform a PCI device to String.
+ *
+ * @param {ObjectSchema} pciDevice - PCI device information
+ * @returns {string} - DEVICE, VENDOR, CLASS and PROFILES separated by semicolon
+ */
+export const transformPciToString = (pciDevice = {}) => {
+  const { DEVICE = '', VENDOR = '', CLASS = '', PROFILES = '' } = pciDevice
 
-  return [DEVICE, VENDOR, CLASS].join(',')
+  return [DEVICE, VENDOR, CLASS, PROFILES].join(';')
 }
 
-const getPciAttributes = (pciDevice = '') => {
-  const [DEVICE, VENDOR, CLASS] = pciDevice.split(',')
+/**
+ * Obtain values from a PCI device String.
+ *
+ * @param {string} pciDevice - DEVICE, VENDOR, CLASS and PROFILES separated by semicolon
+ * @returns {ObjectSchema} - PCI device information
+ */
+export const getPciAttributes = (pciDevice = '') => {
+  const [DEVICE, VENDOR, CLASS, PROFILES] = pciDevice.split(';')
 
-  return { DEVICE, VENDOR, CLASS }
+  return { DEVICE, VENDOR, CLASS, PROFILES }
 }
 
 /** @type {Field} Name PCI device field */
@@ -58,6 +70,33 @@ const NAME_FIELD = {
   grid: { sm: 12, md: 3 },
 }
 
+/** @type {Field} Name PCI device field */
+const PROFILE_FIELD = {
+  name: 'PROFILE',
+  label: T.Profile,
+  notOnHypervisors: [vcenter, lxc, firecracker],
+  type: INPUT_TYPES.SELECT,
+  values: (pciDevice) => {
+    if (pciDevice) {
+      const { PROFILES } = getPciAttributes(pciDevice)
+      const profiles = PROFILES.trim() === '' ? [] : PROFILES.split(',')
+
+      return arrayToOptions(profiles)
+    }
+
+    return arrayToOptions([])
+  },
+  dependOf: NAME_FIELD.name,
+  htmlType: (pciDevice) => {
+    const { PROFILES } = getPciAttributes(pciDevice)
+    const emptyProfiles = !PROFILES || PROFILES === '' || PROFILES === '-'
+
+    return emptyProfiles && INPUT_TYPES.HIDDEN
+  },
+  validation: string().trim().notRequired(),
+  grid: { sm: 12, md: 3 },
+}
+
 /** @type {Field} Common field properties */
 const commonFieldProps = (name) => ({
   name,
@@ -72,8 +111,20 @@ const commonFieldProps = (name) => ({
     }
   },
   validation: string().trim().required(),
+  grid: { xs: 12, sm: 3, md: 2 },
+})
+
+/** @type {Field} Common hidden field properties */
+const commonHiddenFieldProps = (name) => ({
+  name,
+  notOnHypervisors: [vcenter, lxc, firecracker],
+  type: INPUT_TYPES.TEXT,
+  htmlType: INPUT_TYPES.HIDDEN,
+  validation: string()
+    .trim()
+    .afterSubmit((content) => content),
   fieldProps: { disabled: true },
-  grid: { xs: 12, sm: 4, md: 3 },
+  grid: { xs: 12, sm: 3, md: 2 },
 })
 
 /** @type {Field} PCI device field */
@@ -85,21 +136,42 @@ const VENDOR_FIELD = { label: T.Vendor, ...commonFieldProps('VENDOR') }
 /** @type {Field} PCI device field */
 const CLASS_FIELD = { label: T.Class, ...commonFieldProps('CLASS') }
 
+/** @type {Field} PCI device field */
+const SHORT_ADDRESS_FIELD = { ...commonHiddenFieldProps('SHORT_ADDRESS') }
+
+/** @type {Field} PCI device field */
+const NETWORK_FIELD = { ...commonHiddenFieldProps('NETWORK') }
+
+/** @type {Field} PCI device field */
+const NETWORK_UNAME_FIELD = { ...commonHiddenFieldProps('NETWORK_UNAME') }
+
+/** @type {Field} PCI device field */
+const SECURITY_GROUPS_FIELD = { ...commonHiddenFieldProps('SECURITY_GROUPS') }
+
+/** @type {Field} PCI device field */
+const TYPE_FIELD = { ...commonHiddenFieldProps('TYPE') }
+
 /**
  * @param {string} [hypervisor] - VM hypervisor
  * @returns {Field[]} List of Graphic inputs fields
  */
 export const PCI_FIELDS = (hypervisor) =>
   filterFieldsByHypervisor(
-    [NAME_FIELD, DEVICE_FIELD, VENDOR_FIELD, CLASS_FIELD],
+    [NAME_FIELD, PROFILE_FIELD, DEVICE_FIELD, VENDOR_FIELD, CLASS_FIELD],
     hypervisor
   )
 
 /** @type {ObjectSchema} PCI devices object schema */
 export const PCI_SCHEMA = getObjectSchemaFromFields([
+  PROFILE_FIELD,
   DEVICE_FIELD,
   VENDOR_FIELD,
   CLASS_FIELD,
+  SHORT_ADDRESS_FIELD,
+  NETWORK_FIELD,
+  NETWORK_UNAME_FIELD,
+  SECURITY_GROUPS_FIELD,
+  TYPE_FIELD,
 ])
 
 /** @type {ObjectSchema} PCI devices schema */

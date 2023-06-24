@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------------- *
- * Copyright 2002-2022, OpenNebula Project, OpenNebula Systems               *
+ * Copyright 2002-2023, OpenNebula Project, OpenNebula Systems               *
  *                                                                           *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may   *
  * not use this file except in compliance with the License. You may obtain   *
@@ -13,50 +13,87 @@
  * See the License for the specific language governing permissions and       *
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
-import { memo, useMemo } from 'react'
+import { Alert, Fade, LinearProgress } from '@mui/material'
+import makeStyles from '@mui/styles/makeStyles'
+import { Cancel as CloseIcon } from 'iconoir-react'
 import PropTypes from 'prop-types'
-import { Alert, LinearProgress } from '@mui/material'
+import { memo, useMemo } from 'react'
 
+import { Translate } from 'client/components/HOC'
+import { RESOURCE_NAMES, T } from 'client/constants'
 import { useViews } from 'client/features/Auth'
-import { useGetVmQuery } from 'client/features/OneApi/vm'
-import { getAvailableInfoTabs } from 'client/models/Helper'
-import { RESOURCE_NAMES } from 'client/constants'
+import {
+  useGetVmQuery,
+  useUpdateUserTemplateMutation,
+} from 'client/features/OneApi/vm'
+import {
+  getAvailableInfoTabs,
+  getErrorMessage,
+  jsonToXml,
+} from 'client/models/Helper'
 
+import { SubmitButton } from 'client/components/FormControl'
 import Tabs from 'client/components/Tabs'
+import Backup from 'client/components/Tabs/Vm/Backup'
+import Configuration from 'client/components/Tabs/Vm/Configuration'
+import History from 'client/components/Tabs/Vm/History'
 import Info from 'client/components/Tabs/Vm/Info'
 import Network from 'client/components/Tabs/Vm/Network'
-import History from 'client/components/Tabs/Vm/History'
 import SchedActions from 'client/components/Tabs/Vm/SchedActions'
 import Snapshot from 'client/components/Tabs/Vm/Snapshot'
 import Storage from 'client/components/Tabs/Vm/Storage'
-import Configuration from 'client/components/Tabs/Vm/Configuration'
 import Template from 'client/components/Tabs/Vm/Template'
+
+const useStyles = makeStyles(({ palette }) => ({
+  vmError: {
+    '&': {
+      marginBottom: '15px',
+      backgroundColor: palette.background.paper,
+    },
+  },
+}))
 
 const getTabComponent = (tabName) =>
   ({
     info: Info,
     network: Network,
     history: History,
-    schedActions: SchedActions,
+    sched_actions: SchedActions,
     snapshot: Snapshot,
+    backup: Backup,
     storage: Storage,
     configuration: Configuration,
     template: Template,
   }[tabName])
 
 const VmTabs = memo(({ id }) => {
+  const classes = useStyles()
   const { view, getResourceView } = useViews()
-  const { isLoading, isError, error } = useGetVmQuery(
-    { id },
-    { refetchOnMountOrArgChange: 10 }
-  )
+  const {
+    status,
+    isError,
+    error,
+    data: vm = {},
+  } = useGetVmQuery({ id }, { refetchOnMountOrArgChange: 10 })
+  const [dismissError] = useUpdateUserTemplateMutation()
+
+  const { USER_TEMPLATE, ID } = vm
+
+  const handleDismissError = async () => {
+    const { ERROR, SCHED_MESSAGE, ...templateWithoutError } = USER_TEMPLATE
+    const xml = jsonToXml({ ...templateWithoutError })
+
+    await dismissError({ id, template: xml, replace: 0 })
+  }
+
+  const vmError = useMemo(() => getErrorMessage(vm), [vm])
 
   const tabsAvailable = useMemo(() => {
     const resource = RESOURCE_NAMES.VM
     const infoTabs = getResourceView(resource)?.['info-tabs'] ?? {}
 
     return getAvailableInfoTabs(infoTabs, getTabComponent, id)
-  }, [view])
+  }, [view, id])
 
   if (isError) {
     return (
@@ -66,11 +103,32 @@ const VmTabs = memo(({ id }) => {
     )
   }
 
-  return isLoading ? (
-    <LinearProgress color="secondary" sx={{ width: '100%' }} />
-  ) : (
-    <Tabs addBorder tabs={tabsAvailable} />
-  )
+  if (status === 'fulfilled' || id === ID) {
+    return (
+      <>
+        <Fade in={!!vmError} unmountOnExit>
+          <Alert
+            variant="outlined"
+            severity="error"
+            className={classes.vmError}
+            sx={{ gridColumn: 'span 2' }}
+            action={
+              <SubmitButton
+                onClick={handleDismissError}
+                icon={<CloseIcon />}
+                tooltip={<Translate word={T.Dismiss} />}
+              />
+            }
+          >
+            {vmError}
+          </Alert>
+        </Fade>
+        <Tabs addBorder tabs={tabsAvailable} />
+      </>
+    )
+  }
+
+  return <LinearProgress color="secondary" sx={{ width: '100%' }} />
 })
 
 VmTabs.propTypes = { id: PropTypes.string.isRequired }

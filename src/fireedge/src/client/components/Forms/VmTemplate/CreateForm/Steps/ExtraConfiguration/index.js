@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------------- *
- * Copyright 2002-2022, OpenNebula Project, OpenNebula Systems               *
+ * Copyright 2002-2023, OpenNebula Project, OpenNebula Systems               *
  *                                                                           *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may   *
  * not use this file except in compliance with the License. You may obtain   *
@@ -31,6 +31,7 @@ import Booting from 'client/components/Forms/VmTemplate/CreateForm/Steps/ExtraCo
 import Context from 'client/components/Forms/VmTemplate/CreateForm/Steps/ExtraConfiguration/context'
 import InputOutput from 'client/components/Forms/VmTemplate/CreateForm/Steps/ExtraConfiguration/inputOutput'
 import Numa from 'client/components/Forms/VmTemplate/CreateForm/Steps/ExtraConfiguration/numa'
+import Backup from 'client/components/Forms/VmTemplate/CreateForm/Steps/ExtraConfiguration/backup'
 
 import { STEP_ID as GENERAL_ID } from 'client/components/Forms/VmTemplate/CreateForm/Steps/General'
 import { SCHEMA } from 'client/components/Forms/VmTemplate/CreateForm/Steps/ExtraConfiguration/schema'
@@ -58,6 +59,7 @@ export const TABS = [
   ScheduleAction,
   Placement,
   Numa,
+  Backup,
 ]
 
 const Content = ({ data, setFormData }) => {

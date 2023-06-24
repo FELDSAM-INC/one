@@ -1,7 +1,7 @@
 # SConstruct for share/man
 
 # -------------------------------------------------------------------------- #
-# Copyright 2002-2022, OpenNebula Project, OpenNebula Systems                #
+# Copyright 2002-2023, OpenNebula Project, OpenNebula Systems                #
 #                                                                            #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may    #
 # not use this file except in compliance with the License. You may obtain    #
@@ -21,15 +21,15 @@ import os
 Import('env')
 
 
-# if env['fireedge']=='yes':
-#     print ("Generating FireEdge minified files\n")
+#if env['fireedge']=='yes':
+#    print ("Generating FireEdge minified files\n")
 #
-#     if env['enterprise']=='yes':
-#         print("OpenNebula Enterprise FireEdge\n")
-#         exit_code=os.system("./build.sh -e")
-#     else:
-#         exit_code=os.system("./build.sh")
+#    if env['enterprise']=='yes':
+#        print("OpenNebula Enterprise FireEdge\n")
+#        exit_code=os.system("./build.sh -e")
+#    else:
+#        exit_code=os.system("./build.sh")
 #
-#     if exit_code != 0:
-#         print ("Error generating minifying FireEdge files\n")
-#         exit(-1)
+#    if exit_code != 0:
+#        print ("Error generating minifying FireEdge files\n")
+#        exit(-1)

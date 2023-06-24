@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------------- *
- * Copyright 2002-2022, OpenNebula Project, OpenNebula Systems               *
+ * Copyright 2002-2023, OpenNebula Project, OpenNebula Systems               *
  *                                                                           *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may   *
  * not use this file except in compliance with the License. You may obtain   *
@@ -22,10 +22,11 @@ import NicCard from 'client/components/Cards/NicCard'
 import {
   AttachAction,
   DetachAction,
+  UpdateAction,
   AttachSecGroupAction,
   DetachSecGroupAction,
 } from 'client/components/Tabs/Vm/Network/Actions'
-
+import Graphs from 'client/components/Tabs/Vm/Network/Graphs'
 import {
   getNics,
   getHypervisor,
@@ -34,8 +35,13 @@ import {
 import { getActionsAvailable } from 'client/models/Helper'
 import { VM_ACTIONS } from 'client/constants'
 
-const { ATTACH_NIC, DETACH_NIC, ATTACH_SEC_GROUP, DETACH_SEC_GROUP } =
-  VM_ACTIONS
+const {
+  ATTACH_NIC,
+  DETACH_NIC,
+  UPDATE_NIC,
+  ATTACH_SEC_GROUP,
+  DETACH_SEC_GROUP,
+} = VM_ACTIONS
 
 /**
  * Renders the list of networks from a VM.
@@ -83,6 +89,9 @@ const VmNetworkTab = ({ tabProps: { actions } = {}, id }) => {
                   {actionsAvailable.includes(DETACH_NIC) && (
                     <DetachAction nic={nic} vmId={id} />
                   )}
+                  {actionsAvailable.includes(UPDATE_NIC) && (
+                    <UpdateAction nic={nic} vmId={id} />
+                  )}
                   {actionsAvailable.includes(ATTACH_SEC_GROUP) && (
                     <AttachSecGroupAction nic={nic} vmId={id} />
                   )}
@@ -106,6 +115,7 @@ const VmNetworkTab = ({ tabProps: { actions } = {}, id }) => {
           )
         })}
       </Stack>
+      <Graphs id={id} />
     </div>
   )
 }

@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------------- *
- * Copyright 2002-2022, OpenNebula Project, OpenNebula Systems               *
+ * Copyright 2002-2023, OpenNebula Project, OpenNebula Systems               *
  *                                                                           *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may   *
  * not use this file except in compliance with the License. You may obtain   *
@@ -13,24 +13,19 @@
  * See the License for the specific language governing permissions and       *
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
-import { ReactElement } from 'react'
 import PropTypes from 'prop-types'
+import { ReactElement } from 'react'
 
-import { Stack, Checkbox } from '@mui/material'
+import { Checkbox, Stack } from '@mui/material'
 import { RefreshDouble } from 'iconoir-react'
-import {
-  UseTableInstanceProps,
-  UseRowSelectState,
-  UseFiltersInstanceProps,
-  UseRowSelectInstanceProps,
-} from 'react-table'
+import { UseRowSelectInstanceProps, UseTableInstanceProps } from 'react-table'
 
+import { SubmitButton } from 'client/components/FormControl'
+import { Tr } from 'client/components/HOC'
 import {
   Action,
   GlobalAction,
 } from 'client/components/Tables/Enhanced/Utils/GlobalActions/Action'
-import { SubmitButton } from 'client/components/FormControl'
-import { Tr } from 'client/components/HOC'
 import { T } from 'client/constants'
 
 /**
@@ -44,6 +39,7 @@ import { T } from 'client/constants'
  * @param {boolean} props.disableRowSelect - Rows can't select
  * @param {GlobalAction[]} props.globalActions - Possible bulk actions
  * @param {UseTableInstanceProps} props.useTableProps - Table props
+ * @param {object[]} props.selectedRows - Selected Rows
  * @returns {ReactElement} Component JSX with all actions
  */
 const GlobalActions = ({
@@ -53,19 +49,12 @@ const GlobalActions = ({
   singleSelect = false,
   disableRowSelect = false,
   globalActions = [],
+  selectedRows,
   useTableProps = {},
 }) => {
   /** @type {UseRowSelectInstanceProps} */
   const { getToggleAllPageRowsSelectedProps, getToggleAllRowsSelectedProps } =
     useTableProps
-
-  /** @type {UseFiltersInstanceProps} */
-  const { preFilteredRows } = useTableProps
-
-  /** @type {UseRowSelectState} */
-  const { selectedRowIds } = useTableProps?.state
-
-  const selectedRows = preFilteredRows.filter((row) => !!selectedRowIds[row.id])
 
   return (
     <Stack
@@ -85,20 +74,20 @@ const GlobalActions = ({
         />
       )}
       {!singleSelect && !disableRowSelect && (
-        <>
-          <Checkbox
-            {...getToggleAllPageRowsSelectedProps()}
-            title={Tr(T.ToggleAllCurrentPageRowsSelected)}
-            indeterminate={getToggleAllRowsSelectedProps().indeterminate}
-            color="secondary"
-          />
-          {globalActions?.map((item, idx) => {
-            const key = item.accessor ?? item.label ?? item.tooltip ?? idx
-
-            return <Action key={key} item={item} selectedRows={selectedRows} />
-          })}
-        </>
+        <Checkbox
+          {...getToggleAllPageRowsSelectedProps()}
+          title={Tr(T.ToggleAllCurrentPageRowsSelected)}
+          indeterminate={getToggleAllRowsSelectedProps().indeterminate}
+          color="secondary"
+        />
       )}
+      {globalActions?.map((item, idx) => {
+        if ((singleSelect || disableRowSelect) && item.selected) return null
+
+        const key = item.accessor ?? item.label ?? item.tooltip ?? idx
+
+        return <Action key={key} item={item} selectedRows={selectedRows} />
+      })}
     </Stack>
   )
 }
@@ -111,6 +100,7 @@ GlobalActions.propTypes = {
   disableRowSelect: PropTypes.bool,
   globalActions: PropTypes.array,
   useTableProps: PropTypes.object,
+  selectedRows: PropTypes.array,
 }
 
 export default GlobalActions

@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------------- *
- * Copyright 2002-2022, OpenNebula Project, OpenNebula Systems               *
+ * Copyright 2002-2023, OpenNebula Project, OpenNebula Systems               *
  *                                                                           *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may   *
  * not use this file except in compliance with the License. You may obtain   *
@@ -13,21 +13,26 @@
  * See the License for the specific language governing permissions and       *
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
-import { ReactElement, useState, memo } from 'react'
+import { Box, Chip, Stack, Typography } from '@mui/material'
+import Cancel from 'iconoir-react/dist/Cancel'
+import GotoIcon from 'iconoir-react/dist/Pin'
+import RefreshDouble from 'iconoir-react/dist/RefreshDouble'
 import PropTypes from 'prop-types'
-import { Pin as GotoIcon, RefreshDouble, Cancel } from 'iconoir-react'
-import { Typography, Box, Stack, Chip } from '@mui/material'
+import { ReactElement, memo, useState } from 'react'
 import { Row } from 'react-table'
 
-import { useLazyGetVmQuery } from 'client/features/OneApi/vm'
+import { SubmitButton } from 'client/components/FormControl'
+import { Tr } from 'client/components/HOC'
+import MultipleTags from 'client/components/MultipleTags'
+import SplitPane from 'client/components/SplitPane'
 import { VmsTable } from 'client/components/Tables'
 import VmActions from 'client/components/Tables/Vms/actions'
 import VmTabs from 'client/components/Tabs/Vm'
-import SplitPane from 'client/components/SplitPane'
-import MultipleTags from 'client/components/MultipleTags'
-import { SubmitButton } from 'client/components/FormControl'
-import { Tr } from 'client/components/HOC'
 import { T, VM } from 'client/constants'
+import {
+  useLazyGetVmQuery,
+  useUpdateUserTemplateMutation,
+} from 'client/features/OneApi/vm'
 
 /**
  * Displays a list of VMs with a split pane between the list and selected row(s).
@@ -36,7 +41,7 @@ import { T, VM } from 'client/constants'
  */
 function VirtualMachines() {
   const [selectedRows, onSelectedRowsChange] = useState(() => [])
-  const actions = VmActions()
+  const actions = VmActions(selectedRows)
 
   const hasSelectedRows = selectedRows?.length > 0
   const moreThanOneSelected = selectedRows?.length > 1
@@ -44,12 +49,12 @@ function VirtualMachines() {
   return (
     <SplitPane gridTemplateRows="1fr auto 1fr">
       {({ getGridProps, GutterComponent }) => (
-        <Box {...(hasSelectedRows && getGridProps())}>
+        <Box height={1} {...(hasSelectedRows && getGridProps())}>
           <VmsTable
             onSelectedRowsChange={onSelectedRowsChange}
             globalActions={actions}
+            useUpdateMutation={useUpdateUserTemplateMutation}
           />
-
           {hasSelectedRows && (
             <>
               <GutterComponent direction="row" track={1} />
@@ -79,17 +84,24 @@ function VirtualMachines() {
  * @returns {ReactElement} VM details
  */
 const InfoTabs = memo(({ vm, gotoPage, unselect }) => {
-  const [getVm, { isFetching }] = useLazyGetVmQuery()
+  const [getVm, { data: lazyData, isFetching }] = useLazyGetVmQuery()
+  const id = lazyData?.ID ?? vm.ID
+  const name = lazyData?.NAME ?? vm.NAME
 
   return (
     <Stack overflow="auto">
-      <Stack direction="row" alignItems="center" gap={1} mb={1}>
+      <Stack direction="row" alignItems="center" gap={1} mx={1} mb={1}>
+        <Typography color="text.primary" noWrap flexGrow={1}>
+          {`#${id} | ${name}`}
+        </Typography>
+
+        {/* -- ACTIONS -- */}
         <SubmitButton
           data-cy="detail-refresh"
           icon={<RefreshDouble />}
           tooltip={Tr(T.Refresh)}
           isSubmitting={isFetching}
-          onClick={() => getVm({ id: vm?.ID })}
+          onClick={() => getVm({ id })}
         />
         {typeof gotoPage === 'function' && (
           <SubmitButton
@@ -107,11 +119,9 @@ const InfoTabs = memo(({ vm, gotoPage, unselect }) => {
             onClick={() => unselect()}
           />
         )}
-        <Typography color="text.primary" noWrap>
-          {`#${vm?.ID} | ${vm?.NAME}`}
-        </Typography>
+        {/* -- END ACTIONS -- */}
       </Stack>
-      <VmTabs id={vm?.ID} />
+      <VmTabs id={id} />
     </Stack>
   )
 })

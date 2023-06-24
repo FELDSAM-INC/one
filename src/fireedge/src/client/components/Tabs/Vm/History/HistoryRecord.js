@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------------- *
- * Copyright 2002-2022, OpenNebula Project, OpenNebula Systems               *
+ * Copyright 2002-2023, OpenNebula Project, OpenNebula Systems               *
  *                                                                           *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may   *
  * not use this file except in compliance with the License. You may obtain   *
@@ -78,10 +78,12 @@ const HistoryRecordCard = memo(
 
     const { name: userName } = useGetUsersQuery(undefined, {
       selectFromResult: ({ data }) => getNameFromResult(UID, data),
+      skip: UID === -1,
     })
 
     const { name: groupName } = useGetGroupsQuery(undefined, {
       selectFromResult: ({ data }) => getNameFromResult(GID, data),
+      skip: UID === -1,
     })
 
     return (
@@ -93,27 +95,27 @@ const HistoryRecordCard = memo(
         <div className={classes.main}>
           <div className={classes.title}>
             <Typography noWrap component="span" data-cy="record-data">
-              {`#${SEQ} | #${HID} ${HOSTNAME} | ${Tr(T.Action)}: ${action}`}
+              {`${SEQ} | ${HID} ${HOSTNAME} | ${Tr(T.Action)}: ${action}`}
             </Typography>
           </div>
           <div className={classes.caption}>
-            <span title={`${Tr(T.Datastore)}: #${DS_ID} ${dsName}`}>
+            <span title={`${Tr(T.Datastore)}: ${DS_ID} ${dsName}`}>
               <Folder />
-              <span data-cy="datastore">{`#${DS_ID} ${dsName}`}</span>
+              <span data-cy="datastore">{dsName}</span>
             </span>
             {+UID !== -1 && (
               <>
-                <span title={`${Tr(T.Owner)}: #${UID} ${userName}`}>
+                <span title={`${Tr(T.Owner)}: ${UID} ${userName}`}>
                   <User />
-                  <span data-cy="owner">{`#${UID} ${userName}`}</span>
+                  <span data-cy="owner">{userName}</span>
                 </span>
-                <span title={`${Tr(T.Group)}: #${GID} ${groupName}`}>
+                <span title={`${Tr(T.Group)}: ${GID} ${groupName}`}>
                   <Group />
-                  <span data-cy="group">{`#${GID} ${groupName}`}</span>
+                  <span data-cy="group">{groupName}</span>
                 </span>
                 <span title={`${Tr(T.RequestId)}: ${REQUEST_ID}`}>
                   <InfoEmpty />
-                  <span data-cy="request">{`#${REQUEST_ID}`}</span>
+                  <span data-cy="request">{REQUEST_ID}</span>
                 </span>
               </>
             )}

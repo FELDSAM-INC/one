@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------------- *
- * Copyright 2002-2022, OpenNebula Project, OpenNebula Systems               *
+ * Copyright 2002-2023, OpenNebula Project, OpenNebula Systems               *
  *                                                                           *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may   *
  * not use this file except in compliance with the License. You may obtain   *
@@ -13,6 +13,8 @@
  * See the License for the specific language governing permissions and       *
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
+import AllImagesTable from 'client/components/Tables/AllImages'
+import BackupsTable from 'client/components/Tables/Backups'
 import ClustersTable from 'client/components/Tables/Clusters'
 import DatastoresTable from 'client/components/Tables/Datastores'
 import DockerHubTagsTable from 'client/components/Tables/DockerHubTags'
@@ -20,6 +22,8 @@ import EnhancedTable from 'client/components/Tables/Enhanced'
 import GroupsTable from 'client/components/Tables/Groups'
 import HostsTable from 'client/components/Tables/Hosts'
 import ImagesTable from 'client/components/Tables/Images'
+import IncrementsTable from 'client/components/Tables/Increments'
+import FilesTable from 'client/components/Tables/Files'
 import MarketplaceAppsTable from 'client/components/Tables/MarketplaceApps'
 import MarketplacesTable from 'client/components/Tables/Marketplaces'
 import SecurityGroupsTable from 'client/components/Tables/SecurityGroups'
@@ -35,9 +39,14 @@ import VNetworkTemplatesTable from 'client/components/Tables/VNetworkTemplates'
 import VRoutersTable from 'client/components/Tables/VRouters'
 import ZonesTable from 'client/components/Tables/Zones'
 
+export * from 'client/components/Tables/Enhanced/Utils'
+
 export {
+  AllImagesTable,
   SkeletonTable,
   EnhancedTable,
+  BackupsTable,
+  FilesTable,
   VirtualizedTable,
   ClustersTable,
   DatastoresTable,
@@ -45,6 +54,7 @@ export {
   GroupsTable,
   HostsTable,
   ImagesTable,
+  IncrementsTable,
   MarketplaceAppsTable,
   MarketplacesTable,
   SecurityGroupsTable,

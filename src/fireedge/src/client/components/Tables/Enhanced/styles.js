@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------------- *
- * Copyright 2002-2022, OpenNebula Project, OpenNebula Systems               *
+ * Copyright 2002-2023, OpenNebula Project, OpenNebula Systems               *
  *                                                                           *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may   *
  * not use this file except in compliance with the License. You may obtain   *
@@ -24,7 +24,7 @@ export default makeStyles(({ palette, typography, breakpoints }) => ({
   },
   toolbar: {
     ...typography.body1,
-    marginBottom: 16,
+    marginBottom: '1em',
     display: 'grid',
     gridTemplateRows: 'auto auto',
     gridTemplateAreas: `

@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------------- *
- * Copyright 2002-2022, OpenNebula Project, OpenNebula Systems               *
+ * Copyright 2002-2023, OpenNebula Project, OpenNebula Systems               *
  *                                                                           *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may   *
  * not use this file except in compliance with the License. You may obtain   *
@@ -15,7 +15,6 @@
  * ------------------------------------------------------------------------- */
 // eslint-disable-next-line prettier/prettier, no-unused-vars
 import { VmQuota, NetworkQuota, DatastoreQuota, ImageQuota } from 'client/constants/quota'
-import * as ACTIONS from 'client/constants/actions'
 
 /**
  * @typedef Group
@@ -37,7 +36,6 @@ import * as ACTIONS from 'client/constants/actions'
  */
 
 export const GROUP_ACTIONS = {
-  REFRESH: ACTIONS.REFRESH,
   CREATE_DIALOG: 'create_dialog',
   UPDATE_DIALOG: 'update_dialog',
   QUOTAS_DIALOG: 'quotas_dialog',

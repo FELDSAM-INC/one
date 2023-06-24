@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------------- *
- * Copyright 2002-2022, OpenNebula Project, OpenNebula Systems               *
+ * Copyright 2002-2023, OpenNebula Project, OpenNebula Systems               *
  *                                                                           *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may   *
  * not use this file except in compliance with the License. You may obtain   *
@@ -18,6 +18,7 @@
  * @typedef {object} StateInfo
  * @property {string} color - Color.
  * @property {string} name - Name.
+ * @property {string} [displayName] - Display name.
  * @property {string} [meaning] - Meaning.
  * @property {string} [shortName] - Short name.
  */
@@ -137,3 +138,6 @@ export const UNKNOWN = 'UNKNOWN'
 export const USED = 'USED'
 export const USED_PERS = 'USED_PERS'
 export const WARNING = 'WARNING'
+export const BACKUP = 'BACKUP'
+export const BACKUP_POWEROFF = 'BACKUP_POWEROFF'
+export const UPDATE_FAILURE = 'UPDATE_FAILURE'

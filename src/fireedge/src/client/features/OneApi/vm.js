@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------------- *
- * Copyright 2002-2022, OpenNebula Project, OpenNebula Systems               *
+ * Copyright 2002-2023, OpenNebula Project, OpenNebula Systems               *
  *                                                                           *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may   *
  * not use this file except in compliance with the License. You may obtain   *
@@ -173,6 +173,8 @@ const vmApi = oneApi.injectEndpoints({
 
         return { params: { id }, command }
       },
+      transformResponse: (data) =>
+        [data?.MONITORING_DATA?.MONITORING ?? []].flat(),
     }),
     getMonitoringPool: builder.query({
       /**
@@ -315,7 +317,7 @@ const vmApi = oneApi.injectEndpoints({
 
         return { params, command }
       },
-      invalidatesTags: [VM_POOL],
+      invalidatesTags: (_, __, { id }) => [{ type: VM, id }, VM_POOL],
     }),
     actionVm: builder.mutation({
       /**
@@ -552,6 +554,26 @@ const vmApi = oneApi.injectEndpoints({
        */
       query: (params) => {
         const name = Actions.VM_NIC_DETACH
+        const command = { name, ...Commands[name] }
+
+        return { params, command }
+      },
+      invalidatesTags: (_, __, { id }) => [{ type: VM, id }],
+    }),
+    updateNic: builder.mutation({
+      /**
+       * Updates a network interface from a virtual machine.
+       *
+       * @param {object} params - Request parameters
+       * @param {string} params.id - Virtual machine id
+       * @param {string} params.nic - NIC id
+       * @param {number} params.append - Append
+       * @param {string} params.template - NIC id
+       * @returns {number} Virtual machine id
+       * @throws Fails when response isn't code 200
+       */
+      query: (params) => {
+        const name = Actions.VM_NIC_UPDATE
         const command = { name, ...Commands[name] }
 
         return { params, command }
@@ -873,6 +895,25 @@ const vmApi = oneApi.injectEndpoints({
       },
       invalidatesTags: (_, __, { id }) => [{ type: VM, id }],
     }),
+    backup: builder.mutation({
+      /**
+       * Backup the VM.
+       *
+       * @param {object} params - Request parameters
+       * @param {string} params.id - Virtual machine id
+       * @param {number} params.dsId - Backup Datastore id
+       * @param {boolean} params.reset - Backup reset
+       * @returns {number} Virtual machine id
+       * @throws Fails when response isn't code 200
+       */
+      query: (params) => {
+        const name = Actions.VM_BACKUP
+        const command = { name, ...Commands[name] }
+
+        return { params, command }
+      },
+      invalidatesTags: (_, __, { id }) => [{ type: VM, id }],
+    }),
     lockVm: builder.mutation({
       /**
        * Locks a Virtual Machine. Lock certain actions depending on blocking level.
@@ -1050,6 +1091,7 @@ export const {
   useResizeDiskMutation,
   useAttachNicMutation,
   useDetachNicMutation,
+  useUpdateNicMutation,
   useAttachSecurityGroupMutation,
   useDetachSecurityGroupMutation,
   useChangeVmPermissionsMutation,
@@ -1062,6 +1104,7 @@ export const {
   useUpdateUserTemplateMutation,
   useUpdateConfigurationMutation,
   useRecoverMutation,
+  useBackupMutation,
   useLockVmMutation,
   useUnlockVmMutation,
   useAddScheduledActionMutation,

@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------------- *
- * Copyright 2002-2022, OpenNebula Project, OpenNebula Systems               *
+ * Copyright 2002-2023, OpenNebula Project, OpenNebula Systems               *
  *                                                                           *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may   *
  * not use this file except in compliance with the License. You may obtain   *
@@ -14,28 +14,31 @@
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
 import {
-  Cell2X2 as InstancesIcons,
-  ModernTv as VmsIcons,
-  Shuffle as VRoutersIcons,
-  Archive as TemplatesIcon,
-  EmptyPage as TemplateIcon,
-  Packages as ServicesIcon,
-  MultiplePagesEmpty as ServiceTemplateIcon,
-  Box as StorageIcon,
+  RefreshDouble as BackupIcon,
+  Server as ClusterIcon,
   Db as DatastoreIcon,
+  Folder as FileIcon,
+  Group as GroupIcon,
+  HardDrive as HostIcon,
   BoxIso as ImageIcon,
-  SimpleCart as MarketplaceIcon,
+  CloudSync as InfrastructureIcon,
+  Cell2X2 as InstancesIcons,
   CloudDownload as MarketplaceAppIcon,
-  ServerConnection as NetworksIcon,
+  SimpleCart as MarketplaceIcon,
   NetworkAlt as NetworkIcon,
   KeyframesCouple as NetworkTemplateIcon,
-  CloudSync as InfrastructureIcon,
-  Server as ClusterIcon,
-  HardDrive as HostIcon,
-  MinusPinAlt as ZoneIcon,
+  ServerConnection as NetworksIcon,
+  HistoricShield as SecurityGroupIcon,
+  MultiplePagesEmpty as ServiceTemplateIcon,
+  Packages as ServicesIcon,
+  Box as StorageIcon,
   Home as SystemIcon,
+  EmptyPage as TemplateIcon,
+  Archive as TemplatesIcon,
   User as UserIcon,
-  Group as GroupIcon,
+  Shuffle as VRoutersIcons,
+  ModernTv as VmsIcons,
+  MinusPinAlt as ZoneIcon,
 } from 'iconoir-react'
 
 import loadable from '@loadable/component'
@@ -94,9 +97,52 @@ const ServiceTemplateDetail = loadable(
 const Datastores = loadable(() => import('client/containers/Datastores'), {
   ssr: false,
 })
+const CreateDatastores = loadable(
+  () => import('client/containers/Datastores/Create'),
+  {
+    ssr: false,
+  }
+)
+
 const Images = loadable(() => import('client/containers/Images'), {
   ssr: false,
 })
+const Files = loadable(() => import('client/containers/Files'), {
+  ssr: false,
+})
+const CreateFiles = loadable(() => import('client/containers/Files/Create'), {
+  ssr: false,
+})
+const SecurityGroups = loadable(
+  () => import('client/containers/SecurityGroups'),
+  {
+    ssr: false,
+  }
+)
+const CreateSecurityGroups = loadable(
+  () => import('client/containers/SecurityGroups/Create'),
+  {
+    ssr: false,
+  }
+)
+const Backups = loadable(() => import('client/containers/Backups'), {
+  ssr: false,
+})
+const BackupDetail = loadable(
+  () => import('client/containers/Backups/Detail'),
+  {
+    ssr: false,
+  }
+)
+const CreateImages = loadable(() => import('client/containers/Images/Create'), {
+  ssr: false,
+})
+const CreateDockerfile = loadable(
+  () => import('client/containers/Images/Dockerfile'),
+  {
+    ssr: false,
+  }
+)
 const Marketplaces = loadable(() => import('client/containers/Marketplaces'), {
   ssr: false,
 })
@@ -113,12 +159,19 @@ const VirtualNetworks = loadable(
   () => import('client/containers/VirtualNetworks'),
   { ssr: false }
 )
+const VirtualNetworksDetail = loadable(
+  () => import('client/containers/VirtualNetworks/Detail'),
+  { ssr: false }
+)
+const CreateVirtualNetwork = loadable(
+  () => import('client/containers/VirtualNetworks/Create'),
+  { ssr: false }
+)
 const VNetworkTemplates = loadable(
   () => import('client/containers/VNetworkTemplates'),
   { ssr: false }
 )
 // const NetworkTopologies = loadable(() => import('client/containers/NetworkTopologies'), { ssr: false })
-// const SecurityGroups = loadable(() => import('client/containers/SecurityGroups'), { ssr: false })
 
 const Clusters = loadable(() => import('client/containers/Clusters'), {
   ssr: false,
@@ -156,7 +209,7 @@ export const PATH = {
       DETAIL: `/${RESOURCE_NAMES.VM}/:id`,
     },
     VROUTERS: {
-      LIST: `/${RESOURCE_NAMES.V_ROUTER}`,
+      LIST: `/${RESOURCE_NAMES.VROUTER}`,
     },
     SERVICES: {
       LIST: `/${RESOURCE_NAMES.SERVICE}`,
@@ -181,10 +234,22 @@ export const PATH = {
     DATASTORES: {
       LIST: `/${RESOURCE_NAMES.DATASTORE}`,
       DETAIL: `/${RESOURCE_NAMES.DATASTORE}/:id`,
+      CREATE: `/${RESOURCE_NAMES.DATASTORE}/create`,
     },
     IMAGES: {
       LIST: `/${RESOURCE_NAMES.IMAGE}`,
       DETAIL: `/${RESOURCE_NAMES.IMAGE}/:id`,
+      CREATE: `/${RESOURCE_NAMES.IMAGE}/create`,
+      DOCKERFILE: `/${RESOURCE_NAMES.IMAGE}/dockerfile`,
+    },
+    FILES: {
+      LIST: `/${RESOURCE_NAMES.FILE}`,
+      DETAIL: `/${RESOURCE_NAMES.FILE}/:id`,
+      CREATE: `/${RESOURCE_NAMES.FILE}/create`,
+    },
+    BACKUPS: {
+      LIST: `/${RESOURCE_NAMES.BACKUP}`,
+      DETAIL: `/${RESOURCE_NAMES.BACKUP}/:id`,
     },
     MARKETPLACES: {
       LIST: `/${RESOURCE_NAMES.MARKETPLACE}`,
@@ -200,6 +265,7 @@ export const PATH = {
     VNETS: {
       LIST: `/${RESOURCE_NAMES.VNET}`,
       DETAIL: `/${RESOURCE_NAMES.VNET}/:id`,
+      CREATE: `/${RESOURCE_NAMES.VNET}/create`,
     },
     VN_TEMPLATES: {
       LIST: `/${RESOURCE_NAMES.VN_TEMPLATE}`,
@@ -208,6 +274,7 @@ export const PATH = {
     SEC_GROUPS: {
       LIST: `/${RESOURCE_NAMES.SEC_GROUP}`,
       DETAIL: `/${RESOURCE_NAMES.SEC_GROUP}/:id`,
+      CREATE: `/${RESOURCE_NAMES.SEC_GROUP}/create`,
     },
   },
   INFRASTRUCTURE: {
@@ -353,11 +420,51 @@ const ENDPOINTS = [
         Component: Datastores,
       },
       {
+        title: T.CreateDatastore,
+        path: PATH.STORAGE.DATASTORES.CREATE,
+        Component: CreateDatastores,
+      },
+      {
         title: T.Images,
         path: PATH.STORAGE.IMAGES.LIST,
         sidebar: true,
         icon: ImageIcon,
         Component: Images,
+      },
+      {
+        title: T.CreateImage,
+        path: PATH.STORAGE.IMAGES.CREATE,
+        Component: CreateImages,
+      },
+      {
+        title: T.Files,
+        path: PATH.STORAGE.FILES.LIST,
+        sidebar: true,
+        icon: FileIcon,
+        Component: Files,
+      },
+      {
+        title: T.CreateFile,
+        path: PATH.STORAGE.FILES.CREATE,
+        Component: CreateFiles,
+      },
+      {
+        title: T.CreateDockerfile,
+        path: PATH.STORAGE.IMAGES.DOCKERFILE,
+        Component: CreateDockerfile,
+      },
+      {
+        title: T.Backups,
+        path: PATH.STORAGE.BACKUPS.LIST,
+        sidebar: true,
+        icon: BackupIcon,
+        Component: Backups,
+      },
+      {
+        title: T.Backup,
+        description: (params) => `#${params?.id}`,
+        path: PATH.STORAGE.BACKUPS.DETAIL,
+        Component: BackupDetail,
       },
       {
         title: T.Marketplaces,
@@ -392,11 +499,39 @@ const ENDPOINTS = [
         Component: VirtualNetworks,
       },
       {
+        title: (_, state) =>
+          state?.ID !== undefined
+            ? T.UpdateVirtualNetwork
+            : T.CreateVirtualNetwork,
+        description: (_, state) =>
+          state?.ID !== undefined && `#${state.ID} ${state.NAME}`,
+        path: PATH.NETWORK.VNETS.CREATE,
+        Component: CreateVirtualNetwork,
+      },
+      {
+        title: T.VirtualNetworks,
+        description: (params) => `#${params?.id}`,
+        path: PATH.NETWORK.VNETS.DETAIL,
+        Component: VirtualNetworksDetail,
+      },
+      {
         title: T.NetworkTemplates,
         path: PATH.NETWORK.VN_TEMPLATES.LIST,
         sidebar: true,
         icon: NetworkTemplateIcon,
         Component: VNetworkTemplates,
+      },
+      {
+        title: T.SecurityGroups,
+        path: PATH.NETWORK.SEC_GROUPS.LIST,
+        sidebar: true,
+        icon: SecurityGroupIcon,
+        Component: SecurityGroups,
+      },
+      {
+        title: T.CreateSecurityGroup,
+        path: PATH.NETWORK.SEC_GROUPS.CREATE,
+        Component: CreateSecurityGroups,
       },
     ],
   },

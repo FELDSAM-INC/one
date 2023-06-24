@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------------- *
- * Copyright 2002-2022, OpenNebula Project, OpenNebula Systems               *
+ * Copyright 2002-2023, OpenNebula Project, OpenNebula Systems               *
  *                                                                           *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may   *
  * not use this file except in compliance with the License. You may obtain   *
@@ -17,22 +17,25 @@ import * as ACTIONS from 'client/constants/actions'
 import COLOR from 'client/constants/color'
 import * as STATES from 'client/constants/states'
 import * as T from 'client/constants/translates'
+
 /**
  * @typedef {object} PciDevice - PCI device
  * @property {string} ADDRESS - Address, bus, slot and function
  * @property {string} BUS - Address bus
  * @property {string} CLASS - Id of PCI device class
- * @property {string} [CLASS_NAME] - Name of PCI device class
+ * @property {string} CLASS_NAME - Name of PCI device class
  * @property {string} DEVICE - Id of PCI device
- * @property {string} [DEVICE_NAME] - Name of PCI device
+ * @property {string} DEVICE_NAME - Name of PCI device
  * @property {string} DOMAIN - Address domain
  * @property {string} FUNCTION - Address function
  * @property {string} NUMA_NODE - Numa node
+ * @property {string} PROFILES - Available vGPU Profiles
  * @property {string} SHORT_ADDRESS - Short address
  * @property {string} SLOT - Address slot
+ * @property {string} [UUID] - UUID
  * @property {string} TYPE - Type
  * @property {string} VENDOR - Id of PCI device vendor
- * @property {string} [VENDOR_NAME] - Name of PCI device vendor
+ * @property {string} VENDOR_NAME - Name of PCI device vendor
  * @property {string|number} VMID - Id using this device, -1 if free
  */
 
@@ -174,7 +177,6 @@ export const HOST_STATES = [
 
 /** @enum {string} Host actions */
 export const HOST_ACTIONS = {
-  REFRESH: ACTIONS.REFRESH,
   CREATE_DIALOG: 'create_dialog',
   RENAME: ACTIONS.RENAME,
   CHANGE_CLUSTER: 'change_cluster',
@@ -199,7 +201,7 @@ export const PIN_POLICY = {
 /** @enum {string} Custom Hypervisor */
 export const CUSTOM_HOST_HYPERVISOR = {
   NAME: 'Custom',
-  SUNSTONE_NAME: T.CustomHypervisor,
+  SUNSTONE_NAME: T.Custom,
 }
 
 /**

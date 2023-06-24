@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------------- *
- * Copyright 2002-2022, OpenNebula Project, OpenNebula Systems               *
+ * Copyright 2002-2023, OpenNebula Project, OpenNebula Systems               *
  *                                                                           *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may   *
  * not use this file except in compliance with the License. You may obtain   *
@@ -267,6 +267,7 @@ export const generateCapacityInput = ({ validation, ...field }) => ({
         modificationType === list ? schema.oneOf(options) : schema
     ),
   grid: { md: 3 },
+  fieldProps: { min: 0 },
 })
 
 /**

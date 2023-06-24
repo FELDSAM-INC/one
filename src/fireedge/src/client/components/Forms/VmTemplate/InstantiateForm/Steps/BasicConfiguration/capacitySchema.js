@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------------- *
- * Copyright 2002-2022, OpenNebula Project, OpenNebula Systems               *
+ * Copyright 2002-2023, OpenNebula Project, OpenNebula Systems               *
  *                                                                           *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may   *
  * not use this file except in compliance with the License. You may obtain   *
@@ -15,28 +15,36 @@
  * ------------------------------------------------------------------------- */
 import { NumberSchema } from 'yup'
 
-import { scaleVcpuByCpuFactor } from 'client/models/VirtualMachine'
-import { getUserInputParams } from 'client/models/Helper'
 import {
-  Field,
-  schemaUserInput,
-  prettyBytes,
-  isDivisibleBy,
-} from 'client/utils'
-import {
-  T,
   HYPERVISORS,
+  T,
   USER_INPUT_TYPES,
   VmTemplate,
   VmTemplateFeatures,
 } from 'client/constants'
+import { getUserInputParams } from 'client/models/Helper'
+import { scaleVcpuByCpuFactor } from 'client/models/VirtualMachine'
+import {
+  Field,
+  isDivisibleBy,
+  prettyBytes,
+  schemaUserInput,
+} from 'client/utils'
 
 const { number, numberFloat, range, rangeFloat } = USER_INPUT_TYPES
 
 const TRANSLATES = {
-  MEMORY: { name: 'MEMORY', label: T.Memory, tooltip: T.MemoryConcept },
-  CPU: { name: 'CPU', label: T.PhysicalCpu, tooltip: T.CpuConcept },
-  VCPU: { name: 'VCPU', label: T.VirtualCpu, tooltip: T.VirtualCpuConcept },
+  MEMORY: {
+    name: 'MEMORY',
+    label: [T.MemoryWithUnit, '(MB)'],
+    tooltip: T.MemoryConcept,
+  },
+  CPU: { name: 'CPU', label: T.PhysicalCpuWithPercent, tooltip: T.CpuConcept },
+  VCPU: {
+    name: 'VCPU',
+    label: T.VirtualCpuWithDecimal,
+    tooltip: T.VirtualCpuConcept,
+  },
 }
 
 const valueLabelFormat = (value) => prettyBytes(value, 'MB')

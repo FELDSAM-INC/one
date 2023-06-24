@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------------- *
- * Copyright 2002-2022, OpenNebula Project, OpenNebula Systems               *
+ * Copyright 2002-2023, OpenNebula Project, OpenNebula Systems               *
  *                                                                           *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may   *
  * not use this file except in compliance with the License. You may obtain   *
@@ -13,9 +13,10 @@
  * See the License for the specific language governing permissions and       *
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
+import { T } from 'client/constants'
 import * as ACTIONS from 'client/constants/actions'
 // eslint-disable-next-line no-unused-vars
-import { Permissions, LockInfo } from 'client/constants/common'
+import { LockInfo, Permissions } from 'client/constants/common'
 
 /**
  * @typedef VmTemplate
@@ -45,7 +46,6 @@ import { Permissions, LockInfo } from 'client/constants/common'
  */
 
 export const VM_TEMPLATE_ACTIONS = {
-  REFRESH: ACTIONS.REFRESH,
   CREATE_DIALOG: 'create_dialog',
   IMPORT_DIALOG: 'import_dialog',
   UPDATE_DIALOG: 'update_dialog',
@@ -63,7 +63,13 @@ export const VM_TEMPLATE_ACTIONS = {
   CHANGE_GROUP: ACTIONS.CHANGE_GROUP,
 }
 
-export const NUMA_PIN_POLICIES = ['NONE', 'THREAD', 'SHARED', 'CORE']
+export const NUMA_PIN_POLICIES = {
+  NONE: 'NONE',
+  THREAD: 'THREAD',
+  SHARED: 'SHARED',
+  CORE: 'CORE',
+  NODE_AFFINITY: 'NODE_AFFINITY',
+}
 
 export const NUMA_MEMORY_ACCESS = ['shared', 'private']
 
@@ -82,6 +88,8 @@ export const KVM_FIRMWARE_TYPES = FIRMWARE_TYPES.concat([
   '/usr/share/OVMF/OVMF_CODE.fd',
   '/usr/share/OVMF/OVMF_CODE.secboot.fd',
 ])
+
+export const PCI_TYPES = { MANUAL: 'pci_manual', AUTOMATIC: 'pci_automatic' }
 
 export const VCENTER_FIRMWARE_TYPES = FIRMWARE_TYPES.concat(['uefi'])
 
@@ -105,4 +113,37 @@ export const TEMPLATE_LOGOS = {
   Ubuntu: 'images/logos/ubuntu.png',
   'Windows xp': 'images/logos/windowsxp.png',
   'Windows 10': 'images/logos/windows8.png',
+}
+
+/** @enum {string} FS freeze options type */
+export const FS_FREEZE_OPTIONS = {
+  [T.None]: 'NONE',
+  [T.QEMUAgent]: 'QEMU-AGENT',
+  [T.Suspend]: 'SUSPEND',
+}
+
+/** @enum {string} Backup mode options type */
+export const BACKUP_MODE_OPTIONS = {
+  [T.Full]: 'FULL',
+  [T.Increment]: 'INCREMENT',
+}
+
+/** @enum {string} NIC Hardware options */
+export const NIC_HARDWARE = {
+  EMULATED: 'emulated',
+  PCI_PASSTHROUGH_AUTOMATIC: 'pci_automatic',
+  PCI_PASSTHROUGH_MANUAL: 'pci_manual',
+}
+
+/** @enum {string} NIC Hardware options names */
+export const NIC_HARDWARE_STR = {
+  [NIC_HARDWARE.EMULATED]: T.Emulated,
+  [NIC_HARDWARE.PCI_PASSTHROUGH_AUTOMATIC]: T.PCIPassthroughAutomatic,
+  [NIC_HARDWARE.PCI_PASSTHROUGH_MANUAL]: T.PCIPassthroughManual,
+}
+
+/** @enum {string} Memory resize options */
+export const MEMORY_RESIZE_OPTIONS = {
+  [T.Ballooning]: 'BALLOONING',
+  [T.Hotplug]: 'HOTPLUG',
 }

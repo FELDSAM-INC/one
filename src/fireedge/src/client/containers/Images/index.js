@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------------- *
- * Copyright 2002-2022, OpenNebula Project, OpenNebula Systems               *
+ * Copyright 2002-2023, OpenNebula Project, OpenNebula Systems               *
  *                                                                           *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may   *
  * not use this file except in compliance with the License. You may obtain   *
@@ -13,18 +13,23 @@
  * See the License for the specific language governing permissions and       *
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
-import { ReactElement, useState, memo } from 'react'
+import { Box, Chip, Stack, Typography } from '@mui/material'
+import Cancel from 'iconoir-react/dist/Cancel'
+import GotoIcon from 'iconoir-react/dist/Pin'
+import RefreshDouble from 'iconoir-react/dist/RefreshDouble'
 import PropTypes from 'prop-types'
-import { BookmarkEmpty } from 'iconoir-react'
-import { Typography, Box, Stack, Chip, IconButton } from '@mui/material'
+import { ReactElement, memo, useState } from 'react'
 import { Row } from 'react-table'
 
-import { ImagesTable } from 'client/components/Tables'
-import ImageTabs from 'client/components/Tabs/Image'
-import SplitPane from 'client/components/SplitPane'
-import MultipleTags from 'client/components/MultipleTags'
+import { SubmitButton } from 'client/components/FormControl'
 import { Tr } from 'client/components/HOC'
-import { T, Image } from 'client/constants'
+import MultipleTags from 'client/components/MultipleTags'
+import SplitPane from 'client/components/SplitPane'
+import { ImagesTable } from 'client/components/Tables'
+import ImageActions from 'client/components/Tables/Images/actions'
+import ImageTabs from 'client/components/Tabs/Image'
+import { Image, T } from 'client/constants'
+import { useLazyGetImageQuery } from 'client/features/OneApi/image'
 
 /**
  * Displays a list of Images with a split pane between the list and selected row(s).
@@ -33,6 +38,7 @@ import { T, Image } from 'client/constants'
  */
 function Images() {
   const [selectedRows, onSelectedRowsChange] = useState(() => [])
+  const actions = ImageActions()
 
   const hasSelectedRows = selectedRows?.length > 0
   const moreThanOneSelected = selectedRows?.length > 1
@@ -40,8 +46,11 @@ function Images() {
   return (
     <SplitPane gridTemplateRows="1fr auto 1fr">
       {({ getGridProps, GutterComponent }) => (
-        <Box {...(hasSelectedRows && getGridProps())}>
-          <ImagesTable onSelectedRowsChange={onSelectedRowsChange} />
+        <Box height={1} {...(hasSelectedRows && getGridProps())}>
+          <ImagesTable
+            onSelectedRowsChange={onSelectedRowsChange}
+            globalActions={actions}
+          />
 
           {hasSelectedRows && (
             <>
@@ -52,6 +61,7 @@ function Images() {
                 <InfoTabs
                   image={selectedRows[0]?.original}
                   gotoPage={selectedRows[0]?.gotoPage}
+                  unselect={() => selectedRows[0]?.toggleRowSelected(false)}
                 />
               )}
             </>
@@ -67,27 +77,53 @@ function Images() {
  *
  * @param {Image} image - Image to display
  * @param {Function} [gotoPage] - Function to navigate to a page of an Image
+ * @param {Function} [unselect] - Function to unselect a Image
  * @returns {ReactElement} Image details
  */
-const InfoTabs = memo(({ image, gotoPage }) => (
-  <Stack overflow="auto">
-    <Stack direction="row" alignItems="center" gap={1} mb={1}>
-      <Typography color="text.primary" noWrap>
-        {`#${image.ID} | ${image.NAME}`}
-      </Typography>
-      {gotoPage && (
-        <IconButton title={Tr(T.LocateOnTable)} onClick={gotoPage}>
-          <BookmarkEmpty />
-        </IconButton>
-      )}
+const InfoTabs = memo(({ image, gotoPage, unselect }) => {
+  const [getImage, { data: lazyData, isFetching }] = useLazyGetImageQuery()
+  const id = lazyData?.ID ?? image.ID
+  const name = lazyData?.NAME ?? image.NAME
+
+  return (
+    <Stack overflow="auto">
+      <Stack direction="row" alignItems="center" gap={1} mx={1} mb={1}>
+        <Typography color="text.primary" noWrap flexGrow={1}>
+          {`#${id} | ${name}`}
+        </Typography>
+        <SubmitButton
+          data-cy="detail-refresh"
+          icon={<RefreshDouble />}
+          tooltip={Tr(T.Refresh)}
+          isSubmitting={isFetching}
+          onClick={() => getImage({ id })}
+        />
+        {typeof gotoPage === 'function' && (
+          <SubmitButton
+            data-cy="locate-on-table"
+            icon={<GotoIcon />}
+            tooltip={Tr(T.LocateOnTable)}
+            onClick={() => gotoPage()}
+          />
+        )}
+        {typeof unselect === 'function' && (
+          <SubmitButton
+            data-cy="unselect"
+            icon={<Cancel />}
+            tooltip={Tr(T.Close)}
+            onClick={() => unselect()}
+          />
+        )}
+      </Stack>
+      <ImageTabs id={image.ID} />
     </Stack>
-    <ImageTabs id={image.ID} />
-  </Stack>
-))
+  )
+})
 
 InfoTabs.propTypes = {
   image: PropTypes.object.isRequired,
   gotoPage: PropTypes.func,
+  unselect: PropTypes.func,
 }
 
 InfoTabs.displayName = 'InfoTabs'

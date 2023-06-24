@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------------- *
- * Copyright 2002-2022, OpenNebula Project, OpenNebula Systems               *
+ * Copyright 2002-2023, OpenNebula Project, OpenNebula Systems               *
  *                                                                           *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may   *
  * not use this file except in compliance with the License. You may obtain   *
@@ -22,6 +22,7 @@ import { name as authSlice, actions, logout } from 'client/features/Auth/slice'
 import groupApi from 'client/features/OneApi/group'
 import systemApi from 'client/features/OneApi/system'
 import { ResourceView } from 'client/apps/sunstone/routes'
+import { areStringEqual } from 'client/models/Helper'
 import {
   _APPS,
   RESOURCE_NAMES,
@@ -61,6 +62,15 @@ export const useAuth = () => {
     }
   )
 
+  const userLabels = useMemo(() => {
+    const labels = user?.TEMPLATE?.LABELS?.split(',') ?? []
+
+    return labels
+      .filter(Boolean)
+      .map((label) => label.toUpperCase())
+      .sort(areStringEqual({ numeric: true, ignorePunctuation: true }))
+  }, [user?.TEMPLATE?.LABELS])
+
   return useMemo(
     () => ({
       ...auth,
@@ -75,6 +85,7 @@ export const useAuth = () => {
         ...(user?.TEMPLATE ?? {}),
         ...(user?.TEMPLATE?.FIREEDGE ?? {}),
       },
+      labels: userLabels ?? [],
       isLogged:
         !!jwt &&
         !!user &&
@@ -84,6 +95,26 @@ export const useAuth = () => {
     }),
     [user, jwt, isLoginInProgress, authGroups, auth, waitViewToLogin]
   )
+}
+
+export const useSystemData = () => {
+  const { data: oneConfig = {} } = systemApi.useGetOneConfigQuery()
+
+  const { user } = useAuth()
+  const userGroup = Array.isArray(user?.GROUPS?.ID)
+    ? user?.GROUPS?.ID
+    : [user?.GROUPS?.ID]
+  const adminGroup = userGroup?.includes?.('0')
+
+  return { oneConfig, adminGroup }
+}
+
+export const useDisableInputByUserAndConfig = (input = '') => {
+  const { adminGroup, oneConfig } = useSystemData()
+
+  return {
+    disabled: !adminGroup && oneConfig.VM_RESTRICTED_ATTR?.includes?.(input),
+  }
 }
 
 export const useAuthApi = () => {

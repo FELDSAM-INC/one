@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------------- *
- * Copyright 2002-2022, OpenNebula Project, OpenNebula Systems               *
+ * Copyright 2002-2023, OpenNebula Project, OpenNebula Systems               *
  *                                                                           *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may   *
  * not use this file except in compliance with the License. You may obtain   *
@@ -27,6 +27,7 @@ const initial = {
   withGroupSwitcher: false,
   isLoading: false,
   isFixMenu: false,
+  upload: 0,
   notifications: [],
 }
 
@@ -64,7 +65,11 @@ const slice = createSlice({
         ...state,
         zone: payload,
       }))
-
+      /* UPLOAD NOTIFICATION */
+      .addCase(actions.setUploadSnackbar, (state, { payload }) => ({
+        ...state,
+        upload: payload,
+      }))
       /* NOTIFICATION ACTIONS */
       .addCase(actions.enqueueSnackbar, (state, { payload }) => {
         const { key, options, message } = payload

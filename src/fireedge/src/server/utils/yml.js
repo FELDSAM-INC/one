@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------------- *
- * Copyright 2002-2022, OpenNebula Project, OpenNebula Systems               *
+ * Copyright 2002-2023, OpenNebula Project, OpenNebula Systems               *
  *                                                                           *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may   *
  * not use this file except in compliance with the License. You may obtain   *
@@ -14,14 +14,8 @@
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
 
-const { env } = require('process')
-const { resolve } = require('path')
 const { parse: yamlToJson } = require('yaml')
 const {
-  defaultConfigFile,
-  defaultWebpackMode,
-  defaultSunstoneConfig,
-  defaultProvisionConfig,
   protectedConfigData,
   defaultAppName,
   defaultApps,
@@ -31,22 +25,11 @@ const { existsFile, defaultError } = require('server/utils/server')
 const { messageTerminal } = require('server/utils/general')
 const { global } = require('window-or-global')
 
-const defaultPath =
-  env && env.NODE_ENV === defaultWebpackMode ? ['../', '../', '../'] : ['../']
-
-const basePaths = [__dirname, ...defaultPath, 'etc']
-
 const getConfigPathByApp = (app) =>
   ({
-    [defaultAppName]:
-      global?.paths?.FIREEDGE_CONFIG ||
-      resolve(...basePaths, defaultConfigFile),
-    [defaultApps.sunstone.name]:
-      global?.paths?.SUNSTONE_CONFIG ||
-      resolve(...basePaths, 'sunstone', defaultSunstoneConfig),
-    [defaultApps.provision.name]:
-      global?.paths?.PROVISION_CONFIG ||
-      resolve(...basePaths, 'provision', defaultProvisionConfig),
+    [defaultAppName]: global?.paths?.FIREEDGE_CONFIG,
+    [defaultApps.sunstone.name]: global?.paths?.SUNSTONE_CONFIG,
+    [defaultApps.provision.name]: global?.paths?.PROVISION_CONFIG,
   }[app])
 
 const getProtectedKeysByApp = (app) => protectedConfigData[app] || []

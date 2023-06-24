@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------------- *
- * Copyright 2002-2022, OpenNebula Project, OpenNebula Systems               *
+ * Copyright 2002-2023, OpenNebula Project, OpenNebula Systems               *
  *                                                                           *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may   *
  * not use this file except in compliance with the License. You may obtain   *
@@ -25,6 +25,7 @@ import {
   CPU_FIELDS,
   VCPU_FIELDS,
   SHOWBACK_FIELDS,
+  MEMORY_RESIZE_FIELDS,
 } from './capacitySchema'
 import { FIELDS as VM_GROUP_FIELDS } from './vmGroupSchema'
 import { FIELDS as OWNERSHIP_FIELDS } from './ownershipSchema'
@@ -62,6 +63,10 @@ const SECTIONS = (hypervisor, isUpdate, features) =>
       legend: T.Memory,
       fields: filterFieldsByHypervisor(MEMORY_FIELDS, hypervisor),
     },
+    {
+      id: 'capacity',
+      fields: filterFieldsByHypervisor(MEMORY_RESIZE_FIELDS, hypervisor),
+    },
     !features?.hide_cpu && {
       id: 'capacity',
       legend: T.PhysicalCpu,
@@ -96,11 +101,13 @@ const SECTIONS = (hypervisor, isUpdate, features) =>
 
 /**
  * @param {HYPERVISORS} [hypervisor] - Template hypervisor
+ * @param {boolean} [isUpdate] - If `true`, the form is being updated
+ * @param {VmTemplateFeatures} [features] - Features
  * @returns {BaseSchema} Step schema
  */
-const SCHEMA = (hypervisor) =>
+const SCHEMA = (hypervisor, isUpdate, features) =>
   getObjectSchemaFromFields(
-    SECTIONS(hypervisor)
+    SECTIONS(hypervisor, isUpdate, features)
       .map(({ fields }) => fields)
       .flat()
   )

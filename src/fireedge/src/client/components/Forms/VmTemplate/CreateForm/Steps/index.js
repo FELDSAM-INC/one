@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------------- *
- * Copyright 2002-2022, OpenNebula Project, OpenNebula Systems               *
+ * Copyright 2002-2023, OpenNebula Project, OpenNebula Systems               *
  *                                                                           *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may   *
  * not use this file except in compliance with the License. You may obtain   *
@@ -32,6 +32,7 @@ import {
   encodeBase64,
   getUnknownAttributes,
 } from 'client/utils'
+import { T, MEMORY_RESIZE_OPTIONS } from 'client/constants'
 
 /**
  * Encodes the start script value to base64 if it is not already encoded.
@@ -121,6 +122,13 @@ const Steps = createSteps([General, ExtraConfiguration, CustomVariables], {
 
       !isCapacity && (extraTemplate.CONTEXT[upperName] = `$${upperName}`)
     })
+
+    if (
+      general?.MEMORY_RESIZE_MODE === MEMORY_RESIZE_OPTIONS[T.Ballooning] &&
+      general?.MEMORY_SLOTS
+    ) {
+      delete general.MEMORY_SLOTS
+    }
 
     return jsonToXml({
       ...customVariables,

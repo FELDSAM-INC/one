@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------------- *
- * Copyright 2002-2022, OpenNebula Project, OpenNebula Systems               *
+ * Copyright 2002-2023, OpenNebula Project, OpenNebula Systems               *
  *                                                                           *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may   *
  * not use this file except in compliance with the License. You may obtain   *
@@ -18,6 +18,7 @@ import COLOR from 'client/constants/color'
 // eslint-disable-next-line no-unused-vars
 import { Permissions, LockInfo } from 'client/constants/common'
 import * as ACTIONS from 'client/constants/actions'
+import T from 'client/constants/translates'
 
 /**
  * @typedef ARLease
@@ -40,8 +41,9 @@ import * as ACTIONS from 'client/constants/actions'
  * @property {string} SIZE - Size
  * @property {AR_TYPES} TYPE - Type
  * @property {string} USED_LEASES - Used leases
+ * @property {string} [IPAM_MAD] - IPAM driver
  * @property {{ LEASE: ARLease|ARLease[] }} [LEASES] - Leases information
- * @property {string} [GLOBAL_PREFIX] -Global prefix
+ * @property {string} [GLOBAL_PREFIX] - Global prefix
  * @property {string} [PARENT_NETWORK_AR_ID] - Parent address range id
  * @property {string} [ULA_PREFIX] - ULA prefix
  * @property {string} [VN_MAD] - Virtual network manager
@@ -94,11 +96,6 @@ import * as ACTIONS from 'client/constants/actions'
  * @property {string} [TEMPLATE.NETWORK_ADDRESS] - Network address
  * @property {string} [TEMPLATE.NETWORK_MASK] - Network mask
  * @property {string} [TEMPLATE.SEARCH_DOMAIN] - Domain
- * @property {string} [TEMPLATE.VCENTER_FROM_WILD] - vCenter information
- * @property {string} [TEMPLATE.VCENTER_INSTANCE_ID] - vCenter information
- * @property {string} [TEMPLATE.VCENTER_NET_REF] - vCenter information
- * @property {string} [TEMPLATE.VCENTER_PORTGROUP_TYPE] - vCenter information
- * @property {string} [TEMPLATE.VCENTER_TEMPLATE_REF] - vCenter information
  */
 
 /** @type {STATES.StateInfo[]} Virtual Network states */
@@ -139,20 +136,45 @@ export const VN_STATES = [
     color: COLOR.error.dark,
     meaning: 'Driver action failed.',
   },
+  {
+    // 6
+    name: STATES.UPDATE_FAILURE,
+    color: COLOR.error.light,
+    meaning: 'Network action failed',
+  },
 ]
 
 /** @enum {string} Virtual network actions */
 export const VN_ACTIONS = {
   CREATE_DIALOG: 'create_dialog',
+  IMPORT_DIALOG: 'import_dialog',
+  UPDATE_DIALOG: 'update_dialog',
+  INSTANTIATE_DIALOG: 'instantiate_dialog',
+  RESERVE_DIALOG: 'reserve_dialog',
+  CHANGE_CLUSTER: 'change_cluster',
+  LOCK: 'lock',
+  UNLOCK: 'unlock',
   DELETE: 'delete',
   RECOVER: 'recover',
-  UPDATE: 'update',
 
   // INFORMATION
   RENAME: ACTIONS.RENAME,
   CHANGE_MODE: ACTIONS.CHANGE_MODE,
   CHANGE_OWNER: ACTIONS.CHANGE_OWNER,
   CHANGE_GROUP: ACTIONS.CHANGE_GROUP,
+
+  // ADDRESS RANGE
+  ADD_AR: 'add_ar',
+  UPDATE_AR: 'update_ar',
+  DELETE_AR: 'delete_ar',
+
+  // LEASES
+  HOLD_LEASE: 'hold_lease',
+  RELEASE_LEASE: 'release_lease',
+
+  // SECURITY GROUPS
+  ADD_SECGROUP: 'add_secgroup',
+  DELETE_SECGROUP: 'delete_secgroup',
 }
 
 /** @enum {string} Virtual network actions by state */
@@ -162,8 +184,8 @@ export const VN_ACTIONS_BY_STATE = {
     STATES.INIT,
     STATES.LOCK_CREATE,
     STATES.LOCK_DELETE,
-    STATES.LOCKED,
     STATES.ERROR,
+    STATES.UPDATE_FAILURE,
   ],
   [VN_ACTIONS.UPDATE]: [STATES.READY],
 
@@ -187,17 +209,38 @@ export const AR_TYPES = {
 
 /** @enum {string} Virtual Network Drivers */
 export const VN_DRIVERS = {
-  dummy: 'dummy',
-  dot1Q: '802.1Q',
-  ebtables: 'ebtables',
-  fw: 'fw',
-  ovswitch: 'ovswitch',
-  vxlan: 'vxlan',
-  vcenter: 'vcenter',
-  ovswitch_vxlan: 'ovswitch_vxlan',
   bridge: 'bridge',
+  fw: 'fw',
+  dot1Q: '802.1Q',
+  vxlan: 'vxlan',
+  ovswitch: 'ovswitch',
+  ovswitch_vxlan: 'ovswitch_vxlan',
   elastic: 'elastic',
   nodeport: 'nodeport',
+}
+
+export const VNET_METHODS = {
+  static: 'static (Based on context)',
+  dhcp: 'dhcp (DHCPv4)',
+  skip: 'skip (Do not configure IPv4)',
+}
+
+export const VNET_METHODS6 = {
+  static: 'static (Based on context)',
+  auto: 'auto (SLAAC)',
+  dhcp: 'dhcp (SLAAC & DHCPv6)',
+  disable: 'disable (Do not use IPv6)',
+  skip: 'skip (Do not configure IPv6)',
+}
+
+/** @enum {string} Virtual Network Drivers names */
+export const VN_DRIVERS_STR = {
+  [VN_DRIVERS.bridge]: 'Bridged',
+  [VN_DRIVERS.fw]: 'Bridged & Security Groups',
+  [VN_DRIVERS.dot1Q]: '802.1Q',
+  [VN_DRIVERS.vxlan]: 'VXLAN',
+  [VN_DRIVERS.ovswitch]: 'Open vSwitch',
+  [VN_DRIVERS.ovswitch_vxlan]: 'Open vSwitch - VXLAN',
 }
 
 /**
@@ -206,4 +249,45 @@ export const VN_DRIVERS = {
  */
 export const VNET_THRESHOLD = {
   LEASES: { high: 66, low: 33 },
+}
+
+export const LEASES_STATES_STR = {
+  OUTDATED: 'outdated',
+  ERROR: 'error',
+  UPDATING: 'updating',
+  UPDATED: 'updated',
+  HOLD: 'hold',
+  RESERVED: 'reserved',
+  VROUTER: 'vrouter',
+}
+
+export const LEASE_STATE = {
+  [LEASES_STATES_STR.OUTDATED]: {
+    name: T.Outdated,
+    color: COLOR.warning.main,
+  },
+  [LEASES_STATES_STR.ERROR]: {
+    name: T.Error,
+    color: COLOR.error.main,
+  },
+  [LEASES_STATES_STR.UPDATING]: {
+    name: T.Updating,
+    color: COLOR.info.main,
+  },
+  [LEASES_STATES_STR.UPDATED]: {
+    name: T.Updated,
+    color: COLOR.success.main,
+  },
+  [LEASES_STATES_STR.HOLD]: {
+    name: T.Hold,
+    color: COLOR.debug.main,
+  },
+  [LEASES_STATES_STR.RESERVED]: {
+    name: T.Reserved,
+    color: COLOR.debug.main,
+  },
+  [LEASES_STATES_STR.VROUTER]: {
+    name: T.Vrouter,
+    color: COLOR.debug.main,
+  },
 }

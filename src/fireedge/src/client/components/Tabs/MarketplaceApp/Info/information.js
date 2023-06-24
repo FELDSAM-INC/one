@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------------- *
- * Copyright 2002-2022, OpenNebula Project, OpenNebula Systems               *
+ * Copyright 2002-2023, OpenNebula Project, OpenNebula Systems               *
  *                                                                           *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may   *
  * not use this file except in compliance with the License. You may obtain   *
@@ -82,8 +82,13 @@ const InformationPanel = ({ app = {}, actions }) => {
     {
       name: T.State,
       value: <StatusChip text={stateName} stateColor={stateColor} />,
+      dataCy: 'state',
     },
-    { name: T.Locked, value: levelLockToString(LOCK?.LOCKED) },
+    {
+      name: T.Locked,
+      value: levelLockToString(LOCK?.LOCKED),
+      dataCy: 'locked',
+    },
     { name: T.Format, value: FORMAT },
     { name: T.Version, value: VERSION },
   ]

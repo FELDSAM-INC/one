@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------------- *
- * Copyright 2002-2022, OpenNebula Project, OpenNebula Systems               *
+ * Copyright 2002-2023, OpenNebula Project, OpenNebula Systems               *
  *                                                                           *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may   *
  * not use this file except in compliance with the License. You may obtain   *
@@ -13,22 +13,22 @@
  * See the License for the specific language governing permissions and       *
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
-import { DateTime } from 'luxon'
 import {
-  parse as ParserToJson,
-  X2jOptions,
-  j2xParser as ParserToXml,
   J2xOptions,
+  parse as ParserToJson,
+  j2xParser as ParserToXml,
+  X2jOptions,
 } from 'fast-xml-parser'
+import { DateTime, Settings } from 'luxon'
 
-import { camelCase } from 'client/utils'
 import {
-  T,
+  CURRENCY,
   Permission,
-  UserInputObject,
+  T,
   USER_INPUT_TYPES,
-  SERVER_CONFIG,
+  UserInputObject,
 } from 'client/constants'
+import { sentenceCase } from 'client/utils'
 
 /**
  * @param {object} json - JSON
@@ -90,12 +90,9 @@ export const stringToBoolean = (str) =>
  */
 export const formatNumberByCurrency = (number, options) => {
   try {
-    const currency = SERVER_CONFIG?.currency ?? 'EUR'
-    const locale = SERVER_CONFIG?.lang?.replace('_', '-') ?? undefined
-
-    return Intl.NumberFormat(locale, {
+    return Intl.NumberFormat(Settings.defaultLocale, {
       style: 'currency',
-      currency,
+      currency: CURRENCY,
       currencyDisplay: 'narrowSymbol',
       notation: 'compact',
       compactDisplay: 'long',
@@ -104,6 +101,28 @@ export const formatNumberByCurrency = (number, options) => {
     }).format(number)
   } catch {
     return number.toString()
+  }
+}
+
+/**
+ * Function to compare two values.
+ *
+ * @param {Intl.CollatorOptions} options - Options to compare the values
+ * @returns {function(string, string)} - Function to compare two strings
+ * Negative when the referenceStr occurs before compareString
+ * Positive when the referenceStr occurs after compareString
+ * Returns 0 if they are equivalent
+ */
+export const areStringEqual = (options) => (a, b) => {
+  try {
+    const collator = new Intl.Collator(Settings.defaultLocale, {
+      sensitivity: 'base',
+      ...options,
+    })
+
+    return collator.compare(a, b)
+  } catch {
+    return -1
   }
 }
 
@@ -268,9 +287,18 @@ export const getActionsAvailable = (actions = {}, hypervisor = '') =>
     .filter(([_, action]) => {
       if (typeof action === 'boolean') return action
 
-      const { enabled = false, not_on: notOn = [] } = action || {}
+      const {
+        enabled = false,
+        not_on: notOn = [],
+        only_on: onlyOn = [],
+      } = action || {}
 
-      return !!enabled && !notOn?.includes?.(hypervisor)
+      return (
+        !!enabled &&
+        ((!notOn && !onlyOn) ||
+          (notOn && !notOn?.includes?.(hypervisor)) ||
+          onlyOn?.includes?.(hypervisor))
+      )
     })
     .map(([actionName, _]) => actionName)
 
@@ -290,12 +318,11 @@ export const getAvailableInfoTabs = (infoTabs = {}, getTabComponent, id) =>
   Object.entries(infoTabs)
     ?.filter(([_, { enabled } = {}]) => !!enabled)
     ?.map(([tabName, tabProps]) => {
-      const camelName = camelCase(tabName)
-      const TabContent = getTabComponent?.(camelName)
+      const TabContent = getTabComponent?.(tabName)
 
       return (
         TabContent && {
-          name: camelName,
+          label: TabContent?.label ?? sentenceCase(tabName),
           id: tabName,
           renderContent: () => <TabContent tabProps={tabProps} id={id} />,
         }

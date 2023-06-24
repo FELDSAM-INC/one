@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------------- *
- * Copyright 2002-2022, OpenNebula Project, OpenNebula Systems               *
+ * Copyright 2002-2023, OpenNebula Project, OpenNebula Systems               *
  *                                                                           *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may   *
  * not use this file except in compliance with the License. You may obtain   *
@@ -13,18 +13,26 @@
  * See the License for the specific language governing permissions and       *
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
-import { ReactElement, useState, memo } from 'react'
+import { Box, Chip, Stack, Typography } from '@mui/material'
+import Cancel from 'iconoir-react/dist/Cancel'
+import GotoIcon from 'iconoir-react/dist/Pin'
+import RefreshDouble from 'iconoir-react/dist/RefreshDouble'
 import PropTypes from 'prop-types'
-import { BookmarkEmpty } from 'iconoir-react'
-import { Typography, Box, Stack, Chip, IconButton } from '@mui/material'
+import { ReactElement, memo, useState } from 'react'
 import { Row } from 'react-table'
 
-import { DatastoresTable } from 'client/components/Tables'
-import DatastoreTabs from 'client/components/Tabs/Datastore'
-import SplitPane from 'client/components/SplitPane'
-import MultipleTags from 'client/components/MultipleTags'
+import { SubmitButton } from 'client/components/FormControl'
 import { Tr } from 'client/components/HOC'
-import { T, Datastore } from 'client/constants'
+import MultipleTags from 'client/components/MultipleTags'
+import SplitPane from 'client/components/SplitPane'
+import { DatastoresTable } from 'client/components/Tables'
+import DatastoreActions from 'client/components/Tables/Datastores/actions'
+import DatastoreTabs from 'client/components/Tabs/Datastore'
+import { Datastore, T } from 'client/constants'
+import {
+  useLazyGetDatastoreQuery,
+  useUpdateDatastoreMutation,
+} from 'client/features/OneApi/datastore'
 
 /**
  * Displays a list of Datastores with a split pane between the list and selected row(s).
@@ -33,6 +41,7 @@ import { T, Datastore } from 'client/constants'
  */
 function Datastores() {
   const [selectedRows, onSelectedRowsChange] = useState(() => [])
+  const actions = DatastoreActions()
 
   const hasSelectedRows = selectedRows?.length > 0
   const moreThanOneSelected = selectedRows?.length > 1
@@ -40,8 +49,12 @@ function Datastores() {
   return (
     <SplitPane gridTemplateRows="1fr auto 1fr">
       {({ getGridProps, GutterComponent }) => (
-        <Box {...(hasSelectedRows && getGridProps())}>
-          <DatastoresTable onSelectedRowsChange={onSelectedRowsChange} />
+        <Box height={1} {...(hasSelectedRows && getGridProps())}>
+          <DatastoresTable
+            onSelectedRowsChange={onSelectedRowsChange}
+            globalActions={actions}
+            useUpdateMutation={useUpdateDatastoreMutation}
+          />
 
           {hasSelectedRows && (
             <>
@@ -52,6 +65,7 @@ function Datastores() {
                 <InfoTabs
                   datastore={selectedRows[0]?.original}
                   gotoPage={selectedRows[0]?.gotoPage}
+                  unselect={() => selectedRows[0]?.toggleRowSelected(false)}
                 />
               )}
             </>
@@ -67,27 +81,54 @@ function Datastores() {
  *
  * @param {Datastore} datastore - Datastore to display
  * @param {Function} [gotoPage] - Function to navigate to a page of a Datastore
+ * @param {Function} [unselect] - Function to unselect a Datastore
  * @returns {ReactElement} Datastore details
  */
-const InfoTabs = memo(({ datastore, gotoPage }) => (
-  <Stack overflow="auto">
-    <Stack direction="row" alignItems="center" gap={1} mb={1}>
-      <Typography color="text.primary" noWrap>
-        {`#${datastore.ID} | ${datastore.NAME}`}
-      </Typography>
-      {gotoPage && (
-        <IconButton title={Tr(T.LocateOnTable)} onClick={gotoPage}>
-          <BookmarkEmpty />
-        </IconButton>
-      )}
+const InfoTabs = memo(({ datastore, gotoPage, unselect }) => {
+  const [getDatastore, { data: lazyData, isFetching }] =
+    useLazyGetDatastoreQuery()
+  const id = lazyData?.ID ?? datastore.ID
+  const name = lazyData?.NAME ?? datastore.NAME
+
+  return (
+    <Stack overflow="auto">
+      <Stack direction="row" alignItems="center" gap={1} mx={1} mb={1}>
+        <Typography color="text.primary" noWrap flexGrow={1}>
+          {`#${id} | ${name}`}
+        </Typography>
+        <SubmitButton
+          data-cy="detail-refresh"
+          icon={<RefreshDouble />}
+          tooltip={Tr(T.Refresh)}
+          isSubmitting={isFetching}
+          onClick={() => getDatastore({ id })}
+        />
+        {typeof gotoPage === 'function' && (
+          <SubmitButton
+            data-cy="locate-on-table"
+            icon={<GotoIcon />}
+            tooltip={Tr(T.LocateOnTable)}
+            onClick={() => gotoPage()}
+          />
+        )}
+        {typeof unselect === 'function' && (
+          <SubmitButton
+            data-cy="unselect"
+            icon={<Cancel />}
+            tooltip={Tr(T.Close)}
+            onClick={() => unselect()}
+          />
+        )}
+      </Stack>
+      <DatastoreTabs id={datastore.ID} />
     </Stack>
-    <DatastoreTabs id={datastore.ID} />
-  </Stack>
-))
+  )
+})
 
 InfoTabs.propTypes = {
   datastore: PropTypes.object.isRequired,
   gotoPage: PropTypes.func,
+  unselect: PropTypes.func,
 }
 
 InfoTabs.displayName = 'InfoTabs'

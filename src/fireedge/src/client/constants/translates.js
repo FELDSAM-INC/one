@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------------- *
- * Copyright 2002-2022, OpenNebula Project, OpenNebula Systems               *
+ * Copyright 2002-2023, OpenNebula Project, OpenNebula Systems               *
  *                                                                           *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may   *
  * not use this file except in compliance with the License. You may obtain   *
@@ -18,16 +18,25 @@ module.exports = {
   Back: 'Back',
   Previous: 'Previous',
   Next: 'Next',
+  Sort: 'Sort',
   SortBy: 'Sort by',
-  FilterBy: 'Filter by',
   Filter: 'Filter',
   Filters: 'Filters',
+  FilterBy: 'Filter by',
+  FilterLabels: 'Filter labels',
+  FilterByLabel: 'Filter by label',
+  First: 'First',
+  Last: 'Last',
+  ApplyLabels: 'Apply labels',
+  Label: 'Label',
+  NoLabels: 'NoLabels',
   All: 'All',
   On: 'On',
   ToggleAllCurrentPageRowsSelected: 'Toggle all current page rows selected',
   NumberOfResourcesSelected: 'All %s resources are selected',
   SelectAllResources: 'Select all %s resources',
   ClearSelection: 'Clear selection',
+  ResetFilters: 'Clear current search query, filters, and sorts',
 
   /* actions */
   Accept: 'Accept',
@@ -41,26 +50,37 @@ module.exports = {
   AttachNic: 'Attach NIC',
   AttachVolatile: 'Attach volatile disk',
   BackToList: 'Back to %s list',
+  Backup: 'Backup',
   Cancel: 'Cancel',
   Change: 'Change',
   ChangeGroup: 'Change group',
   ChangeOwner: 'Change owner',
   Clear: 'Clear',
   ClickToCopy: 'Click to copy',
+  Confirm: 'Confirm',
+  Commit: 'Commit',
   Clone: 'Clone',
   CloneSeveralTemplates: 'Clone several Templates',
   CloneTemplate: 'Clone Template',
+  CloneSecGroup: 'Clone Security Group',
+  CloneSecGroups: 'Clone Security Groups',
   Close: 'Close',
   Collapse: 'Collapse',
   Configuration: 'Configuration',
   CopiedToClipboard: 'Copied to clipboard',
   Create: 'Create',
+  CreateDatastore: 'Create Datastore',
+  CreateDockerfile: 'Create Dockerfile',
+  CreateFile: 'Create File',
   CreateHost: 'Create Host',
+  CreateImage: 'Create Image',
   CreateMarketApp: 'Create Marketplace App',
   CreateProvider: 'Create Provider',
   CreateProvision: 'Create Provision',
-  CreateVmTemplate: 'Create VM Template',
+  CreateSecurityGroup: 'Create Security Group',
   CreateServiceTemplate: 'Create Service Template',
+  CreateVirtualNetwork: 'Create Virtual Network',
+  CreateVmTemplate: 'Create VM Template',
   CurrentGroup: 'Current group: %s',
   CurrentOwner: 'Current owner: %s',
   Delete: 'Delete',
@@ -68,20 +88,29 @@ module.exports = {
   DeleteDb: 'Delete database',
   DeleteScheduleAction: 'Delete schedule action: %s',
   DeleteSeveralTemplates: 'Delete several Templates',
+  DeleteSeveralVirtualNetworks: 'Delete several Virtual Networks',
   DeleteSomething: 'Delete: %s',
+  DeleteAddressRange: 'Delete Address Range',
   DeleteTemplate: 'Delete Template',
+  DeleteVirtualNetwork: 'Delete Virtual Network',
+  DeleteOtherSnapshots: 'This will delete all the other image snapshots',
   Deploy: 'Deploy',
   DeployServiceTemplate: 'Deploy Service Template',
   Detach: 'Detach',
   DetachSomething: 'Detach: %s',
   Disable: 'Disable',
   Dismiss: 'Dismiss',
+  DiskSnapshotCreate: 'Disk snapshot create',
+  DiskSnapshotRevert: 'Disk snapshot revert',
+  DiskSnapshotDelete: 'Disk snapshot delete',
   Done: 'Done',
   Edit: 'Edit',
   EditSomething: 'Edit: %s',
   Enable: 'Enable',
   Failure: 'Failure',
   Finish: 'Finish',
+  Flatten: 'Flatten',
+  FlattenSnapshot: 'Flatten %s',
   Hold: 'Hold',
   Import: 'Import',
   Info: 'Info',
@@ -104,15 +133,18 @@ module.exports = {
   Recreate: 'Recreate',
   Refresh: 'Refresh',
   Release: 'Release',
+  ReleaseIp: 'Release IP',
   Remove: 'Remove',
   Rename: 'Rename',
   RenameSomething: 'Rename: %s',
   Reschedule: 'Reschedule',
+  Reserve: 'Reserve',
   Resize: 'Resize',
   ResizeCapacity: 'Resize capacity',
   ResizeSomething: 'Resize: %s',
   Resume: 'Resume',
   Retry: 'Retry',
+  Restore: 'Restore',
   Revert: 'Revert',
   RevertSomething: 'Revert: %s',
   Save: 'Save',
@@ -123,6 +155,7 @@ module.exports = {
   Select: 'Select',
   SelectCluster: 'Select Cluster',
   SelectDatastore: 'Select a Datastore to store the resource',
+  SelectDatastoreImage: 'Select a Datastore',
   SelectDockerHubTag: 'Select DockerHub image tag (default latest)',
   SelectGroup: 'Select a group',
   SelectHost: 'Select a host',
@@ -141,6 +174,9 @@ module.exports = {
   ShowAll: 'Show all',
   SignIn: 'Sign In',
   SignOut: 'Sign Out',
+  SnapshotCreate: 'Snapshot create',
+  SnapshotRevert: 'Snapshot revert',
+  SnapshotDelete: 'Snapshot delete',
   Stop: 'Stop',
   Submit: 'Submit',
   Success: 'Success',
@@ -157,11 +193,12 @@ module.exports = {
   UnReschedule: 'Un-Reschedule',
   Unshare: 'Unshare',
   Update: 'Update',
-  UpdateVmConfiguration: 'Update VM Configuration',
   UpdateProvider: 'Update Provider',
   UpdateScheduleAction: 'Update schedule action: %s',
-  UpdateVmTemplate: 'Update VM Template',
   UpdateServiceTemplate: 'Update Service Template',
+  UpdateVirtualNetwork: 'Update Virtual Network',
+  UpdateVmConfiguration: 'Update VM Configuration',
+  UpdateVmTemplate: 'Update VM Template',
 
   /* questions */
   Yes: 'Yes',
@@ -171,9 +208,11 @@ module.exports = {
   /* Scheduling */
   Action: 'Action',
   ScheduleAction: 'Schedule action',
+  ScheduleActionType: 'Schedule action type',
   Charter: 'Charter',
-  PunctualAction: 'Punctual action',
-  RelativeAction: 'Relative action',
+  OneTimeAction: 'One time',
+  PeriodicAction: 'Periodic',
+  RelativeAction: 'Relative',
   DoneAgo: 'Done %s',
   NextInTime: 'Next in %s',
   FirstTime: 'First time %s',
@@ -232,6 +271,12 @@ module.exports = {
   TakeMeToTheAppGui: 'Take me to the %s GUI',
 
   /* errors */
+  Error: 'Error',
+  Outdated: 'Outdated',
+  Updated: 'Updated',
+  Updating: 'Updating',
+  Reserved: 'Reserved',
+  Vrouter: 'Vrouter',
   SessionExpired: 'Sorry, your session has expired',
   OnlyForOneadminGroup:
     'Only members of the oneadmin group can access OneProvision functionality',
@@ -247,6 +292,10 @@ module.exports = {
   Empty: 'Empty',
   NoDataAvailable: 'There is no data available',
   ErrorsOcurred: '%s error(s) occurred',
+  UpdatedNic: 'Updated nic',
+  ErrorUpdatingSecGroups: 'VMs in error. The Update to the latest rules failed',
+  PendingUpdatingSecGroups: 'VMs waiting to be updated with the latest rules',
+  Unknown: 'Unknown',
 
   /* steps form */
   AdvancedOptions: 'Advanced options',
@@ -274,6 +323,7 @@ module.exports = {
   CleanupConcept: 'Delete all vms and images first, then delete the resources',
   Force: 'Force',
   ForceConcept: 'Force configure to execute',
+  ConfigureProvision: 'Configure provision %s',
 
   /* sections */
   Dashboard: 'Dashboard',
@@ -292,6 +342,12 @@ module.exports = {
   AddUserSshPrivateKey: 'Add user SSH private key',
   SshPassphraseKey: 'SSH private key passphrase',
   AddUserSshPassphraseKey: 'Add user SSH private key passphrase',
+  Labels: 'Labels',
+  NewLabelOrSearch: 'New label or search',
+  LabelAlreadyExists: 'Label already exists',
+  PressToCreateLabel: 'Press enter to create a new label',
+  SavesInTheUserTemplate: "Saved in the User's template",
+  NoLabelsOnList: 'You have not defined any labels, list is empty',
 
   /* sections - system */
   User: 'User',
@@ -323,8 +379,13 @@ module.exports = {
   NetworksTopologies: 'Networks topologies',
   SecurityGroup: 'Security group',
   SecurityGroups: 'Security groups',
+  NoNetworksInMonitoring:
+    'There is currently no network monitoring information associated with this VM',
 
   /* sections - storage */
+  Backups: 'Backups',
+  BackupDatastore: 'Backup Datastore',
+  BackupRestored: 'Backup restored',
   Datastore: 'Datastore',
   Datastores: 'Datastores',
   Image: 'Image',
@@ -335,6 +396,140 @@ module.exports = {
   Marketplaces: 'Marketplaces',
   App: 'App',
   Apps: 'Apps',
+  Os: 'Operating system image',
+  Cdrom: 'Readonly CD-ROM',
+  Datablock: 'Generic storage datablock',
+  Path: 'Path/URL',
+  ImagePath: 'Path in OpenNebula server or URL',
+  Upload: 'Upload',
+  EmptyDisk: 'Empty disk image',
+  ImageSize: 'Image size, in Megabytes',
+  Vd: 'Virtio',
+  Sd: 'SCSI/SATA',
+  Hd: 'Parallel ATA (IDE)',
+  CustomBus: 'Custom bus',
+  Fs: 'Fs',
+  CustomFormat: 'Custom Format',
+  Dockerfile: 'Dockerfile',
+  Running: 'Running',
+  DoNotRestoreNICAttributes: 'Do not restore NIC attributes',
+  DoNotRestoreIPAttributes: 'Do not restore IP attributes',
+  Full: 'Full',
+  Increment: 'Increment',
+  Incremental: 'Incremental',
+  Mode: 'Mode',
+  ResetBackup: 'Reset',
+  IncrementId: 'Increment ID',
+  RestoreBackup: 'Restore backup',
+
+  /* storage backends */
+  StorageBackend: 'Storage backend',
+  DatastoreType: 'Datastore type',
+  FilesystemShared: 'Filesystem - shared mode',
+  FilesystemSSH: 'Filesystem - SSH mode',
+  Ceph: 'Ceph',
+  Vcenter: 'vCenter',
+  LVM: 'LVM',
+  RawDeviceMapping: 'Raw device mapping',
+  StorageRestic: 'Backup - Restic (EE only)',
+  StorageRsync: 'Backup - RSync',
+
+  /* datastore */
+  Transfer: 'Transfer',
+  CustomDSMAD: 'Custom DS_MAD',
+  CustomTMMAD: 'Custom TM_MAD',
+  Filesystem: 'Filesystem',
+  Devices: 'Devices',
+  Shared: 'Shared',
+  SSH: 'SSH',
+  FSLVM: 'FS LVM',
+  ConfigurationAttributes: 'Configuration attributes',
+  RestrictedDirs: 'Restricted directories',
+  SafeDirs: 'Safe directories',
+  StorageUsageLimit: 'Storage usage limit (in MB)',
+  TransferBandwidthLimit: 'Transfer bandwidth limit (B/s)',
+  DoNotTryToUntarOrDecompress: 'Do not try to untar or decompress',
+  CheckDSCapacityBeforeCreatingImage:
+    'Check available capacity of the Datastore before creating a new Image',
+  HostBridgeList: 'Host bridge list',
+  CephPoolToStoreImages: 'Ceph pool to store images',
+  CephHost: 'Ceph host',
+  CephUser: 'Ceph user',
+  CephSecret: 'Ceph secret',
+  CephUserConcept: 'The username to interact with the Ceph cluster',
+  CephSecretConcept: 'A generated UUID for a LibVirt secret',
+  ResticPassword: 'Restic password',
+  ResticSFTPUser: 'Restic SFTP user',
+  ResticSFTPServer: 'Restic SFTP server',
+  BackupIOPriority: 'Backup I/O priority',
+  BackupIOPriorityConcept:
+    'Run restic operations under a given ionice priority using the best-effort I/O scheduler',
+  BackupCPUPriority: 'Backup CPU priority',
+  BackupCPUPriorityConcept:
+    'Run restic operations with a given scheduler priority (nice)',
+  BandwidthLimit: 'Bandwidth limit',
+  BandwidthLimitConcept: 'limit download and upload to a maximum rate in KiB/s',
+  NumberOfConcurrentConnections: 'Number of concurrent connections',
+  NumberOfConcurrentConnectionsConcept:
+    'Set the number of concurrent connections to the backup backend (default is 5)',
+  MaximumReadIOPS: 'Maximum read IOPS',
+  MaximumReadIOPSConcept:
+    'Run backups in a systemd slice, limiting the max number of read IOPS',
+  MaximumWriteIOPS: 'Maximum write IOPS',
+  MaximumWriteIOPSConcept:
+    'Run backups in a systemd slice, limiting the max number of write IOPS',
+  CPUQuota: 'CPU quota',
+  CPUQuotaConcept:
+    'Run backups in a systemd slice with a given cpu quota (percentage). Use > 100 for using several CPUs',
+  CompressionLevel: 'Compression level',
+  CompressionLevelConcept:
+    'Compress backups in the datastore, it needs a Restic repository with format version 2',
+  RsyncHost: 'Rsync host',
+  RsyncUser: 'Rsync user',
+  VolumeGroupName: 'Volume group name',
+  GlusterHost: 'Gluster host',
+  GlusterHostConcept:
+    'Host and port of one (and only one) Gluster server (host:port)',
+  GlusterVolume: 'Gluster volume',
+  GlusterVolumeConcept: 'Gluster volume to use for the datastore',
+  RDBFormat: 'RDB format',
+  CephConfigurationFilePath: 'Ceph configuration file path',
+  CephConfigurationFilePathConcept:
+    'Needed if using a non-default path for the ceph configuration file',
+  CephKeyfile: 'Ceph keyfile',
+  CephKeyfileConcept: 'File containing the secret key of user',
+
+  CompatibleSystemDatastores: 'Compatible system datastores',
+  CompatibleSystemDatastoresConcept:
+    'Specifies which system datastores are compatible with this image datastore',
+  StagingDirectoryForImageRegistration:
+    'Staging directory for Image registration',
+  AdapterTypeUsedByVirtualDisksVMs: 'Adapter type used by virtual disks VMs',
+  TypeOfDiskToBeCreated: 'Type of disk to be created',
+  ManagedObjectReferenceOfTheDatastore:
+    'Managed Object Reference of the datastore',
+  NameOfTheVcenterDatastore: 'Name of the vCenter datastore',
+  ManagedObjectReferenceOfTheDatacenter:
+    'Managed Object Reference of the vCenter datacenter',
+  NameOfTheVcenterDatacenter: 'Name of the vCenter datacenter',
+  vCenterImageDirectory: 'vCenter image directory',
+  vCenterVolatileDirectory: 'vCenter volatile directory',
+  HostnameOrIPOfTheVcenterHost: 'Hostname or IP of the vCenter host',
+  MaxNumberOSThreads: 'Max number of OS threads',
+  MaxNumberOSThreadsConcept:
+    'Sets GOMAXPROCS for restic to limit the OS threads that execute user-level Go code simultaneously.',
+  Sparsify: 'Sparsify',
+  SparsifyConcept:
+    'Runs virt-sparsify on flatten backups to reduce backup size. It requires libguestfs package.',
+  Arguments: 'Arguments',
+  RsyncArgumentsConcept:
+    'Command line arguments for rsync command (Default: -az)',
+  TemporalDirectory: 'Temporal directory',
+  TemporalDirectoryConcept:
+    'Temporary Directory used for rebasing incremental images (Default: /var/tmp)',
+  StandaloneQcow2Clone: 'Standalone qcow2 clone',
+  StandaloneQcow2CloneConcept:
+    'Clone qcow2 without a backing chain and no dependencies with Image datastore files',
 
   /* sections - templates & instances */
   Instances: 'Instances',
@@ -433,6 +628,20 @@ module.exports = {
   PartOf: 'Part of',
   GuacamoleState: 'Guacamole State',
   VMRCState: 'VMRC State',
+  RdpLayout: 'RDP keyboard layout',
+  RdpRizeMethod: 'RDP rezise method',
+  DisableAudio: 'Disable audio',
+  EnableAudioInput: 'Enable audio input',
+  EnableWallpaper: 'Render desktop wallpaper',
+  EnableTheming: 'Render windows theming control',
+  EnableFontSmoothing: 'Enable font smoothing',
+  EnableFullWindowDrag: 'Enable full window drag',
+  EnableDesktopComposition: 'Enable desktop composition',
+  EnableMenuAnimations: 'Enable menu animations',
+  DisableBitmapCaching: 'Disable bitmap caching',
+  DisableOffscreenCaching: 'Disable offscreen caching',
+  DisableGlyphCaching: 'Disable glyph caching',
+  Timezone: 'Timezone',
   /* VM schema - info */
   VmName: 'VM name',
   UserTemplate: 'User Template',
@@ -442,11 +651,14 @@ module.exports = {
   /* VM schema - capacity */
   Capacity: 'Capacity',
   PhysicalCpu: 'Physical CPU',
+  PhysicalCpuWithPercent: 'Physical CPU (%)',
   VirtualCpu: 'Virtual CPU',
+  VirtualCpuWithDecimal: 'Virtual CPU',
   VirtualCores: 'Virtual Cores',
   Cores: 'Cores',
   Sockets: 'Sockets',
   Memory: 'Memory',
+  MemoryWithUnit: 'Memory %s',
   Cost: 'Cost',
   CostEachMonth: '%s / month',
   CostCpu: 'Cost / CPU',
@@ -470,8 +682,9 @@ module.exports = {
   NIC: 'NIC',
   Alias: 'Alias',
   AsAnAlias: 'Attach as an alias',
-  External: 'External',
-  ExternalConcept: 'The NIC will be attached as an external alias of the VM',
+  SkipNetworkContextualization: 'Skip network contextualization',
+  SkipNetworkContextualizationConcept:
+    'A virtual router can be configured to route SDNAT traffic for this NIC IP address',
   OverrideNetworkValuesIPv4: 'Override Network Values IPv4',
   OverrideNetworkValuesIPv6: 'Override Network Values IPv6',
   OverrideNetworkInboundTrafficQos: 'Override Network Inbound Traffic QoS',
@@ -481,8 +694,16 @@ module.exports = {
   DetachSecurityGroupFromNic: 'Detach Security Group %1$s from NIC %2$s',
   PortForwarding: 'Port forwarding',
   HostnamePortsForwardedToVmPorts: '%1$s ports %2$s forwarded to VM ports %3$s',
+  VirtualNicHardwareMode: 'Virtual NIC hardware mode',
+  Emulated: 'Emulated',
+  PCIPassthroughAutomatic: 'PCI Passthrough - Automatic',
+  PCIPassthroughManual: 'PCI Passthrough - Manual',
+  ShortAddress: 'Short address',
   /* VM schema - snapshot */
   VmSnapshotNameConcept: 'The new snapshot name. It can be empty',
+  VmSnapshotHint: `
+    Snapshots in this tab refer to System Snapshots, which includes all disks and
+    the memory state of the VM. For disk snapshots, see the Storage tab`,
   /* VM schema - actions */
   EnforceCapacityChecks: 'Enforce capacity checks',
   EnforceCapacityChecksConcept: `
@@ -502,8 +723,24 @@ module.exports = {
   OperationConceptRecreate:
     'No recover action possible, delete and recreate the VM',
   OperationConceptDeleteDb: `
-    No recover action possible, delete the VM from the DB.
-    It does not trigger any action on the hypervisor`,
+  No recover action possible, delete the VM from the DB.
+  It does not trigger any action on the hypervisor`,
+  RecoverDescriptionVNet: `
+    Recovers a stuck Virtual Network after an update operation that didn't 
+    finish successfully, since updating a Virtual Network implies updating 
+    the corresponding Virtual Machine NICs. The recovery may be done by failing, 
+    succeeding or retrying the current operation; or deleting the Virtual Network. 
+    You need to manually check the affected VMs and the network resources on the
+    infrastructure to decide if the operation was successful or not, or if
+    it can be retried.`,
+  OperationConceptFailureVNet:
+    'Recover a Virtual Network by failing the pending action',
+  OperationConceptSuccessVNet:
+    'Recover a Virtual Network by succeeding the pending action',
+  OperationConceptRetryVNet:
+    'Recover a Virtual Network by retrying the last failed action',
+  OperationConceptDeleteVNet:
+    'No recover action possible, delete the Virtual Network',
   /* VM schema - history */
   RequestId: 'Request ID',
   TimeWhenTheStateChanged: 'Time when the state changed',
@@ -512,10 +749,12 @@ module.exports = {
 
   /* VM Template schema */
   /* VM Template schema - general */
-  CustomHypervisor: 'Custom',
+  Custom: 'Custom',
   CustomVariables: 'Custom Variables',
+  CustomAttributes: 'Custom Attributes',
   Hypervisor: 'Hypervisor',
   Logo: 'Logo',
+  MakePersistent: 'Make Persistent',
   MakeNewImagePersistent: 'Make the new images persistent',
   TemplateName: 'Template name',
   Virtualization: 'Virtualization',
@@ -559,7 +798,7 @@ module.exports = {
   MemoryModification: 'Memory modification',
   AllowUsersToModifyMemory:
     "Allow users to modify this template's default memory on instantiate",
-  MemoryConcept: 'Amount of RAM required for the VM',
+  MemoryConcept: 'Amount of RAM required for the VM, in Megabytes',
   CpuConcept: `
     Percentage of CPU divided by 100 required for the
     Virtual Machine. Half a processor is written 0.5`,
@@ -577,6 +816,10 @@ module.exports = {
   AllowUsersToModifyVirtualCpu:
     "Allow users to modify this template's default Virtual CPU on instantiate",
   EnableHotResize: 'Enable hot resize',
+  Hotplug: 'Hotplug',
+  Ballooning: 'Ballooning',
+  MemoryResizeMode: 'Memory resize mode',
+  MemorySlots: 'Memory slots',
   /* VM Template schema - VM Group */
   AssociateToVMGroup: 'Associate VM to a VM Group',
   /* VM Template schema - vCenter */
@@ -608,6 +851,14 @@ module.exports = {
   DatastorePolicyExpressionConcept: `
     This field sets which attribute will be used to
     sort the suitable datastores for this VM`,
+  /* VM Template schema - Backup */
+  BackupVolatileDisksQuestion: 'Backup volatile disks?',
+  FSFreeze: 'FS Freeze',
+  HowManyBackupsQuestion: 'How many backups do you want to keep?',
+  QEMUAgent: 'QEMU Agent',
+  FSFreezeConcept: `
+    How the FS is freeze for running VMs. When
+    possible backups are crash consistent`,
   /* VM Template schema - OS & CPU */
   /* VM Template schema - OS & CPU - boot */
   Boot: 'Boot',
@@ -706,6 +957,7 @@ module.exports = {
   Input: 'Input',
   Inputs: 'Inputs',
   PciDevices: 'PCI Devices',
+  Profile: 'Profile',
   DeviceName: 'Device name',
   Device: 'Device',
   Vendor: 'Vendor',
@@ -719,11 +971,61 @@ module.exports = {
   GenerateRandomPassword: 'Generate random password',
   Command: 'Command',
   Bus: 'BUS',
+  ConnectionAttributes: '%s connection attributes',
+  /* VM Template schema - Input/Output - graphics - Remote Connections Keymaps */
+  Arabic: 'Arabic',
+  Croatian: 'Croatian',
+  Czech: 'Czech',
+  Danish: 'Danish',
+  Dutch: 'Dutch',
+  EnglishGB: 'English (United Kingdom)',
+  EnglishUS: 'English (United States)',
+  Estonian: 'Estonian',
+  Faroese: 'Faroese',
+  Finnish: 'Finnish',
+  French: 'French',
+  FrenchBe: 'French (Belgium)',
+  FrenchCa: 'French (Canada)',
+  FrenchBEPO: 'French (BEPO)',
+  FrenchSw: 'French (Switzerland)',
+  German: 'German',
+  GermanSw: 'German (Switzerland)',
+  Hungarian: 'Hungarian',
+  Icelandic: 'Icelandic',
+  Italian: 'Italian',
+  Japanese: 'Japanese',
+  Latvian: 'Latvian',
+  Lithuanian: 'Lithuanian',
+  Macedonian: 'Macedonian',
+  Norwegian: 'Norwegian',
+  Polish: 'Polish',
+  Portuguese: 'Portuguese',
+  PortugueseBr: 'Portuguese (Brazil)',
+  Russian: 'Russian',
+  Slovenian: 'Slovenian',
+  SpanishEs: 'Spanish (Spain)',
+  SpanishLatam: 'Spanish (Latin American)',
+  Swedish: 'Swedish',
+  Thai: 'Thai',
+  Turkish: 'Turkish',
+  /* VM graphs */
+  DiskReadBytes: 'Disk read bytes',
+  DiskWriteBytes: 'Disk write bytes',
+  DiskReadIOPS: 'Disk read IOPS',
+  DiskWriteIOPS: 'Disk write bytes',
+  NetRX: 'Net RX',
+  NetTX: 'Net TX',
+  NetDownloadSpeed: 'Net download speed',
+  NetUploadSpeed: 'Net upload speed',
+  /* VM Template schema - Input/Output - graphics - Remote connections */
+  DisplayUpdate: 'Display update',
   /* VM Template schema - NUMA */
   NumaTopology: 'NUMA Topology',
   NumaTopologyConcept:
     'These settings will help you to fine tune the performance of VMs',
   PinPolicy: 'Pin Policy',
+  NodeAffinity: 'Numa Affinity',
+  NodeAffinityConcept: 'Number of NUMA nodes (node affinity)',
   NumaNodeItem: 'Node #%s',
   NumaNodeTitle: 'Cores & CPUS',
   PinPolicyConcept: 'Virtual CPU pinning preference: %s',
@@ -754,6 +1056,8 @@ module.exports = {
   CopyOf: 'Copy of ',
   PrefixMultipleConcept:
     'Several templates are selected, please choose prefix to name the new copies',
+  PrefixSecGroupsMultipleConcept:
+    'Several security groups are selected, please choose a prefix to name the new copies Prefix',
   NewTemplateNameConcept: 'New Image name',
   CloneWithImages: 'Clone with images',
   CloneWithImagesConcept: `
@@ -789,6 +1093,7 @@ module.exports = {
   NetworkAddress: 'Network address',
   NetworkMask: 'Network mask',
   Gateway: 'Gateway',
+  Gateway6: 'IPv6 Gateway',
   GatewayConcept: 'Default gateway for the network',
   Gateway6Concept: 'IPv6 router for this network',
   SearchDomainForDNSResolution: 'Search domains for DNS resolution',
@@ -797,9 +1102,9 @@ module.exports = {
   NetworkMethod6Concept: 'Sets IPv6 guest conf. method for NIC in this network',
   DNS: 'DNS',
   DNSConcept: 'DNS servers, a space separated list of servers',
-  AverageBandwidth: 'Average bandwidth (KBytes/s)',
-  PeakBandwidth: 'Peak bandwidth (KBytes/s)',
-  PeakBurst: 'Peak burst (KBytes)',
+  AverageBandwidth: 'Average bandwidth',
+  PeakBandwidth: 'Peak bandwidth',
+  PeakBurst: 'Peak burst',
   InboundAverageBandwidthConcept:
     'Average bitrate for the interface in kilobytes/second for inbound traffic',
   InboundPeakBandwidthConcept:
@@ -814,8 +1119,10 @@ module.exports = {
   TransmissionQueue: 'Transmission queue',
   OnlySupportedForVirtioDriver: 'Only supported for virtio driver',
   GuestOptions: 'Guest options',
-  GuestMTU: 'GuestMTU',
+  GuestMTU: 'MTU of the Guest interfaces',
   GuestMTUConcept: 'Sets the MTU for the NICs in this network',
+  NetMethod: 'Method',
+  NetMethod6: 'IPv6 Method',
   UsedLeases: 'Used leases',
   TotalLeases: 'Total leases',
   TotalClusters: 'Total clusters',
@@ -827,8 +1134,69 @@ module.exports = {
     States for success/failure recovers: LOCK_CREATE, LOCK_DELETE state.
     States for a retry recover: LOCK_CREATE, LOCK_DELETE state.
     States for delete: Any but READY.`,
+  ReservationParent: 'Reservation parent',
+  ReservedFromVNetId: 'Reserved from VNET %s',
+  GuacamoleConnections: 'Guacamole Connections',
+  /* Virtual Network schema - driver configuration */
+  NetworkMode: 'Network mode',
+  Bridge: 'Bridge',
+  BridgeConcept: 'Name of the physical bridge in the nodes to attach VM NICs',
+  PhysicalDevice: 'Physical device',
+  PhysicalDeviceConcept: 'Node NIC to send/receive virtual network traffic',
+  MacSpoofingFilter: ' MAC spoofing filter',
+  IpSpoofingFilter: ' IP spoofing filter',
+  MTU: 'MTU of the interface',
+  MTUConcept: 'Maximum Transmission Unit',
+  VlanId: 'VLAN ID',
+  AutomaticVlanId: 'Automatic VLAN ID',
+  VxlanMode: 'VXLAN mode',
+  VxlanModeConcept: 'Multicast protocol for multi destination BUM traffic',
+  VxlanTunnelEndpoint: 'VXLAN Tunnel endpoint',
+  VxlanTunnelEndpointConcept: 'Tunnel endpoint communication type',
+  VxlanMulticast: 'VXLAN Multicast',
+  VxlanMulticastConcept:
+    'Base multicast address for each VLAN. The MC address is :vxlan_mc + :vlan_id',
+  IpConfiguration: 'IP Configuration',
+  IpConfigurationConcept:
+    'Options passed to ip cmd on operations specific to this Virtual Network',
+  OuterVlanId: 'Outer VLAN ID',
+  AutomaticOuterVlanId: 'Automatic Outer VLAN ID',
+  InvalidAttribute: 'Invalid attribute',
+  /* Virtual Network schema - address range */
+  Addresses: 'Addresses',
+  AddressRange: 'Address Range',
+  FirstIPv4Address: 'First IPv4 address',
+  FirstIPv6Address: 'First IPv6 address',
+  FirstMacAddress: 'First MAC address',
+  PrefixLength: 'Prefix length',
+  PrefixLengthConcept: 'Length of the prefix to configure VM interfaces',
+  SLAAC: 'SLAAC',
+  IPv6GlobalPrefix: 'IPv6 Global prefix',
+  IPv6ULAPrefix: 'IPv6 ULA prefix',
+  IPAMDriver: 'IPAM driver',
+  InvalidAddress: 'Invalid address',
+  InvalidIPv4: 'Invalid IPv4',
+  InvalidIPv6: 'Invalid IPv6',
+  InvalidMAC: 'Invalid MAC',
+  DisabledAddressRangeInForm:
+    'Address Ranges need to be managed in the individual Virtual Network panel',
+  /* Virtual Network schema - QoS */
+  QoS: 'QoS',
+  InboundTraffic: 'Inbound traffic',
+  OutboundTraffic: 'Outbound traffic',
+  SelectQOS: 'Select QoS',
+  /* Virtual Network schema - reserve */
+  ReservationFromVirtualNetwork: 'Reservation from Virtual Network',
+  CanSelectAddressFromAR:
+    'You can select the addresses from an specific Address Range',
+  NumberOfAddresses: 'Number of addresses',
+  AddToNewVirtualNetwork: 'Add to a new Virtual Network',
+  AddToExistingReservation: 'Add to an existing Reservation',
+  FirstAddress: 'First address',
+  IpOrMac: 'IP or MAC',
 
   /* security group schema */
+  Security: 'Security',
   TCP: 'TCP',
   UDP: 'UDP',
   ICMP: 'ICMP',
@@ -839,6 +1207,7 @@ module.exports = {
   Any: 'Any',
   Protocol: 'Protocol',
   IcmpType: 'ICMP Type',
+  IcmpTypeV6: 'ICMPv6 Type',
 
   /* Host schema */
   IM_MAD: 'IM MAD',
@@ -893,6 +1262,7 @@ module.exports = {
   BasePath: 'Base path',
   FileSystemType: 'Filesystem type',
   Persistent: 'Persistent',
+  NonPersistent: 'Non Persistent',
   RunningVMs: 'Running VMs',
   /* Disk - general */
   DiskType: 'Disk type',
@@ -928,6 +1298,7 @@ module.exports = {
     Iothread id used by this disk. Default is round robin.
     Can be used only if IOTHREADS > 0. If this input is disabled
     please first configure IOTHREADS value on OS & CPU -> Features`,
+  ImageLocation: 'Image Location',
 
   /* Provision schema */
   /* Provision - general */
@@ -950,6 +1321,29 @@ module.exports = {
   DefaultValue: 'Default value',
   Mandatory: 'Mandatory',
   PressKeysToAddAValue: 'Press any of the following keys to add a value: %s',
+  /** Security Groups */
+  Start: 'Start',
+  Rules: 'Rules',
+  PortRange: 'Port Range',
+  FirstIPIPv6Address: 'First IP/IPv6 address',
+  TargetNetwork: 'Target Network',
+  AnyNetwork: 'Any Network',
+  ManualNetwork: 'Manual Network',
+  OpennebulaVirtualNetwork: 'OpenNebula Virtual Network',
+  SelectNewNetwork: 'Please select a network from the list',
+  NotVmsCurrentySecGroups:
+    'There are currently no VMs associated with this Security Group',
+  CommitMessageSecGroups: `
+    Please note: each time the rules are edited, the commit operation is done automatically.
+    This action will force the propagation of security group changes to VMs. 
+    The operation takes time to iterate over all VMs in the security group, 
+    the progress can be checked in the "VMs" panel.`,
+  RecoverCommitMessageSecGroups:
+    'If set the commit operation will only operate on outdated and error VMs',
+  /** Image */
+  NotVmsCurrentyImage: 'There are currently no VMs associated with this image',
+  NotSnapshotCurrenty:
+    'There are currently no snapshots associated with this image',
 
   /* Validation */
   /* Validation - mixed */

@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------------- *
- * Copyright 2002-2022, OpenNebula Project, OpenNebula Systems               *
+ * Copyright 2002-2023, OpenNebula Project, OpenNebula Systems               *
  *                                                                           *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may   *
  * not use this file except in compliance with the License. You may obtain   *
@@ -14,6 +14,11 @@
  * limitations under the License.                                            *
  * ------------------------------------------------------------------------- */
 import { Actions, Commands } from 'server/utils/constants/commands/cluster'
+import {
+  Actions as ExtraActions,
+  Commands as ExtraCommands,
+} from 'server/routes/api/cluster/routes'
+
 import {
   oneApi,
   ONE_RESOURCES,
@@ -85,6 +90,24 @@ const clusterApi = oneApi.injectEndpoints({
           )
         } catch {}
       },
+    }),
+    getClusterAdmin: builder.query({
+      /**
+       * Retrieve the information as serveradmin.
+       *
+       * @param {object} params - Request params
+       * @param {string} params.id - Cluster id
+       * @param {boolean} [params.decrypt] - Optional flag to decrypt contained secrets, valid only for admin
+       * @returns {Cluster} Get cluster identified by id
+       * @throws Fails when response isn't code 200
+       */
+      query: (params) => {
+        const name = ExtraActions.CLUSTER_ADMINSHOW
+        const command = { name, ...ExtraCommands[name] }
+
+        return { params, command }
+      },
+      providesTags: (_, __, { id }) => [{ type: CLUSTER, id }],
     }),
     allocateCluster: builder.mutation({
       /**
@@ -281,6 +304,8 @@ export const {
   useLazyGetClustersQuery,
   useGetClusterQuery,
   useLazyGetClusterQuery,
+  useGetClusterAdminQuery,
+  useLazyGetClusterAdminQuery,
 
   // Mutations
   useAllocateClusterMutation,

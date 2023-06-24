@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------------- *
- * Copyright 2002-2022, OpenNebula Project, OpenNebula Systems               *
+ * Copyright 2002-2023, OpenNebula Project, OpenNebula Systems               *
  *                                                                           *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may   *
  * not use this file except in compliance with the License. You may obtain   *
@@ -64,10 +64,15 @@ export const concatNewMessageToLog = (log, message = {}) => {
 
   const { data, command, commandId } = message
 
-  return {
-    ...log,
-    [command]: {
+  if (log?.[command]?.[commandId] !== undefined) {
+    log[command][commandId]?.push(data)
+  } else if (log?.[command] !== undefined) {
+    log[command][commandId] = [data]
+  } else {
+    log[command] = {
       [commandId]: [...(log?.[command]?.[commandId] ?? []), data],
-    },
+    }
   }
+
+  return { ...log }
 }

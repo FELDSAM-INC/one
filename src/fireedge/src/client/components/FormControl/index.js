@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------------- *
- * Copyright 2002-2022, OpenNebula Project, OpenNebula Systems               *
+ * Copyright 2002-2023, OpenNebula Project, OpenNebula Systems               *
  *                                                                           *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may   *
  * not use this file except in compliance with the License. You may obtain   *
@@ -29,6 +29,7 @@ import SubmitButton, {
   SubmitButtonPropTypes,
 } from 'client/components/FormControl/SubmitButton'
 import InputCode from 'client/components/FormControl/InputCode'
+import DockerfileController from 'client/components/FormControl/DockerfileController'
 import ErrorHelper from 'client/components/FormControl/ErrorHelper'
 import Tooltip from 'client/components/FormControl/Tooltip'
 
@@ -47,6 +48,7 @@ export {
   SubmitButton,
   SubmitButtonPropTypes,
   InputCode,
+  DockerfileController,
   ErrorHelper,
   Tooltip,
 }

@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------------- *
- * Copyright 2002-2022, OpenNebula Project, OpenNebula Systems               *
+ * Copyright 2002-2023, OpenNebula Project, OpenNebula Systems               *
  *                                                                           *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may   *
  * not use this file except in compliance with the License. You may obtain   *
@@ -16,14 +16,14 @@
 import BasicConfiguration, {
   STEP_ID as BASIC_ID,
 } from 'client/components/Forms/VmTemplate/InstantiateForm/Steps/BasicConfiguration'
-import UserInputs, {
-  STEP_ID as USER_INPUTS_ID,
-} from 'client/components/Forms/VmTemplate/InstantiateForm/Steps/UserInputs'
 import ExtraConfiguration, {
   STEP_ID as EXTRA_ID,
 } from 'client/components/Forms/VmTemplate/InstantiateForm/Steps/ExtraConfiguration'
+import UserInputs, {
+  STEP_ID as USER_INPUTS_ID,
+} from 'client/components/Forms/VmTemplate/InstantiateForm/Steps/UserInputs'
 import { jsonToXml, userInputsToArray } from 'client/models/Helper'
-import { createSteps } from 'client/utils'
+import { createSteps, deleteObjectKeys } from 'client/utils'
 
 const Steps = createSteps(
   (vmTemplate) => {
@@ -49,12 +49,38 @@ const Steps = createSteps(
 
       return initialValue
     },
-    transformBeforeSubmit: (formData, vmTemplate) => {
+    transformBeforeSubmit: (formData, vmTemplate, _, adminGroup, oneConfig) => {
       const {
         [BASIC_ID]: { name, instances, hold, persistent, ...restOfConfig } = {},
         [USER_INPUTS_ID]: userInputs,
         [EXTRA_ID]: extraTemplate = {},
       } = formData ?? {}
+
+      if (!adminGroup) {
+        const vmRestrictedAttributes = oneConfig?.VM_RESTRICTED_ATTR ?? []
+        vmRestrictedAttributes.forEach((restrictedAttr) => {
+          const splitedAttr = restrictedAttr.split('/')
+
+          /**
+           * For now, we will delete only the DISK attributes as we have to
+           * investigate the core behavior related to each of them (i.e.:
+           * Disk restricted attributes expect to be deleted, but NIC ones
+           * must be kept unchanged).
+           *
+           * TODO: Review each VM_RESTRICTED_ATTR behavior to implement
+           * the corresponding logic for them
+           */
+          if (splitedAttr[0] !== 'DISK') return
+          deleteObjectKeys(splitedAttr, extraTemplate)
+        })
+      }
+
+      vmTemplate?.TEMPLATE?.OS &&
+        extraTemplate?.OS &&
+        (extraTemplate.OS = {
+          ...vmTemplate?.TEMPLATE?.OS,
+          ...extraTemplate?.OS,
+        })
 
       // merge with template disks to get TYPE attribute
       const templateXML = jsonToXml({
@@ -65,7 +91,7 @@ const Steps = createSteps(
 
       const data = { instances, hold, persistent, template: templateXML }
 
-      const templates = [...new Array(instances)].map((_, idx) => ({
+      const templates = [...new Array(instances)].map((__, idx) => ({
         id: vmTemplate.ID,
         name: name?.replace(/%idx/gi, idx),
         ...data,

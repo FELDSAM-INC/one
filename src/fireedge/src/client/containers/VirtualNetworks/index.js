@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------------- *
- * Copyright 2002-2022, OpenNebula Project, OpenNebula Systems               *
+ * Copyright 2002-2023, OpenNebula Project, OpenNebula Systems               *
  *                                                                           *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may   *
  * not use this file except in compliance with the License. You may obtain   *
@@ -15,14 +15,22 @@
  * ------------------------------------------------------------------------- */
 import { ReactElement, useState, memo } from 'react'
 import PropTypes from 'prop-types'
-import { BookmarkEmpty } from 'iconoir-react'
-import { Typography, Box, Stack, Chip, IconButton } from '@mui/material'
+import GotoIcon from 'iconoir-react/dist/Pin'
+import RefreshDouble from 'iconoir-react/dist/RefreshDouble'
+import Cancel from 'iconoir-react/dist/Cancel'
+import { Typography, Box, Stack, Chip } from '@mui/material'
 import { Row } from 'react-table'
 
+import {
+  useLazyGetVNetworkQuery,
+  useUpdateVNetMutation,
+} from 'client/features/OneApi/network'
 import { VNetworksTable } from 'client/components/Tables'
+import VNetworkActions from 'client/components/Tables/VNetworks/actions'
 import VNetworkTabs from 'client/components/Tabs/VNetwork'
 import SplitPane from 'client/components/SplitPane'
 import MultipleTags from 'client/components/MultipleTags'
+import { SubmitButton } from 'client/components/FormControl'
 import { Tr } from 'client/components/HOC'
 import { T, VirtualNetwork } from 'client/constants'
 
@@ -33,6 +41,7 @@ import { T, VirtualNetwork } from 'client/constants'
  */
 function VirtualNetworks() {
   const [selectedRows, onSelectedRowsChange] = useState(() => [])
+  const actions = VNetworkActions()
 
   const hasSelectedRows = selectedRows?.length > 0
   const moreThanOneSelected = selectedRows?.length > 1
@@ -40,8 +49,12 @@ function VirtualNetworks() {
   return (
     <SplitPane gridTemplateRows="1fr auto 1fr">
       {({ getGridProps, GutterComponent }) => (
-        <Box {...(hasSelectedRows && getGridProps())}>
-          <VNetworksTable onSelectedRowsChange={onSelectedRowsChange} />
+        <Box height={1} {...(hasSelectedRows && getGridProps())}>
+          <VNetworksTable
+            onSelectedRowsChange={onSelectedRowsChange}
+            globalActions={actions}
+            useUpdateMutation={useUpdateVNetMutation}
+          />
 
           {hasSelectedRows && (
             <>
@@ -52,6 +65,7 @@ function VirtualNetworks() {
                 <InfoTabs
                   vnet={selectedRows[0]?.original}
                   gotoPage={selectedRows[0]?.gotoPage}
+                  unselect={() => selectedRows[0]?.toggleRowSelected(false)}
                 />
               )}
             </>
@@ -67,27 +81,56 @@ function VirtualNetworks() {
  *
  * @param {VirtualNetwork} vnet - Virtual Network to display
  * @param {Function} [gotoPage] - Function to navigate to a page of a Virtual Network
+ * @param {Function} [unselect] - Function to unselect
  * @returns {ReactElement} Virtual Network details
  */
-const InfoTabs = memo(({ vnet, gotoPage }) => (
-  <Stack overflow="auto">
-    <Stack direction="row" alignItems="center" gap={1} mb={1}>
-      <Typography color="text.primary" noWrap>
-        {`#${vnet.ID} | ${vnet.NAME}`}
-      </Typography>
-      {gotoPage && (
-        <IconButton title={Tr(T.LocateOnTable)} onClick={gotoPage}>
-          <BookmarkEmpty />
-        </IconButton>
-      )}
+const InfoTabs = memo(({ vnet, gotoPage, unselect }) => {
+  const [get, { data: lazyData, isFetching }] = useLazyGetVNetworkQuery()
+  const id = lazyData?.ID ?? vnet.ID
+  const name = lazyData?.NAME ?? vnet.NAME
+
+  return (
+    <Stack overflow="auto">
+      <Stack direction="row" alignItems="center" gap={1} mx={1} mb={1}>
+        <Typography color="text.primary" noWrap flexGrow={1}>
+          {`#${id} | ${name}`}
+        </Typography>
+
+        {/* -- ACTIONS -- */}
+        <SubmitButton
+          data-cy="detail-refresh"
+          icon={<RefreshDouble />}
+          tooltip={Tr(T.Refresh)}
+          isSubmitting={isFetching}
+          onClick={() => get({ id })}
+        />
+        {typeof gotoPage === 'function' && (
+          <SubmitButton
+            data-cy="locate-on-table"
+            icon={<GotoIcon />}
+            tooltip={Tr(T.LocateOnTable)}
+            onClick={() => gotoPage()}
+          />
+        )}
+        {typeof unselect === 'function' && (
+          <SubmitButton
+            data-cy="unselect"
+            icon={<Cancel />}
+            tooltip={Tr(T.Close)}
+            onClick={() => unselect()}
+          />
+        )}
+        {/* -- END ACTIONS -- */}
+      </Stack>
+      <VNetworkTabs id={id} />
     </Stack>
-    <VNetworkTabs id={vnet.ID} />
-  </Stack>
-))
+  )
+})
 
 InfoTabs.propTypes = {
-  vnet: PropTypes.object.isRequired,
+  vnet: PropTypes.object,
   gotoPage: PropTypes.func,
+  unselect: PropTypes.func,
 }
 
 InfoTabs.displayName = 'InfoTabs'
