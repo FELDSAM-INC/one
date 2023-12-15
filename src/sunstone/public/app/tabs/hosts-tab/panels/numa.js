@@ -288,10 +288,21 @@ define(function(require) {
                   ).add(
                     $("<td/>").text(element["PAGES"])
                   ).add(
-                    $("<td/>").text(element["USAGE"])
+                    $("<td/>").text(element["PAGES"]-element["FREE"])
                   )
                 )
               )
+
+              if(element["PAGES"] > 0){
+                var total = parseInt(element["PAGES"]*element["SIZE"]);
+                var used = parseInt((element["PAGES"]-element["FREE"])*element["SIZE"]);
+                var parser = Humanize.sizeFromKB;
+                var ratio = Math.round((used / total) * 100);
+                info_str = parser(used) + ' / ' + parser(total) + ' (' + ratio + '%)';
+
+                memory.append($("<h7/>").text("Hugepages ("+parser(element["SIZE"])+")"));
+                memory.append(ProgressBar.html(used, total, info_str, 'memory-used'));
+              }
             });
             hugepage.append(hugepageTable.append(body));
           }
