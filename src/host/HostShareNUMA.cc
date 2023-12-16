@@ -1128,6 +1128,9 @@ int HostShareNUMA::make_hugepage_topology(HostShareCapacity &sr,
         vm_node->replace("CPUS", cpu_ids);
     }
 
+    // pin CPUs to selected numa node
+    sr.topology->replace("NODE_AFFINITY", node_id);
+
     return 0;
 }
 
