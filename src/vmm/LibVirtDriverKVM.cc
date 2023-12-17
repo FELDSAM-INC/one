@@ -617,7 +617,7 @@ int LibVirtDriver::deployment_description_kvm(
     bool hyperv             = false;
     bool localtime          = false;
     bool guest_agent        = false;
-    int  virtio_scsi_queues = 0;
+    string  virtio_scsi_queues = "";
     int  scsi_targets_num   = 0;
     int  iothreads          = 0;
     int  iothread_actual    = 1;
