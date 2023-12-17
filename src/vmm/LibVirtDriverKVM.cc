@@ -1666,9 +1666,9 @@ int LibVirtDriver::deployment_description_kvm(
 
             if (the_virtio_queues != 0 && *the_model == "virtio")
             {
-                if (the_virtio_queues == "vcpu-count")
+                if (*the_virtio_queues == "vcpu-count")
                 {
-                    the_virtio_queues = vcpu;
+                    the_virtio_queues = &vcpu;
                 }
 
                 file << "\t\t\t<driver name='vhost' queues="
