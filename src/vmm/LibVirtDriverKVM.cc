@@ -594,6 +594,7 @@ int LibVirtDriver::deployment_description_kvm(
 
     string  default_filter = "";
     string  default_model  = "";
+    string  default_virtio_queues = "";
 
     const VectorAttribute * graphics;
 
@@ -1552,6 +1553,8 @@ int LibVirtDriver::deployment_description_kvm(
 
     get_attribute(nullptr, host, cluster, "NIC", "MODEL", default_model);
 
+    get_attribute(nullptr, host, cluster, "NIC", "VIRTIO_QUEUES", default_virtio_queues);
+
     num = vm->get_template_attribute("NIC", nic);
 
     for (int i=0; i<num; i++)
@@ -1650,15 +1653,26 @@ int LibVirtDriver::deployment_description_kvm(
             file << "\t\t\t<model type="
                  << one_util::escape_xml_attr(*the_model) << "/>\n";
 
-            if (!virtio_queues.empty() && *the_model == "virtio")
+            string * the_virtio_queues = 0;
+
+            if (!virtio_queues.empty())
             {
-                if (virtio_queues == "vcpu-count")
+                the_virtio_queues = &virtio_queues;
+            }
+            else if (!default_virtio_queues.empty())
+            {
+                the_virtio_queues = &default_virtio_queues;
+            }
+
+            if (the_virtio_queues != 0 && *the_model == "virtio")
+            {
+                if (the_virtio_queues == "vcpu-count")
                 {
-                    virtio_queues = vcpu;
+                    the_virtio_queues = vcpu;
                 }
 
                 file << "\t\t\t<driver name='vhost' queues="
-                     << one_util::escape_xml_attr(vcpu)
+                     << one_util::escape_xml_attr(the_virtio_queues)
                      << "/>\n";
             }
         }
@@ -1981,7 +1995,7 @@ int LibVirtDriver::deployment_description_kvm(
                 virtio_scsi_queues = vcpu;
             }
 
-            file << " queues=" << one_util::escape_xml_attr(vcpu);
+            file << " queues=" << one_util::escape_xml_attr(virtio_scsi_queues);
         }
 
         if ( iothreads > 0 )
