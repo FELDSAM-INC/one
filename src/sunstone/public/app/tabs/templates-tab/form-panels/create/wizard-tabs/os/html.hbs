@@ -275,7 +275,8 @@
               {{tr "virtio-scsi Queues"}}
               {{{tip (tr "Number of vCPU queues to use in the virtio-scsi controller. Leave blank to use the default value.")}}}
               <select wizard_field="VIRTIO_SCSI_QUEUES">
-                <option value=""></option>
+                <option value=""> - </option>
+                <option value="auto">Auto</option>
                 <option value="1">1</option>
                 <option value="2">2</option>
                 <option value="3">3</option>
