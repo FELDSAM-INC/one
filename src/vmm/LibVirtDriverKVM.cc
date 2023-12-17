@@ -1652,8 +1652,13 @@ int LibVirtDriver::deployment_description_kvm(
 
             if (!virtio_queues.empty() && *the_model == "virtio")
             {
+                if (virtio_queues == "vcpu-count")
+                {
+                    virtio_queues = vcpu;
+                }
+
                 file << "\t\t\t<driver name='vhost' queues="
-                     << one_util::escape_xml_attr(virtio_queues)
+                     << one_util::escape_xml_attr(vcpu)
                      << "/>\n";
             }
         }
@@ -1961,7 +1966,7 @@ int LibVirtDriver::deployment_description_kvm(
              << "\t</devices>" << endl;
     }
 
-    if ( virtio_scsi_queues > 0 || scsi_targets_num > 1)
+    if ( !virtio_scsi_queues.empty() || scsi_targets_num > 1)
     {
         file << "\t<devices>" << endl
              << "\t\t<controller type='scsi' index='0' model='virtio-scsi'>"
@@ -1969,9 +1974,14 @@ int LibVirtDriver::deployment_description_kvm(
 
         file << "\t\t\t<driver";
 
-        if ( virtio_scsi_queues > 0 )
+        if ( !virtio_scsi_queues.empty() )
         {
-            file << " queues=" << one_util::escape_xml_attr(virtio_scsi_queues);
+            if (virtio_scsi_queues == "vcpu-count")
+            {
+                virtio_scsi_queues = vcpu;
+            }
+
+            file << " queues=" << one_util::escape_xml_attr(vcpu);
         }
 
         if ( iothreads > 0 )
