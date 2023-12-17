@@ -1672,7 +1672,7 @@ int LibVirtDriver::deployment_description_kvm(
                 }
 
                 file << "\t\t\t<driver name='vhost' queues="
-                     << one_util::escape_xml_attr(the_virtio_queues)
+                     << one_util::escape_xml_attr(*the_virtio_queues)
                      << "/>\n";
             }
         }
