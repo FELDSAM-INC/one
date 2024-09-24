@@ -82,6 +82,8 @@ void LifeCycleManager::trigger_deploy(int vid)
 
             vm->set_prolog_stime(thetime);
 
+            vm->set_vm_info();
+
             vmpool->update_history(vm.get());
 
             vmpool->update(vm.get());
@@ -254,6 +256,8 @@ void LifeCycleManager::trigger_migrate(int vid, const RequestAttributes& ra,
 
             vm->set_action(vm_action, uid, gid, req_id);
 
+            vm->set_vm_info();
+
             vmpool->update_history(vm.get());
 
             vm->set_previous_action(vm_action, uid, gid, req_id);
@@ -333,6 +337,8 @@ void LifeCycleManager::trigger_migrate(int vid, const RequestAttributes& ra,
 
             vm->set_prolog_stime(the_time);
 
+            vm->set_vm_info();
+
             vmpool->update_history(vm.get());
 
             vmpool->update(vm.get());
@@ -385,6 +391,8 @@ void LifeCycleManager::trigger_live_migrate(int vid, const RequestAttributes& ra
             hpool->add_capacity(vm->get_hid(), sr);
 
             vm->set_stime(time(0));
+
+            vm->set_vm_info();
 
             vmpool->update_history(vm.get());
 
