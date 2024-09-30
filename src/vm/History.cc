@@ -254,11 +254,6 @@ int History::select(SqlDB * db)
 		rc = -1;
 	}
 
-    if ( rc == 0 ) // Regenerate non-persistent data
-    {
-        non_persistent_data();
-    }
-
     return rc;
 }
 

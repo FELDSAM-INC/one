@@ -55,8 +55,6 @@ VirtualMachine::VirtualMachine(int           id,
         stime(time(0)),
         etime(0),
         deploy_id(""),
-        history(0),
-        previous_history(0),
         disks(false),
         nics(false),
         _log(0)
@@ -80,11 +78,6 @@ VirtualMachine::VirtualMachine(int           id,
 
 VirtualMachine::~VirtualMachine()
 {
-    for (unsigned int i=0 ; i < history_records.size() ; i++)
-    {
-        delete history_records[i];
-    }
-
     delete _log;
 }
 
@@ -515,7 +508,7 @@ int VirtualMachine::select(SqlDB * db)
 
     string system_dir;
     int    rc;
-    int    last_seq;
+    int    seq;
 
     Nebula& nd = Nebula::instance();
 
@@ -528,35 +521,15 @@ int VirtualMachine::select(SqlDB * db)
     }
 
     //Get History Records.
-    if ( hasHistory() )
+    if (history && history->select(db) != 0)
     {
-        last_seq = history->seq;
-
-        delete history_records[last_seq];
-
-        for (int i = last_seq; i >= 0; i--)
-        {
-            History * hp;
-
-            hp = new History(oid, i);
-            history_records[i] = hp;
-
-            rc = hp->select(db);
-
-            if ( rc != 0)
-            {
-                goto error_previous_history;
-            }
-
-            if ( i == last_seq )
-            {
-                history = hp;
-            }
-            else if ( i == last_seq - 1 )
-            {
-                previous_history = hp;
-            }
-        }
+        seq = history->seq;
+        goto error_common;
+    }
+    if (previous_history && previous_history->select(db) != 0)
+    {
+        seq = previous_history->seq;
+        goto error_common;
     }
 
     if ( state == DONE ) //Do not recreate dirs. They may be deleted
@@ -616,10 +589,8 @@ int VirtualMachine::select(SqlDB * db)
 
     return 0;
 
-error_previous_history:
-    ose << "Cannot get previous history record (seq:" << history->seq
-        << ") for VM id: " << oid;
-
+error_common:
+    ose << "Error loading history for VM " << oid  << " seq " << seq;
     log("ONE", Log::ERROR, ose);
     return -1;
 }
@@ -1901,7 +1872,7 @@ void VirtualMachine::add_history(
     int           seq;
     string        vm_xml;
 
-    if (history == 0)
+    if (!history)
     {
         seq = 0;
     }
@@ -1909,15 +1880,13 @@ void VirtualMachine::add_history(
     {
         seq = history->seq + 1;
 
-        previous_history = history;
+        previous_history = move(history);
     }
 
     to_xml_extended(vm_xml, 0);
 
-    history = new History(oid, seq, hid, hostname, cid, vmm_mad, tm_mad, ds_id,
+    history = make_unique<History>(oid, seq, hid, hostname, cid, vmm_mad, tm_mad, ds_id,
             vm_xml);
-
-    history_records.push_back(history);
 };
 
 /* -------------------------------------------------------------------------- */
@@ -1925,7 +1894,6 @@ void VirtualMachine::add_history(
 
 void VirtualMachine::cp_history()
 {
-    History * htmp;
     string    vm_xml;
 
     if (history == 0)
@@ -1935,7 +1903,7 @@ void VirtualMachine::cp_history()
 
     to_xml_extended(vm_xml, 0);
 
-    htmp = new History(oid,
+    auto htmp = make_unique<History>(oid,
                        history->seq + 1,
                        history->hid,
                        history->hostname,
@@ -1945,10 +1913,8 @@ void VirtualMachine::cp_history()
                        history->ds_id,
                        vm_xml);
 
-    previous_history = history;
-    history          = htmp;
-
-    history_records.push_back(history);
+    previous_history = move(history);
+    history          = move(htmp);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -1959,14 +1925,14 @@ void VirtualMachine::cp_previous_history()
     History * htmp;
     string    vm_xml;
 
-    if ( previous_history == 0 || history == 0)
+    if ( !previous_history || !history )
     {
         return;
     }
 
     to_xml_extended(vm_xml, 0);
 
-    htmp = new History(oid,
+    auto htmp = make_unique<History>(oid,
                        history->seq + 1,
                        previous_history->hid,
                        previous_history->hostname,
@@ -1976,10 +1942,8 @@ void VirtualMachine::cp_previous_history()
                        previous_history->ds_id,
                        vm_xml);
 
-    previous_history = history;
-    history          = htmp;
-
-    history_records.push_back(history);
+    previous_history = move(history);
+    history          = move(htmp);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -2256,7 +2220,6 @@ string& VirtualMachine::to_xml_extended(string& xml, int n_history) const
 {
     string template_xml;
     string user_template_xml;
-    string history_xml;
     string perm_xml;
     string snap_xml;
     string lock_str;
@@ -2287,21 +2250,37 @@ string& VirtualMachine::to_xml_extended(string& xml, int n_history) const
 
     if ( hasHistory() && n_history > 0 )
     {
-        oss << "<HISTORY_RECORDS>";
+        string history_xml;
 
         if ( n_history == 2 )
         {
-            for (unsigned int i=0; i < history_records.size(); i++)
+            if (history && history->seq > 1)
             {
                 oss << history_records[i]->to_xml(history_xml);
+                // Dump the full history record
+                auto vmpool = Nebula::instance().get_vmpool();
+                vmpool->dump_history(history_xml, oid);
+
+                // Remove the VM from the history to reduce size and comply with xml-schema
+                ObjectXML obj(history_xml);
+                obj.remove_nodes("/HISTORY_RECORDS/HISTORY/VM");
+
+                oss << obj;
+            }
+            else
+            {
+                oss << "<HISTORY_RECORDS>";
+                if (previous_history) oss << previous_history->to_xml(history_xml);
+                if (history) oss << history->to_xml(history_xml);
+                oss << "</HISTORY_RECORDS>";
             }
         }
         else
         {
+            oss << "<HISTORY_RECORDS>";
             oss << history->to_xml(history_xml);
+            oss << "</HISTORY_RECORDS>";
         }
-
-        oss << "</HISTORY_RECORDS>";
     }
     else
     {
@@ -2459,7 +2438,7 @@ string& VirtualMachine::to_xml_short(string& xml)
     if ( hasHistory() )
     {
         oss << "<HISTORY_RECORDS>";
-        oss << history_records[history_records.size() - 1]->to_xml_short(history_xml);
+        oss << history->to_xml_short(history_xml);
         oss << "</HISTORY_RECORDS>";
     }
     else
@@ -2591,16 +2570,14 @@ int VirtualMachine::from_xml(const string &xml_str)
     if ( xpath(last_seq,"/VM/HISTORY_RECORDS/HISTORY/SEQ", -1) == 0 &&
             last_seq != -1 )
     {
-        history_records.resize(last_seq + 1);
+        history = make_unique<History>(oid, last_seq);
 
-        for (int i=0; i <= last_seq; ++i)
+        // Initialize previous history
+        --last_seq;
+        if (last_seq >= 0)
         {
-            history_records[i] = 0;
+            previous_history = make_unique<History>(oid, last_seq);
         }
-
-        history = new History(oid, last_seq);
-
-        history_records[last_seq] = history;
     }
 
     // -------------------------------------------------------------------------
