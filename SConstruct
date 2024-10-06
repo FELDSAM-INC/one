@@ -41,6 +41,8 @@ cwd = os.getcwd()
 # Environment that will be applied to each scons child
 main_env = Environment()
 main_env['ENV']['PATH'] = os.environ['PATH']
+if 'LD_LIBRARY_PATH' in os.environ:
+    main_env['ENV']['LD_LIBRARY_PATH'] = os.environ['LD_LIBRARY_PATH']
 
 main_env['CXXFLAGS'] = " -DGITVERSION=\'\"" + git_version + "\"\'"
 
