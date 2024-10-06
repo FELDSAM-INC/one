@@ -39,7 +39,7 @@ def add_cdata(d):
         return { k: add_cdata(v) for (k,v) in d.items()}
 
     else:
-        return f"<![CDATA[{str(d)}]]>"
+        return "<![CDATA[%s]]>" % str(d)
 
 
 def cast2one(param):
