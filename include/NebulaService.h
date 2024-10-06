@@ -150,7 +150,7 @@ public:
      */
     static std::string code_version()
     {
-        return "6.10.0.6"; // bump version
+        return "6.10.0.7"; // bump version
     }
 
     /**
