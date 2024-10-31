@@ -1157,13 +1157,27 @@ void VirtualMachineManager::trigger_migrate(int vid)
 
         Nebula::instance().get_tm()->migrate_transfer_command(vm.get(), os);
 
+        //Generate VM description file
+        os << "Generating deployment file: " << vm->get_deployment_file();
+
+        vm->log("VMM", Log::INFO, os);
+
+        os.str("");
+
+        rc = vmd->deployment_description(vm.get(), vm->get_deployment_file());
+
+        if (rc != 0)
+        {
+            goto error_file;
+        }
+
         // Invoke driver method
         drv_msg = format_message(
             vm->get_previous_hostname(),
             vm->get_hostname(),
             vm->get_deploy_id(),
-            "",
-            "",
+            vm->get_deployment_file(),
+            vm->get_remote_deployment_file(),
             "",
             os.str(),
             "",
