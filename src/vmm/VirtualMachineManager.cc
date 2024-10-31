@@ -1124,6 +1124,7 @@ void VirtualMachineManager::trigger_migrate(int vid)
 {
     trigger([this, vid] {
         const VirtualMachineManagerDriver * vmd;
+        int rc;
 
         ostringstream os;
         string   vm_tmpl;
@@ -1196,6 +1197,11 @@ void VirtualMachineManager::trigger_migrate(int vid)
 
         error_driver:
             os << "migrate_action, error getting driver " << vm->get_vmm_mad();
+            goto error_common;
+
+        error_file:
+            os << "migrate_action, error generating deployment file: "
+            << vm->get_deployment_file();
             goto error_common;
 
         error_previous_history:
