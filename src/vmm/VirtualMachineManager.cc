@@ -1189,6 +1189,8 @@ void VirtualMachineManager::trigger_migrate(int vid)
 
         vmd->migrate(vid, drv_msg);
 
+        vmpool->update(vm.get());
+        
         return;
 
         error_history:
