@@ -1124,7 +1124,6 @@ void VirtualMachineManager::trigger_migrate(int vid)
 {
     trigger([this, vid] {
         const VirtualMachineManagerDriver * vmd;
-        int rc;
 
         ostringstream os;
         string   vm_tmpl;
@@ -1158,27 +1157,13 @@ void VirtualMachineManager::trigger_migrate(int vid)
 
         Nebula::instance().get_tm()->migrate_transfer_command(vm.get(), os);
 
-        //Generate VM description file
-        os << "Generating deployment file: " << vm->get_deployment_file();
-
-        vm->log("VMM", Log::INFO, os);
-
-        os.str("");
-
-        rc = vmd->deployment_description(vm.get(), vm->get_deployment_file());
-
-        if (rc != 0)
-        {
-            goto error_file;
-        }
-
         // Invoke driver method
         drv_msg = format_message(
             vm->get_previous_hostname(),
             vm->get_hostname(),
             vm->get_deploy_id(),
-            vm->get_deployment_file(),
-            vm->get_remote_deployment_file(),
+            "",
+            "",
             "",
             os.str(),
             "",
@@ -1189,8 +1174,6 @@ void VirtualMachineManager::trigger_migrate(int vid)
 
         vmd->migrate(vid, drv_msg);
 
-        vmpool->update(vm.get());
-        
         return;
 
         error_history:
@@ -1199,11 +1182,6 @@ void VirtualMachineManager::trigger_migrate(int vid)
 
         error_driver:
             os << "migrate_action, error getting driver " << vm->get_vmm_mad();
-            goto error_common;
-
-        error_file:
-            os << "migrate_action, error generating deployment file: "
-            << vm->get_deployment_file();
             goto error_common;
 
         error_previous_history:
