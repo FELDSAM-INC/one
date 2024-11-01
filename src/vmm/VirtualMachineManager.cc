@@ -1160,6 +1160,7 @@ void VirtualMachineManager::trigger_migrate(int vid)
         ostringstream os;
         string   vm_tmpl;
         string   drv_msg;
+        string   tm_command = "";
 
         // Get the VM from the pool
         auto vm = vmpool->get(vid);
@@ -1189,6 +1190,8 @@ void VirtualMachineManager::trigger_migrate(int vid)
 
         Nebula::instance().get_tm()->migrate_transfer_command(vm.get(), os);
 
+        tm_command = os.str();
+
         //Generate VM description file
         os << "Generating migrate file: " << vm->get_migrate_file();
 
@@ -1211,7 +1214,7 @@ void VirtualMachineManager::trigger_migrate(int vid)
             "",
             "",
             "",
-            os.str(),
+            tm_command,
             "",
             vm->get_system_dir(),
             vm->to_xml(vm_tmpl),
