@@ -374,7 +374,9 @@ private:
         const std::string& disk_target_path,
         const std::string& tmpl,
         int ds_id,
-        int sgid);
+        int sgid,
+        const std::string& lmfile,
+        const std::string& rmfile);
 
 public:
     /**

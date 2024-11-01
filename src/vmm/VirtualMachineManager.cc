@@ -1155,6 +1155,7 @@ void VirtualMachineManager::trigger_migrate(int vid)
 {
     trigger([this, vid] {
         const VirtualMachineManagerDriver * vmd;
+        int rc;
 
         ostringstream os;
         string   vm_tmpl;
