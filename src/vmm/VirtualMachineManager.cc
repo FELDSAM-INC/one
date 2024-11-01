@@ -1192,6 +1192,8 @@ void VirtualMachineManager::trigger_migrate(int vid)
 
         tm_command = os.str();
 
+        os.str("");
+
         //Generate VM description file
         os << "Generating migrate file: " << vm->get_migrate_file();
 
