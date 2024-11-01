@@ -40,9 +40,14 @@ if [ "x$CLEANUP_MEMORY_ON_START" = "xyes" ]; then
         "Failed compact memory on $dest_host"
 fi
 
+# if compression is enabled, set cache to 1GB
+if [ "x$MIGRATE_OPTIONS" = "x--compressed" ]; then
+    virsh --connect $QEMU_PROTOCOL://$src_host/system migrate-compcache $deploy_id --size 1073741824
+fi
+
 # do live migration, but cleanup target host in case of error
-virsh --connect $QEMU_PROTOCOL://$src_host/system \
-    migrate --live $deploy_id $MIGRATE_OPTIONS $QEMU_PROTOCOL://$dest_host/system
+retry_if "active block job" 3 5 virsh --connect $QEMU_PROTOCOL://$src_host/system migrate \
+        --live $MIGRATE_OPTIONS $deploy_id $QEMU_PROTOCOL://$dest_host/system
 
 RC=$?
 
