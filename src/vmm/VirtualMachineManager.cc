@@ -211,7 +211,9 @@ string VirtualMachineManager::format_message(
     const string& disk_target_path,
     const string& tmpl,
     int ds_id,
-    int sgid)
+    int sgid,
+    const string& lmfile,
+    const string& rmfile)
 {
     ostringstream oss;
 
@@ -252,6 +254,17 @@ string VirtualMachineManager::format_message(
     {
         oss << "<LOCAL_DEPLOYMENT_FILE/>";
         oss << "<REMOTE_DEPLOYMENT_FILE/>";
+    }
+
+    if (!lmfile.empty())
+    {
+        oss << "<LOCAL_MIGRATE_FILE>" << lmfile << "</LOCAL_MIGRATE_FILE>";
+        oss << "<REMOTE_MIGRATE_FILE>" << rmfile << "</REMOTE_MIGRATE_FILE>";
+    }
+    else
+    {
+        oss << "<LOCAL_MIGRATE_FILE/>";
+        oss << "<REMOTE_MIGRATE_FILE/>";
     }
 
     if (!cfile.empty())
@@ -432,7 +445,9 @@ void VirtualMachineManager::trigger_deploy(int vid)
             disk_path,
             vm->to_xml(vm_tmpl),
             vm->get_ds_id(),
-            -1);
+            -1,
+            "",
+            "");
 
         vmd->deploy(vid, drv_msg);
 
@@ -534,7 +549,9 @@ void VirtualMachineManager::trigger_save(int vid)
             "",
             vm->to_xml(vm_tmpl),
             ds_id,
-            -1);
+            -1,
+            "",
+            "");
 
         vmd->save(vid, drv_msg);
 
@@ -627,7 +644,9 @@ void VirtualMachineManager::trigger_shutdown(int vid)
             "",
             vm->to_xml(vm_tmpl),
             ds_id,
-            -1);
+            -1,
+            "",
+            "");
 
         vmd->shutdown(vid, drv_msg);
 
@@ -700,7 +719,9 @@ void VirtualMachineManager::trigger_reboot(int vid)
             "",
             vm->to_xml(vm_tmpl),
             vm->get_ds_id(),
-            -1);
+            -1,
+            "",
+            "");
 
         vmd->reboot(vid, drv_msg);
 
@@ -765,7 +786,9 @@ void VirtualMachineManager::trigger_reset(int vid)
             "",
             vm->to_xml(vm_tmpl),
             vm->get_ds_id(),
-            -1);
+            -1,
+            "",
+            "");
 
         vmd->reset(vid, drv_msg);
 
@@ -850,7 +873,9 @@ void VirtualMachineManager::trigger_cancel(int vid)
             "",
             vm->to_xml(vm_tmpl),
             ds_id,
-            -1);
+            -1,
+            "",
+            "");
 
         vmd->cancel(vid, drv_msg);
 
@@ -924,7 +949,9 @@ void VirtualMachineManager::trigger_cancel_previous(int vid)
             "",
             vm->to_xml(vm_tmpl),
             vm->get_ds_id(),
-            -1);
+            -1,
+            "",
+            "");
 
         vmd->cancel(vid, drv_msg);
 
@@ -1010,7 +1037,9 @@ void VirtualMachineManager::trigger_cleanup(int vid, bool cancel_previous)
             "",
             vm->to_xml(vm_tmpl),
             vm->get_ds_id(),
-            -1);
+            -1,
+            "",
+            "");
 
         vmd->cleanup(vid, drv_msg);
 
@@ -1092,7 +1121,9 @@ void VirtualMachineManager::trigger_cleanup_previous(int vid)
             "",
             vm->to_xml(vm_tmpl),
             vm->get_ds_id(),
-            -1);
+            -1,
+            "",
+            "");
 
         vmd->cleanup(vid, drv_msg);
 
@@ -1157,6 +1188,20 @@ void VirtualMachineManager::trigger_migrate(int vid)
 
         Nebula::instance().get_tm()->migrate_transfer_command(vm.get(), os);
 
+        //Generate VM description file
+        os << "Generating migrate file: " << vm->get_migrate_file();
+
+        vm->log("VMM", Log::INFO, os);
+
+        os.str("");
+
+        rc = vmd->deployment_description(vm.get(), vm->get_migrate_file());
+
+        if (rc != 0)
+        {
+            goto error_file;
+        }
+
         // Invoke driver method
         drv_msg = format_message(
             vm->get_previous_hostname(),
@@ -1170,7 +1215,9 @@ void VirtualMachineManager::trigger_migrate(int vid)
             vm->get_system_dir(),
             vm->to_xml(vm_tmpl),
             vm->get_previous_ds_id(),
-            -1);
+            -1,
+            vm->get_migrate_file(),
+            vm->get_rmigrate_file());
 
         vmd->migrate(vid, drv_msg);
 
@@ -1182,6 +1229,11 @@ void VirtualMachineManager::trigger_migrate(int vid)
 
         error_driver:
             os << "migrate_action, error getting driver " << vm->get_vmm_mad();
+            goto error_common;
+
+        error_file:
+            os << "migrate_action, error generating migrate file: "
+            << vm->get_migrate_file();
             goto error_common;
 
         error_previous_history:
@@ -1267,7 +1319,9 @@ void VirtualMachineManager::trigger_restore(int vid)
             disk_path,
             vm->to_xml(vm_tmpl),
             vm->get_ds_id(),
-            -1);
+            -1,
+            "",
+            "");
 
         vmd->restore(vid, drv_msg);
 
@@ -1446,7 +1500,9 @@ void VirtualMachineManager::trigger_attach(int vid)
             disk_path,
             vm->to_xml(vm_tmpl),
             vm->get_ds_id(),
-            -1);
+            -1,
+            "",
+            "");
 
         vmd->attach(vid, drv_msg);
 
@@ -1561,7 +1617,9 @@ void VirtualMachineManager::trigger_detach(int vid)
             disk_path,
             vm->to_xml(vm_tmpl),
             vm->get_ds_id(),
-            -1);
+            -1,
+            "",
+            "");
 
         vmd->detach(vid, drv_msg);
 
@@ -1638,7 +1696,9 @@ void VirtualMachineManager::trigger_snapshot_create(int vid)
             "",
             vm->to_xml(vm_tmpl),
             vm->get_ds_id(),
-            -1);
+            -1,
+            "",
+            "");
 
         vmd->snapshot_create(vid, drv_msg);
 
@@ -1710,7 +1770,9 @@ void VirtualMachineManager::trigger_snapshot_revert(int vid)
             "",
             vm->to_xml(vm_tmpl),
             vm->get_ds_id(),
-            -1);
+            -1,
+            "",
+            "");
 
         vmd->snapshot_revert(vid, drv_msg);
 
@@ -1782,7 +1844,9 @@ void VirtualMachineManager::trigger_snapshot_delete(int vid)
             "",
             vm->to_xml(vm_tmpl),
             vm->get_ds_id(),
-            -1);
+            -1,
+            "",
+            "");
 
         vmd->snapshot_delete(vid, drv_msg);
 
@@ -1885,7 +1949,9 @@ void VirtualMachineManager::trigger_disk_snapshot_create(int vid)
             disk_path,
             vm->to_xml(vm_tmpl),
             vm->get_ds_id(),
-            -1);
+            -1,
+            "",
+            "");
 
         vmd->disk_snapshot_create(vid, drv_msg);
 
@@ -1992,7 +2058,9 @@ void VirtualMachineManager::trigger_disk_resize(int vid)
             disk_path,
             vm->to_xml(vm_tmpl),
             vm->get_ds_id(),
-            -1);
+            -1,
+            "",
+            "");
 
         vmd->disk_resize(vid, drv_msg);
 
@@ -2087,7 +2155,9 @@ void VirtualMachineManager::trigger_update_conf(int vid)
             disk_path,
             vm->to_xml(vm_tmpl),
             vm->get_ds_id(),
-            -1);
+            -1,
+            "",
+            "");
 
         vmd->update_conf(vid, drv_msg);
 
@@ -2174,7 +2244,9 @@ void VirtualMachineManager::trigger_attach_nic(int vid)
             disk_path,
             vm->to_xml(vm_tmpl),
             vm->get_ds_id(),
-            -1);
+            -1,
+            "",
+            "");
 
         vmd->attach_nic(vid, drv_msg);
 
@@ -2277,7 +2349,9 @@ void VirtualMachineManager::trigger_detach_nic(int vid)
             disk_path,
             vm->to_xml(vm_tmpl),
             vm->get_ds_id(),
-            -1);
+            -1,
+            "",
+            "");
 
         vmd->detach_nic(vid, drv_msg);
 
@@ -2344,7 +2418,9 @@ int VirtualMachineManager::updatesg(VirtualMachine * vm, int sgid)
         "",
         vm->to_xml(vm_tmpl),
         vm->get_ds_id(),
-        sgid);
+        sgid,
+        "",
+        "");
 
     vmd->updatesg(vm->get_oid(), drv_msg);
 
@@ -2397,7 +2473,9 @@ void VirtualMachineManager::trigger_resize(int vid)
             "",
             vm->to_xml(vm_tmpl),
             vm->get_ds_id(),
-            -1);
+            -1,
+            "",
+            "");
 
         vmd->write_drv(VMManagerMessages::RESIZE, vid, drv_msg);
 

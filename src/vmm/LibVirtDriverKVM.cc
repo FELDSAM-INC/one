@@ -2105,5 +2105,7 @@ int LibVirtDriver::deployment_description_kvm(
 
     file << "</domain>" << endl;
 
+    file.close();
+
     return 0;
 }
