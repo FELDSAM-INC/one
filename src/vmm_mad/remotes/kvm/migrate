@@ -94,10 +94,12 @@ while IFS= read -r -d '' element; do
     XPATH_ELEMENTS[i++]="$element"
 done < <(echo $STDIN| $XPATH \
             /VMM_DRIVER_ACTION_DATA/DATASTORE/TEMPLATE/SHARED \
-            /VMM_DRIVER_ACTION_DATA/DISK_TARGET_PATH)
+            /VMM_DRIVER_ACTION_DATA/DISK_TARGET_PATH \
+            /VMM_DRIVER_ACTION_DATA/REMOTE_MIGRATE_FILE)
 
 SHARED="${XPATH_ELEMENTS[j++]}"
 VM_DIR="${XPATH_ELEMENTS[j++]}"
+REMOTE_MIGRATE_FILE="${XPATH_ELEMENTS[j++]}"
 
 # use "force-share" param for qemu >= 2.10
 [ "$(get_qemu_img_version)" -ge 2010000 ] && QEMU_IMG_PARAM="-U"
@@ -121,7 +123,7 @@ fi
 
 if [ "$SHARED" = "YES" ]; then
     retry_if "active block job" 3 5 virsh --connect $LIBVIRT_URI migrate \
-        --live $MIGRATE_OPTIONS $DEPLOY_ID $QEMU_PROTOCOL://$DEST_HOST/system
+        --live $MIGRATE_OPTIONS --xml $REMOTE_MIGRATE_FILE $DEPLOY_ID $QEMU_PROTOCOL://$DEST_HOST/system
 
     RC=$?
 else
@@ -209,7 +211,7 @@ else
 
     retry_if "active block job" 3 5 \
         virsh --connect $LIBVIRT_URI migrate \
-        --live $MIGRATE_OPTIONS $DEPLOY_ID $QEMU_PROTOCOL://$DEST_HOST/system \
+        --live $MIGRATE_OPTIONS --xml $REMOTE_MIGRATE_FILE $DEPLOY_ID $QEMU_PROTOCOL://$DEST_HOST/system \
         $DISK_OPTS
     RC=$?
 
