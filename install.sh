@@ -2195,7 +2195,7 @@ ONEDB_SHARED_MIGRATOR_FILES="src/onedb/shared/2.0_to_2.9.80.rb \
                              src/onedb/shared/6.0.0_to_6.2.0.rb \
                              src/onedb/shared/6.2.0_to_6.4.0.rb \
                              src/onedb/shared/6.4.0_to_6.6.0.rb \
-                             src/onedb/shared/6.6.0_to_6.8.0.rbm \
+                             src/onedb/shared/6.6.0_to_6.8.0.rb \
                              src/onedb/shared/6.8.0_to_6.10.0.rbm"
 
 ONEDB_LOCAL_MIGRATOR_FILES="src/onedb/local/4.5.80_to_4.7.80.rb \
@@ -2218,7 +2218,7 @@ ONEDB_LOCAL_MIGRATOR_FILES="src/onedb/local/4.5.80_to_4.7.80.rb \
                             src/onedb/shared/6.0.0_to_6.2.0.rb \
                             src/onedb/shared/6.2.0_to_6.4.0.rb \
                             src/onedb/shared/6.4.0_to_6.6.0.rb \
-                            src/onedb/shared/6.6.0_to_6.8.0.rbm \
+                            src/onedb/shared/6.6.0_to_6.8.0.rb \
                             src/onedb/shared/6.8.0_to_6.10.0.rbm"
 
 #-------------------------------------------------------------------------------
