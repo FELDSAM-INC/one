@@ -57,7 +57,7 @@ void LifeCycleManager::start_prolog_migrate(VirtualMachine* vm)
 
     vmpool->update(vm);
 
-    vm->get_capacity(sr);
+    vm->get_previous_capacity(sr);
 
     if ( vm->get_hid() != vm->get_previous_hid() )
     {
@@ -277,7 +277,7 @@ void LifeCycleManager::trigger_deploy_success(int vid)
 
             vmpool->update_previous_history(vm.get());
 
-            vm->get_capacity(sr);
+            vm->get_previous_capacity(sr);
 
             hpool->del_capacity(vm->get_previous_hid(), sr);
 

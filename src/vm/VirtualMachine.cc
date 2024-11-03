@@ -2024,6 +2024,45 @@ void VirtualMachine::get_capacity(HostShareCapacity& sr) const
 /* -------------------------------------------------------------------------- */
 /* -------------------------------------------------------------------------- */
 
+void VirtualMachine::get_previous_capacity(HostShareCapacity& sr) const
+{
+    // Check if previous_history is available
+    if (!hasPreviousHistory())
+    {
+        // Log error about missing previous history
+        ostringstream ose;
+        ose << "Cannot get previous history record for VM id: " << oid;
+        log("ONE", Log::ERROR, ose);
+
+        // Fallback: get the current capacity
+        get_capacity(sr);
+        return;
+    }
+
+    // Create a new VirtualMachine instance
+    VirtualMachine previous_vm(oid, uid, gid, uname, gname, 0, nullptr);
+
+    // Parse the VM XML from the previous history record
+    if (previous_vm.from_xml(previous_history->vm_info) != 0)
+    {
+        // Log error about XML parsing failure
+        ostringstream ose;
+        ose << "Failed to parse VM XML from previous history (seq: " << previous_history->seq
+            << ") for VM id: " << oid;
+        log("ONE", Log::ERROR, ose);
+
+        // Fallback: get the current capacity
+        get_capacity(sr);
+        return;
+    }
+
+    // If parsing is successful, use the previous VM's capacity
+    previous_vm.get_capacity(sr);
+}
+
+/* -------------------------------------------------------------------------- */
+/* -------------------------------------------------------------------------- */
+
 int VirtualMachine::resize(float cpu, long int memory, unsigned int vcpu,
         string& error)
 {
@@ -3931,4 +3970,3 @@ void VirtualMachine::rollback_previous_vnc_port()
 
     graphics->remove("PREVIOUS_PORT");
 };
-

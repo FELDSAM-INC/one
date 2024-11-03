@@ -1035,6 +1035,13 @@ public:
     void get_capacity(HostShareCapacity &sr) const;
 
     /**
+     *  Get the previous VM physical capacity requirements for the host.
+     *  The hasPreviousHistory() function MUST be called before this one.
+     *    @param sr the HostShareCapacity to store the capacity request.
+     */
+    void get_previous_capacity(HostShareCapacity &sr) const;
+
+    /**
      * Adds automatic placement requirements: Datastore and Cluster
      *    @param cluster_ids set of viable clusters for this VM
      *    @param error_str Returns the error reason, if any
