@@ -26,9 +26,6 @@ DRV_MESSAGE=$(cat)
 DEPLOY_ID=$1
 FILE=$2
 
-VM_ID=$4
-DS_ID=$5
-
 if [ -f "$FILE" ]; then
     log "Moving old checkpoint file $FILE"
     epoch=`date +%s`
