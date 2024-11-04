@@ -320,14 +320,14 @@ void LifeCycleManager::trigger_migrate(int vid, const RequestAttributes& ra,
 
             vm->get_capacity(sr);
 
+            hpool->add_capacity(vm->get_hid(), sr);
+
             if ( vm->get_hid() != vm->get_previous_hid() )
             {
                 hpool->del_capacity(vm->get_previous_hid(), sr);
 
                 vm->release_previous_vnc_port();
             }
-
-            hpool->add_capacity(vm->get_hid(), sr);
 
             vm->set_stime(the_time);
 
@@ -1163,8 +1163,6 @@ void LifeCycleManager::clean_up_vm(VirtualMachine * vm, bool dispose,
             vm->set_previous_vm_info();
             vm->set_previous_running_etime(the_time);
 
-            vm->get_previous_capacity(sr);
-
             hpool->del_capacity(vm->get_previous_hid(), sr);
 
             vmpool->update_previous_history(vm);
@@ -1187,8 +1185,6 @@ void LifeCycleManager::clean_up_vm(VirtualMachine * vm, bool dispose,
             vm->set_previous_etime(the_time);
             vm->set_previous_vm_info();
             vm->set_previous_running_etime(the_time);
-
-            vm->get_previous_capacity(sr);
 
             hpool->del_capacity(vm->get_previous_hid(), sr);
 
