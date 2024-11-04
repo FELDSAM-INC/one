@@ -40,7 +40,7 @@ install_requires = [
 if sys.version_info[0] < 3:
     install_requires.append('future')
 
-version = '6.2.2.35'
+version = '6.2.2.36'
 
 # mark pre-release
 v1 = int(version.split('.')[1])
