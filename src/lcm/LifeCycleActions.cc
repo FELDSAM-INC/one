@@ -989,6 +989,7 @@ void LifeCycleManager::clean_up_vm(VirtualMachine * vm, bool dispose,
         int& image_id, int uid, int gid, int req_id)
 {
     HostShareCapacity sr;
+    Template tmpl;
 
     unsigned int port;
 
@@ -1176,7 +1177,6 @@ void LifeCycleManager::clean_up_vm(VirtualMachine * vm, bool dispose,
             vm->set_previous_vm_info();
             vm->set_previous_running_etime(the_time);
 
-            Template tmpl;
             vm->get_previous_capacity(sr, tmpl);
             hpool->del_capacity(vm->get_previous_hid(), sr);
 
@@ -1201,7 +1201,6 @@ void LifeCycleManager::clean_up_vm(VirtualMachine * vm, bool dispose,
             vm->set_previous_vm_info();
             vm->set_previous_running_etime(the_time);
 
-            Template tmpl;
             vm->get_previous_capacity(sr, tmpl);
             hpool->del_capacity(vm->get_previous_hid(), sr);
 
