@@ -231,6 +231,12 @@ define(function(require) {
           space = true;
           descriptionText.push("<div style='"+styles+"'>"+prop.toLocaleLowerCase()+":</div> "+element.TEMPLATE.TOPOLOGY[prop]);
         }
+        nodes = [];
+        for (k in info) {
+          var node = info[k];
+          nodes.push(node.NODE_ID);
+        }
+        descriptionText.push("<div style='"+styles+"'>host_numa_node(s):</div> "+nodes.join(","));
         description.append("("+descriptionText.join("  ").trim()+")");
       }
       info.map(function(core, index){
