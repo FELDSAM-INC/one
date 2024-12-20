@@ -34,6 +34,16 @@ void LifeCycleManager::start_prolog_migrate(VirtualMachine* vm)
 
     time_t the_time = time(0);
 
+    ostringstream oss;
+    oss << "start_prolog_migrate called - "
+        << " VM ID: " << vm->get_oid()
+        << " Current HID: " << vm->get_hid()
+        << " Previous HID: " << vm->get_previous_hid()
+        << " Action: " << vm->get_action()
+        << " State: " << vm->state_str();
+
+    vm->log("LCM", Log::INFO, oss.str());
+
     //----------------------------------------------------
     //                PROLOG_MIGRATE STATE
     //----------------------------------------------------
@@ -45,18 +55,6 @@ void LifeCycleManager::start_prolog_migrate(VirtualMachine* vm)
         vm->delete_snapshots();
     }
 
-    vm->set_previous_etime(the_time);
-
-    vm->set_previous_running_etime(the_time);
-
-    vmpool->update_previous_history(vm);
-
-    vm->set_prolog_stime(the_time);
-
-    vmpool->update_history(vm);
-
-    vmpool->update(vm);
-
     if ( vm->get_hid() != vm->get_previous_hid() )
     {
         Template tmpl;
@@ -66,6 +64,16 @@ void LifeCycleManager::start_prolog_migrate(VirtualMachine* vm)
 
         vm->release_previous_vnc_port();
     }
+
+    vm->set_previous_etime(the_time);
+
+    vm->set_previous_running_etime(the_time);
+
+    vmpool->update_previous_history(vm);
+
+    vm->set_prolog_stime(the_time);
+
+    vmpool->update_history(vm);
 
     vmpool->update(vm);
 
