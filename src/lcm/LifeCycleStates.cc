@@ -270,6 +270,9 @@ void LifeCycleManager::trigger_deploy_success(int vid)
 
             vm->set_running_stime(the_time);
 
+            Template tmpl;
+            vm->get_previous_capacity(sr, tmpl);
+
             vmpool->update_history(vm.get());
 
             vm->set_previous_etime(the_time);
@@ -277,9 +280,6 @@ void LifeCycleManager::trigger_deploy_success(int vid)
             vm->set_previous_running_etime(the_time);
 
             vmpool->update_previous_history(vm.get());
-
-            Template tmpl;
-            vm->get_previous_capacity(sr, tmpl);
 
             hpool->del_capacity(vm->get_previous_hid(), sr);
 
